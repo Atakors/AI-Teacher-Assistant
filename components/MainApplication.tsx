@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import FlashcardGenerator from './FlashcardGenerator';
@@ -17,6 +14,7 @@ import { YEAR_3_PRIMARY_CURRICULUM_CONTENT, YEAR_3_CANVAS_STRUCTURE_DATA } from 
 import { YEAR_4_PRIMARY_CURRICULUM_CONTENT, YEAR_4_CANVAS_STRUCTURE_DATA } from '../constants_year4';
 import { YEAR_5_PRIMARY_CURRICULUM_CONTENT, YEAR_5_CANVAS_STRUCTURE_DATA } from '../constants_year5';
 import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW } from '../constants';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, VerticalAlign } from 'docx';
 
 
 interface MainApplicationProps {
@@ -299,6 +297,60 @@ const MainApplication: React.FC<MainApplicationProps> = ({
     }
   };
 
+    const generateDocxBlob = (plan: LessonPlan): Promise<Blob> => {
+        const cellMargin = { top: 80, bottom: 80, left: 100, right: 100 };
+        const createHeaderCell = (label: string, value: string, options: any = {}) => new TableCell({
+            children: [
+                new Paragraph({ children: [new TextRun({ text: `${label}:`, bold: true })] }),
+                new Paragraph(value)
+            ],
+            margins: cellMargin,
+            ...options
+        });
+
+        const headerTable = new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+                new TableRow({ children: [createHeaderCell('School', plan.school), createHeaderCell('Teacher', plan.teacher), createHeaderCell('Level', plan.level)] }),
+                new TableRow({ children: [createHeaderCell('Sequence', plan.sequence), createHeaderCell('Section', plan.section), createHeaderCell('Number of Ls', plan.numberOfLearners)] }),
+                new TableRow({ children: [createHeaderCell('Session', plan.session), createHeaderCell('Session focus', plan.sessionFocus), createHeaderCell('Domain', plan.domain)] }),
+                new TableRow({ children: [createHeaderCell('Targeted Competency', plan.targetedCompetency, { columnSpan: 3 })] }),
+                new TableRow({ children: [createHeaderCell('Session Objective(s)', plan.sessionObjectives, { columnSpan: 3 })] }),
+                new TableRow({ children: [createHeaderCell('Subsidiary Objective', plan.subsidiaryObjective, { columnSpan: 3 })] }),
+                new TableRow({ children: [createHeaderCell('Anticipated Problems', plan.anticipatedProblems, { columnSpan: 3 })] }),
+                new TableRow({ children: [createHeaderCell('Solutions', plan.solutions, { columnSpan: 3 })] }),
+                new TableRow({ children: [createHeaderCell('Materials', plan.materials.join(', '), { columnSpan: 3 })] }),
+                new TableRow({ children: [createHeaderCell('Cross Curricular Competence', plan.crossCurricularCompetence, { columnSpan: 3 })] }),
+            ],
+        });
+
+        const procedureTable = new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+                new TableRow({
+                    children: ['Time', 'Stages', 'Procedure', 'Interaction'].map(text => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })], margins: cellMargin })),
+                    tableHeader: true,
+                }),
+                ...plan.procedureTable.map(row => new TableRow({
+                    children: [
+                        new TableCell({ children: [new Paragraph(row.time)], verticalAlign: VerticalAlign.TOP, margins: cellMargin }),
+                        new TableCell({ children: [new Paragraph(row.stage)], verticalAlign: VerticalAlign.TOP, margins: cellMargin }),
+                        new TableCell({ children: row.procedure.split('\n').map(p => new Paragraph(p)), verticalAlign: VerticalAlign.TOP, margins: cellMargin }),
+                        new TableCell({ children: [new Paragraph(row.interaction)], verticalAlign: VerticalAlign.TOP, margins: cellMargin }),
+                    ]
+                }))
+            ],
+        });
+
+        const doc = new Document({
+            sections: [{
+                children: [headerTable, new Paragraph({ text: '' }), procedureTable],
+            }],
+        });
+
+        return Packer.toBlob(doc);
+    };
+
   const handleSavePlan = async () => {
     if (!generatedPlan || !selectedCurriculum || !selectedLessonDetails) {
       setError("Cannot save plan without complete context. Please ensure a lesson is selected.");
@@ -306,7 +358,10 @@ const MainApplication: React.FC<MainApplicationProps> = ({
     }
     
     const planName = window.prompt("Enter a name for this lesson plan:", `Plan for ${selectedLessonDetails.name}`);
-    if (!planName || !planName.trim()) return; // User cancelled or entered empty name
+    if (!planName || !planName.trim()) return;
+
+    setIsLoading(true);
+    setError(null);
 
     const sequence = getCurrentCanvasStructureData().find(s => s.id === selectedSequenceId);
     const section = sequence?.sections.find(s => s.id === selectedSectionId);
@@ -319,11 +374,14 @@ const MainApplication: React.FC<MainApplicationProps> = ({
     };
 
     try {
-        await saveLessonPlan(currentUser.uid, planName.trim(), generatedPlan, context);
+        const docxBlob = await generateDocxBlob(generatedPlan);
+        await saveLessonPlan(currentUser.uid, planName.trim(), generatedPlan, context, docxBlob);
         alert("Lesson plan saved successfully!");
     } catch (e) {
         console.error("Failed to save plan", e);
         setError("Could not save the lesson plan. Please try again.");
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -377,7 +435,7 @@ const MainApplication: React.FC<MainApplicationProps> = ({
       case 'flashcardGenerator':
         return <FlashcardGenerator onGenerate={handleFlashcardGeneration} />;
       case 'timetableEditor':
-        return <TimetableEditor userId={currentUser.uid} currentUser={currentUser} />;
+        return <TimetableEditor userId={currentUser.uid} currentUser={currentUser} onOpenPremiumModal={onOpenPremiumModal} />;
       case 'curriculumOverview':
         return <CurriculumOverview curriculumDataMap={curriculumDataMap} />;
       case 'schoolCalendar':

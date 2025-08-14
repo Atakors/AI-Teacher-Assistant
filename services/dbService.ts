@@ -1,9 +1,5 @@
-
-
-
-
 import { supabase } from './supabase';
-import { User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, LessonPlan, SavedLessonPlan, SavedLessonPlanContext } from '../types';
+import { User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, LessonPlan, SavedLessonPlan, SavedLessonPlanContext, DbSavedLessonPlan } from '../types';
 
 // =================================================================================
 // SQL function for Atomic Increments
@@ -11,26 +7,26 @@ import { User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbR
 // To enable atomic increments for usage counts, you need to create two SQL
 // functions in your Supabase project's SQL Editor (Database > SQL Editor).
 //
-// -- Function to increment lesson generations (CORRECTED)
+// -- Function to increment lesson generations (CORRECTED & ROBUST)
 // create or replace function increment_lesson_generations(user_id uuid)
 // returns void
 // language plpgsql
 // as $$
 // begin
 //   update public.users
-//   set lesson_generations = lesson_generations + 1
+//   set lesson_generations = COALESCE(lesson_generations, 0) + 1
 //   where uid = user_id;
 // end;
 // $$;
 //
-// -- Function to increment flashcard generations (CORRECTED)
+// -- Function to increment flashcard generations (CORRECTED & ROBUST)
 // create or replace function increment_flashcard_generations(user_id uuid)
 // returns void
 // language plpgsql
 // as $$
 // begin
 //   update public.users
-//   set flashcard_generations = flashcard_generations + 1
+//   set flashcard_generations = COALESCE(flashcard_generations, 0) + 1
 //   where uid = user_id;
 // end;
 // $$;
@@ -55,11 +51,33 @@ export const updateUser = async (uid: string, updates: Partial<Omit<User, 'uid'>
     if (error) throw error;
 };
 
-export const getAllUsers = async (): Promise<User[]> => {
-    const { data, error } = await supabase.from('users').select('*');
+export const getUsers = async (page: number, pageSize: number): Promise<User[]> => {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .range(from, to)
+        .order('name', { ascending: true });
     if (error) throw error;
+    return data || [];
+};
+
+export interface AdminStats {
+    totalUsers: number;
+    totalLessons: number;
+    totalFlashcards: number;
+}
+
+export const getAdminStats = async (): Promise<AdminStats> => {
+    const { data, error } = await supabase.rpc('get_admin_stats');
+    if (error) {
+        console.error("Error fetching admin stats:", error);
+        throw new Error(`Could not fetch admin statistics. Ensure the 'get_admin_stats' function is created in your Supabase SQL Editor. Details: ${error.message}`);
+    }
     return data;
 };
+
 
 export const updateUserByAdmin = async (uid: string, updates: Partial<User>): Promise<void> => {
     // This function ensures only admin-editable fields are passed to the database.
@@ -255,23 +273,80 @@ export const getReviews = async (limitCount: number = 5): Promise<Review[]> => {
 };
 
 // --- Saved Lesson Plan Functions ---
-export const saveLessonPlan = async (userId: string, name: string, planData: LessonPlan, curriculumContext: SavedLessonPlanContext): Promise<void> => {
-    const { error } = await supabase.from('saved_lesson_plans').insert([{
-        userId,
-        name,
-        planData: planData,
-        curriculumContext: curriculumContext
-    }]);
-    if (error) throw error;
+export const saveLessonPlan = async (userId: string, name: string, planData: LessonPlan, curriculumContext: SavedLessonPlanContext, docxBlob: Blob): Promise<void> => {
+    // 1. Insert plan metadata to get an ID
+    const { data: newPlan, error: insertError } = await supabase
+        .from('saved_lesson_plans')
+        .insert([{ user_id: userId, name, plan_data: planData, curriculum_context: curriculumContext }])
+        .select('id')
+        .single();
+
+    if (insertError) {
+        console.error("Failed to save plan metadata", insertError);
+        throw insertError;
+    }
+
+    const planId = newPlan.id;
+    const filePath = `${userId}/${planId}.docx`;
+
+    // 2. Upload the file to storage
+    const { error: uploadError } = await supabase.storage
+        .from('lesson_plans')
+        .upload(filePath, docxBlob, {
+            contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            upsert: true // Overwrite if it exists, good for retries
+        });
+
+    if (uploadError) {
+        console.error("Failed to upload docx", uploadError);
+        // Clean up the created DB entry if upload fails
+        await supabase.from('saved_lesson_plans').delete().eq('id', planId);
+        throw new Error(`Failed to upload document: ${uploadError.message}`);
+    }
+
+    // 3. Update the plan with the file path
+    const { error: updateError } = await supabase
+        .from('saved_lesson_plans')
+        .update({ file_path: filePath })
+        .eq('id', planId);
+
+    if (updateError) {
+        console.error("Failed to update plan with file path", updateError);
+        // Clean up both DB entry and uploaded file
+        await supabase.from('saved_lesson_plans').delete().eq('id', planId);
+        await supabase.storage.from('lesson_plans').remove([filePath]);
+        throw new Error(`Failed to link document to saved plan: ${updateError.message}`);
+    }
 };
 
 export const getSavedLessonPlans = async (userId: string): Promise<SavedLessonPlan[]> => {
-    const { data, error } = await supabase.from('saved_lesson_plans').select('*').eq('userId', userId).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('saved_lesson_plans').select('*').eq('user_id', userId).order('created_at', { ascending: false });
     if (error) throw error;
-    return data as SavedLessonPlan[];
+    
+    const plans: SavedLessonPlan[] = (data || []).map((dbPlan: DbSavedLessonPlan) => ({
+        id: dbPlan.id,
+        userId: dbPlan.user_id,
+        name: dbPlan.name,
+        planData: dbPlan.plan_data,
+        createdAt: dbPlan.created_at,
+        curriculumContext: dbPlan.curriculum_context,
+        file_path: dbPlan.file_path,
+    }));
+    
+    return plans;
 };
 
-export const deleteSavedLessonPlan = async (planId: string): Promise<void> => {
-    const { error } = await supabase.from('saved_lesson_plans').delete().eq('id', planId);
-    if (error) throw error;
+export const deleteSavedLessonPlan = async (plan: SavedLessonPlan): Promise<void> => {
+    // 1. Delete the file from storage if a path exists
+    if (plan.file_path) {
+        const { error: storageError } = await supabase.storage.from('lesson_plans').remove([plan.file_path]);
+        if (storageError) {
+            // Log the error but don't block DB deletion, as the record is the source of truth
+            console.error(`Failed to delete file ${plan.file_path} from storage:`, storageError);
+        }
+    }
+
+    // 2. Delete the record from the database
+    const { error: dbError } = await supabase.from('saved_lesson_plans').delete().eq('id', plan.id);
+    if (dbError) throw dbError;
 };

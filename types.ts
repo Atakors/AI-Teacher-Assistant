@@ -247,13 +247,15 @@ export interface SavedLessonPlan {
     planData: LessonPlan;
     createdAt: string;
     curriculumContext: SavedLessonPlanContext;
+    file_path?: string;
 }
 
 export interface DbSavedLessonPlan {
     id: string;
-    userId: string;
+    user_id: string;
     name: string;
-    planData: LessonPlan;
-    createdAt: string;
-    curriculumContext: SavedLessonPlanContext;
+    plan_data: LessonPlan;
+    created_at: string;
+    curriculum_context: SavedLessonPlanContext;
+    file_path?: string;
 }

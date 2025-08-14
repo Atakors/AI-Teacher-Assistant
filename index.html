@@ -214,6 +214,21 @@
       .dark .domain-tag-yellow { background-color: #713f12; color: #fde047; }
       .dark .domain-tag-amber { background-color: #78350f; color: #fcd34d; }
       .dark .domain-tag-slate { background-color: #334155; color: #cbd5e1; }
+      
+      /* Animation for Notification Toast */
+      @keyframes fade-in-down {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in-down {
+        animation: fade-in-down 0.5s ease-out forwards;
+      }
 
     </style>
   <script type="importmap">

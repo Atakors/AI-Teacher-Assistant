@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { SavedLessonPlan, User } from '../types';
 import { getSavedLessonPlans, deleteSavedLessonPlan } from '../services/dbService';
+import { supabase } from '../services/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
-import { SparklesIcon, TrashIcon, BookOpenIcon } from '../constants';
+import { SparklesIcon, TrashIcon, BookOpenIcon, DownloadIcon } from '../constants';
 
 interface SavedPlansViewProps {
   currentUser: User;
@@ -19,6 +20,7 @@ const SavedPlansView: React.FC<SavedPlansViewProps> = ({ currentUser, onLoadPlan
 
   const loadPlans = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const plans = await getSavedLessonPlans(currentUser.uid);
       setSavedPlans(plans);
@@ -33,16 +35,40 @@ const SavedPlansView: React.FC<SavedPlansViewProps> = ({ currentUser, onLoadPlan
     loadPlans();
   }, [currentUser.uid]);
 
-  const handleDelete = async (planId: string) => {
+  const handleDelete = async (plan: SavedLessonPlan) => {
     if (window.confirm("Are you sure you want to delete this saved plan? This action cannot be undone.")) {
       try {
-        await deleteSavedLessonPlan(planId);
-        setSavedPlans(prevPlans => prevPlans.filter(p => p.id !== planId));
+        await deleteSavedLessonPlan(plan);
+        setSavedPlans(prevPlans => prevPlans.filter(p => p.id !== plan.id));
       } catch (e) {
         setError("Failed to delete the plan.");
       }
     }
   };
+
+  const handleDownloadDocx = async (plan: SavedLessonPlan) => {
+    if (!plan.file_path) {
+        alert("No document is associated with this plan.");
+        return;
+    }
+    try {
+        const { data, error } = await supabase.storage.from('lesson_plans').download(plan.file_path);
+        if (error) throw error;
+        
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${plan.name.replace(/\s/g, '_')}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error("Error downloading file:", e);
+        setError("Could not download the document.");
+    }
+  };
+
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -81,8 +107,16 @@ const SavedPlansView: React.FC<SavedPlansViewProps> = ({ currentUser, onLoadPlan
                   <p className="text-xs text-[var(--color-text-secondary)] mt-1">Saved on: {new Date(plan.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2 mt-4 sm:mt-0">
-                  <button onClick={() => onLoadPlan(plan)} className="blueprint-button py-2 px-4 rounded-lg text-sm">Load</button>
-                  <button onClick={() => handleDelete(plan.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
+                  <button 
+                    onClick={() => handleDownloadDocx(plan)} 
+                    disabled={!plan.file_path}
+                    className="blueprint-button-secondary py-2 px-4 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <DownloadIcon className="w-4 h-4" />
+                    DOCX
+                  </button>
+                  <button onClick={() => onLoadPlan(plan)} className="blueprint-button py-2 px-4 rounded-lg text-sm">Load in Editor</button>
+                  <button onClick={() => handleDelete(plan)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
                     <TrashIcon className="w-5 h-5" />
                   </button>
                 </div>

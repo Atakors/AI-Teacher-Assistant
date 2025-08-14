@@ -10,6 +10,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { AppState, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, CurriculumLevel, AppView } from './types'; 
 import { getUserById, updateUser, addUser } from './services/dbService';
 import { supabase } from './services/supabase';
+import { SparklesIcon, XIcon } from './constants';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>('landing');
@@ -25,6 +26,7 @@ const App: React.FC = () => {
   const [premiumModalFeature, setPremiumModalFeature] = useState<string | undefined>(undefined);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isTourActive, setIsTourActive] = useState(false);
+  const [showFreePlanToast, setShowFreePlanToast] = useState(false);
   
   // AI Settings State
   const [lessonDetailLevel, setLessonDetailLevel] = useState<LessonDetailLevel>('standard');
@@ -41,13 +43,16 @@ const App: React.FC = () => {
     // It uses onAuthStateChange as the primary source of truth for the user's session.
     let initialCheckCompleted = false;
 
-    const processSession = async (session: any) => {
+    const processSession = async (session: any, event?: string) => {
         try {
             if (session?.user) {
                 const userProfile = await getUserById(session.user.id);
                 if (userProfile) {
                     setCurrentUser(userProfile);
                     setAppState('app');
+                    if (event === 'SIGNED_IN' && userProfile.plan === 'free') {
+                        setShowFreePlanToast(true);
+                    }
                     if (!userProfile.hasCompletedTour && !initialCheckCompleted) {
                         setIsTourActive(true);
                     }
@@ -69,6 +74,7 @@ const App: React.FC = () => {
                     setCurrentUser(createdProfile);
                     setAppState('app');
                     setIsTourActive(true); // Always show tour for new user.
+                    setShowFreePlanToast(true); // Show toast for new (free) users
                 }
             } else {
                 // No session, user is logged out.
@@ -91,7 +97,7 @@ const App: React.FC = () => {
     
     // The listener is the primary source of truth. It fires on login, logout, and initial page load if a session exists.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        processSession(session);
+        processSession(session, event);
     });
 
     // A failsafe: onAuthStateChange may not fire if the user is logged out and there's no session in storage.
@@ -106,6 +112,16 @@ const App: React.FC = () => {
         subscription.unsubscribe();
     };
   }, []);
+  
+  // Effect to auto-hide the free plan notification toast
+  useEffect(() => {
+    if (showFreePlanToast) {
+        const timer = setTimeout(() => {
+            setShowFreePlanToast(false);
+        }, 8000); // Hide after 8 seconds
+        return () => clearTimeout(timer);
+    }
+  }, [showFreePlanToast]);
 
 
   // Theme initialization and persistence effect
@@ -266,6 +282,32 @@ const App: React.FC = () => {
   return (
     <>
       {renderContent()}
+      {showFreePlanToast && (
+        <div className="fixed top-5 right-5 w-full max-w-sm bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg shadow-lg p-4 z-[150] border border-[var(--color-border)] animate-fade-in-down">
+            <div className="flex items-start">
+                <div className="flex-shrink-0">
+                    <SparklesIcon className="w-6 h-6 text-[var(--color-accent)]" />
+                </div>
+                <div className="ml-3 w-0 flex-1 pt-0.5">
+                    <p className="text-sm font-medium">
+                        Welcome to the Free Plan!
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        Limits: 3 Lesson Plans, 3 Flashcards, 1 School, and 5 Classes. Upgrade for unlimited access!
+                    </p>
+                </div>
+                <div className="ml-4 flex-shrink-0 flex">
+                    <button
+                        onClick={() => setShowFreePlanToast(false)}
+                        className="inline-flex rounded-md p-1 text-[var(--color-text-secondary)] hover:bg-[var(--color-inset-bg)] focus:outline-none"
+                    >
+                        <span className="sr-only">Close</span>
+                        <XIcon className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
       {isProfileModalOpen && currentUser && (
         <ProfileModal
           isOpen={isProfileModalOpen}

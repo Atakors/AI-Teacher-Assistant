@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import { School, ClassEntry, TimetableData, Day, User } from '../types';
 import { TIMETABLE_DAYS, TIME_PERIODS, SparklesIcon, DownloadIcon, ChevronDownIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, SaveIcon } from '../constants';
@@ -12,6 +10,7 @@ import autoTable from 'jspdf-autotable';
 interface TimetableEditorProps {
   userId: string;
   currentUser: User;
+  onOpenPremiumModal: (featureName?: string) => void;
 }
 
 const initialTimetableData = (): TimetableData => {
@@ -20,7 +19,10 @@ const initialTimetableData = (): TimetableData => {
   return data as TimetableData;
 };
 
-const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }) => {
+const FREE_PLAN_SCHOOL_LIMIT = 1;
+const FREE_PLAN_CLASS_LIMIT = 5;
+
+const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser, onOpenPremiumModal }) => {
   // Main Data State
   const [schools, setSchools] = useState<School[]>([]);
   const [classes, setClasses] = useState<ClassEntry[]>([]);
@@ -81,6 +83,11 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
   }, [exportMenuRef]);
 
   const handleAddSchool = async () => {
+    if (currentUser.plan === 'free' && schools.length >= FREE_PLAN_SCHOOL_LIMIT) {
+        setError(`Free plan is limited to ${FREE_PLAN_SCHOOL_LIMIT} school. Upgrade to Premium to add more.`);
+        onOpenPremiumModal('Multiple Schools');
+        return;
+    }
     if (!newSchoolName.trim()) return setError("School name cannot be empty.");
     if (schools.some(s => s.name.toLowerCase() === newSchoolName.trim().toLowerCase())) return setError("A school with this name already exists.");
     const newSchoolData: Omit<School, 'id'> = { name: newSchoolName.trim(), userId };
@@ -128,6 +135,11 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
   };
 
   const handleAddClass = async () => {
+    if (currentUser.plan === 'free' && classes.length >= FREE_PLAN_CLASS_LIMIT) {
+        setError(`Free plan is limited to ${FREE_PLAN_CLASS_LIMIT} classes. Upgrade to Premium to add more.`);
+        onOpenPremiumModal('Unlimited Classes');
+        return;
+    }
     if (!newClassName.trim() || !newClassSubject.trim() || !selectedSchoolForNewClass) return setError("Class name, subject, and school are required.");
     const newClassData: Omit<ClassEntry, 'id'> = { name: newClassName.trim(), subject: newClassSubject.trim(), schoolId: selectedSchoolForNewClass, userId };
     try {
