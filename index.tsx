@@ -37,97 +37,75 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<AppView>('lessonPlanner');
 
   useEffect(() => {
-    // This function handles the logic for a given session, either setting the user or landing page.
-    const handleSession = async (session: any) => { // Let TS infer session type
-      try {
-        if (session?.user) {
-          // User is authenticated. Now get or create their profile.
-          const userProfile = await getUserById(session.user.id);
+    // This effect establishes a single, robust flow for handling authentication.
+    // It uses onAuthStateChange as the primary source of truth for the user's session.
+    let initialCheckCompleted = false;
 
-          if (userProfile) {
-            // Existing user, set their profile.
-            setCurrentUser(userProfile);
-            setAppState('app');
-            if (!userProfile.hasCompletedTour) {
-                setIsTourActive(true);
-            }
-          } else {
-            // New user, create their profile.
-            const newProfileData: Omit<User, 'uid'> = {
-              name: session.user.user_metadata?.name || session.user.email || 'New User',
-              email: session.user.email!,
-              avatar: session.user.user_metadata?.avatar_url,
-              plan: 'free',
-              lessonGenerations: 0,
-              flashcardGenerations: 0,
-              hasCompletedTour: false,
-              role: 'user', // Always default to 'user'
-            };
-            await addUser(session.user.id, newProfileData);
-            const createdProfile = { uid: session.user.id, ...newProfileData };
-            
-            setCurrentUser(createdProfile);
-            setAppState('app');
-            // A new user should always see the tour.
-            setIsTourActive(true);
-          }
-        } else {
-          // User is not authenticated.
-          setCurrentUser(null);
-          setAppState('landing');
-        }
-      } catch (error) {
-          // This catch is for background refreshes. A failure here should not log the user out.
-          // The initial load failure is handled by the `catch` block in `checkInitialSession`.
-          console.warn("Failed to update session in background:", error);
-      }
-    };
-
-    // Check for an active session when the app first loads.
-    const checkInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            const userProfile = await getUserById(session.user.id);
-            if (userProfile) {
-                setCurrentUser(userProfile);
-                setAppState('app');
-                if (!userProfile.hasCompletedTour) {
-                    setIsTourActive(true);
+    const processSession = async (session: any) => {
+        try {
+            if (session?.user) {
+                const userProfile = await getUserById(session.user.id);
+                if (userProfile) {
+                    setCurrentUser(userProfile);
+                    setAppState('app');
+                    if (!userProfile.hasCompletedTour && !initialCheckCompleted) {
+                        setIsTourActive(true);
+                    }
+                } else {
+                    // A session exists but no profile, meaning this is a new user.
+                    const newProfileData: Omit<User, 'uid'> = {
+                        name: session.user.user_metadata?.name || session.user.email || 'New User',
+                        email: session.user.email!,
+                        avatar: session.user.user_metadata?.avatar_url,
+                        plan: 'free',
+                        lessonGenerations: 0,
+                        flashcardGenerations: 0,
+                        hasCompletedTour: false,
+                        role: 'user',
+                    };
+                    await addUser(session.user.id, newProfileData);
+                    const createdProfile = { uid: session.user.id, ...newProfileData };
+                    
+                    setCurrentUser(createdProfile);
+                    setAppState('app');
+                    setIsTourActive(true); // Always show tour for new user.
                 }
             } else {
-                // If there's a session but no profile, it might be a new user, but something is wrong.
-                // It's safer to treat as logged out and let them log in again to create a profile.
-                throw new Error("Session found but no user profile. Forcing re-authentication.");
+                // No session, user is logged out.
+                setCurrentUser(null);
+                setAppState('landing');
             }
-        } else {
+        } catch (error) {
+            console.error("Error processing session:", error);
             setCurrentUser(null);
             setAppState('landing');
+        } finally {
+            // This is the crucial part: always hide the loading screen after the first
+            // session check is complete.
+            if (!initialCheckCompleted) {
+                setIsAuthLoading(false);
+                initialCheckCompleted = true;
+            }
         }
-      } catch (error) {
-        console.error("Critical error during initial session check:", error);
-        setCurrentUser(null);
-        setAppState('landing');
-      } finally {
-        // This is crucial: always hide the loading screen, even if errors occur.
-        setIsAuthLoading(false);
-      }
     };
+    
+    // The listener is the primary source of truth. It fires on login, logout, and initial page load if a session exists.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        processSession(session);
+    });
 
-    checkInitialSession();
-
-    // Set up a listener for auth events like sign-in/sign-out.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // The initial session is handled by getSession(). We only handle subsequent changes here.
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        await handleSession(session);
-      }
+    // A failsafe: onAuthStateChange may not fire if the user is logged out and there's no session in storage.
+    // This manual check ensures the loading screen is hidden in that case.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session && !initialCheckCompleted) {
+            processSession(null);
+        }
     });
 
     return () => {
         subscription.unsubscribe();
     };
-  }, []); // The empty dependency array ensures this runs only once on mount.
+  }, []);
 
 
   // Theme initialization and persistence effect
