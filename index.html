@@ -15,6 +15,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Babel for in-browser JSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       /* --- BLUEPRINT THEME SYSTEM (MAIN APP) --- */
       :root {
@@ -107,98 +109,131 @@
       }
       .landing-page-active .blueprint-button:hover, .auth-modal .blueprint-button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 0 30px -5px var(--color-accent);
-        filter: brightness(1.1);
-      }
-      .landing-page-active .feature-card {
-        background-color: rgba(31, 41, 55, 0.3); /* gray-800 with opacity */
-        border: 1px solid #374151; /* gray-700 */
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-      }
-      .landing-page-active .feature-card:hover {
-        transform: translateY(-5px);
-        border-color: rgba(var(--color-accent-rgb), 0.5);
-        box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
-      }
-
-      .main-content {
-        transition: margin-left 0.3s ease-in-out;
-      }
-      select option {
-        background: var(--color-surface);
-        color: var(--color-text-primary);
-      }
-
-      /* Blueprint Card */
-      .blueprint-card {
-        background-color: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: 0.75rem; /* 12px */
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-        transition: box-shadow 0.3s ease, border-color 0.3s ease;
-      }
-
-      /* Blueprint Button & Interactive Elements */
-      .blueprint-button {
-        background-color: var(--color-accent);
-        color: white;
-        border: 1px solid transparent;
-        transition: all 0.2s ease;
-      }
-      .blueprint-button:hover:not(:disabled) {
-        box-shadow: 0 0 15px -3px var(--color-accent);
-        filter: brightness(1.1);
+        box-shadow: 0 0 25px -5px var(--color-accent);
       }
       .blueprint-button-secondary {
         background-color: var(--color-surface);
-        color: var(--color-text-primary);
         border: 1px solid var(--color-border);
+        transition: all 0.2s ease;
       }
-      .blueprint-button-secondary:hover:not(:disabled) {
+      .blueprint-button-secondary:hover {
+        background-color: var(--color-inset-bg);
         border-color: var(--color-accent);
-        box-shadow: 0 0 15px -5px var(--color-accent);
-        color: var(--color-accent);
+      }
+      .dark .blueprint-button-secondary:hover {
+         border-color: var(--color-accent);
       }
       
-      /* Scrollbar */
-      .custom-scrollbar-container::-webkit-scrollbar { width: 8px; }
-      .custom-scrollbar-container::-webkit-scrollbar-track { background: transparent; }
+      .feature-card {
+        background-color: #1F2937;
+        border: 1px solid #374151;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.4);
+      }
+
+      /* --- MAIN APP UI ELEMENTS --- */
+      .aurora-card {
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem; /* 12px */
+        position: relative;
+        overflow: hidden;
+      }
+      .dark .aurora-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 150%;
+        height: 150%;
+        pointer-events: none;
+        background-image: radial-gradient(ellipse at center, rgba(var(--color-accent-rgb), 0.1) 0%, transparent 60%);
+        opacity: 0.5;
+        transition: opacity 0.3s ease;
+      }
+       .aurora-card:hover::before {
+        opacity: 0.8;
+      }
+
+      .blueprint-card {
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 0.5rem; /* 8px */
+      }
+      
+      .interactive-glow:hover {
+        box-shadow: 0 0 10px -3px var(--color-accent);
+      }
+
+      .custom-scrollbar-container {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-border) transparent;
+      }
+      .custom-scrollbar-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
       .custom-scrollbar-container::-webkit-scrollbar-thumb {
-        background: var(--color-border);
+        background-color: var(--color-border);
         border-radius: 10px;
       }
-      .custom-scrollbar-container::-webkit-scrollbar-thumb:hover {
-        background: var(--color-text-secondary);
+      
+      .main-content {
+        transition: margin-left 0.3s ease-in-out;
       }
+      
+      .domain-tag {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+      }
+      .domain-tag-blue { background-color: #bfdbfe; color: #1e40af; }
+      .domain-tag-cyan { background-color: #a5f3fc; color: #155e75; }
+      .domain-tag-green { background-color: #a7f3d0; color: #065f46; }
+      .domain-tag-purple { background-color: #ddd6fe; color: #5b21b6; }
+      .domain-tag-pink { background-color: #fbcfe8; color: #9d174d; }
+      .domain-tag-rose { background-color: #fecdd3; color: #9f1239; }
+      .domain-tag-sky { background-color: #bae6fd; color: #075985; }
+      .domain-tag-yellow { background-color: #fef08a; color: #854d0e; }
+      .domain-tag-amber { background-color: #fde68a; color: #92400e; }
+      .domain-tag-slate { background-color: #e2e8f0; color: #334155; }
+      .dark .domain-tag-blue { background-color: #1e3a8a; color: #93c5fd; }
+      .dark .domain-tag-cyan { background-color: #164e63; color: #67e8f9; }
+      .dark .domain-tag-green { background-color: #064e3b; color: #6ee7b7; }
+      .dark .domain-tag-purple { background-color: #4c1d95; color: #c4b5fd; }
+      .dark .domain-tag-pink { background-color: #831843; color: #f9a8d4; }
+      .dark .domain-tag-rose { background-color: #881337; color: #fda4af; }
+      .dark .domain-tag-sky { background-color: #0c4a6e; color: #7dd3fc; }
+      .dark .domain-tag-yellow { background-color: #713f12; color: #fde047; }
+      .dark .domain-tag-amber { background-color: #78350f; color: #fcd34d; }
+      .dark .domain-tag-slate { background-color: #334155; color: #cbd5e1; }
+
     </style>
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.1.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.1.0/client",
-    "@google/genai": "https://esm.sh/@google/genai@1.3.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
-    "jspdf": "https://esm.sh/jspdf@2.5.1",
-    "jspdf-autotable": "https://esm.sh/jspdf-autotable@3.8.2",
-    "docx": "https://esm.sh/docx@8.5.0",
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
     "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
-    "react/": "https://esm.sh/react@^19.1.1/"
+    "@google/genai": "https://esm.sh/@google/genai@^1.14.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.55.0",
+    "jspdf": "https://esm.sh/jspdf@^3.0.1",
+    "docx": "https://esm.sh/docx@^9.5.1",
+    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.2"
   }
 }
 </script>
-    <!-- Add Babel for in-browser JSX/TSX transpilation -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link rel="stylesheet" href="/index.css">
+<link rel="stylesheet" href="/index.css">
 </head>
-  <body class="font-sans">
+  <body>
     <div id="root"></div>
-    <!-- 
-      Change script type to "text/babel" to enable transpilation.
-      Use a relative path "./index.tsx" for better deployment compatibility.
-      Add data-type="module" to allow ES module imports within the TSX file.
-    -->
     <script type="text/babel" data-type="module" src="./index.tsx"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
