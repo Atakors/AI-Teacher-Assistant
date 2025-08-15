@@ -10,7 +10,6 @@ import autoTable from 'jspdf-autotable';
 interface TimetableEditorProps {
   userId: string;
   currentUser: User;
-  onOpenPremiumModal: (featureName?: string) => void;
 }
 
 const initialTimetableData = (): TimetableData => {
@@ -19,10 +18,7 @@ const initialTimetableData = (): TimetableData => {
   return data as TimetableData;
 };
 
-const FREE_PLAN_SCHOOL_LIMIT = 1;
-const FREE_PLAN_CLASS_LIMIT = 5;
-
-const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser, onOpenPremiumModal }) => {
+const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }) => {
   // Main Data State
   const [schools, setSchools] = useState<School[]>([]);
   const [classes, setClasses] = useState<ClassEntry[]>([]);
@@ -83,11 +79,6 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser, 
   }, [exportMenuRef]);
 
   const handleAddSchool = async () => {
-    if (currentUser.plan === 'free' && schools.length >= FREE_PLAN_SCHOOL_LIMIT) {
-        setError(`Free plan is limited to ${FREE_PLAN_SCHOOL_LIMIT} school. Upgrade to Premium to add more.`);
-        onOpenPremiumModal('Multiple Schools');
-        return;
-    }
     if (!newSchoolName.trim()) return setError("School name cannot be empty.");
     if (schools.some(s => s.name.toLowerCase() === newSchoolName.trim().toLowerCase())) return setError("A school with this name already exists.");
     const newSchoolData: Omit<School, 'id'> = { name: newSchoolName.trim(), userId };
@@ -135,11 +126,6 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser, 
   };
 
   const handleAddClass = async () => {
-    if (currentUser.plan === 'free' && classes.length >= FREE_PLAN_CLASS_LIMIT) {
-        setError(`Free plan is limited to ${FREE_PLAN_CLASS_LIMIT} classes. Upgrade to Premium to add more.`);
-        onOpenPremiumModal('Unlimited Classes');
-        return;
-    }
     if (!newClassName.trim() || !newClassSubject.trim() || !selectedSchoolForNewClass) return setError("Class name, subject, and school are required.");
     const newClassData: Omit<ClassEntry, 'id'> = { name: newClassName.trim(), subject: newClassSubject.trim(), schoolId: selectedSchoolForNewClass, userId };
     try {
@@ -477,7 +463,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser, 
                           {editingSchoolId === school.id ? (
                               <>
                                 <input type="text" value={editingSchoolName} onChange={e => setEditingSchoolName(e.target.value)}
-                                  className={`${inputClasses} text-sm p-1 flex-grow mr-2`} autoFocus/>
+                                  className={`${inputClasses} text-sm p-1 flex-grow mr-2`} style={{ backgroundColor: 'var(--color-surface)' }} autoFocus/>
                                 <div className="flex items-center">
                                     <button onClick={handleUpdateSchool} className="p-1 text-emerald-500 hover:bg-emerald-500/10 rounded-full"><CheckIcon className="w-5 h-5"/></button>
                                     <button onClick={() => setEditingSchoolId(null)} className="p-1 text-slate-500 hover:bg-slate-500/10 rounded-full"><XIcon className="w-5 h-5"/></button>
@@ -606,32 +592,36 @@ const EditClassModal: React.FC<{
         onSave({ ...classToEdit, name, subject, schoolId });
     };
 
-    const inputClasses = "w-full p-3 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-slate-300 bg-slate-50";
+    const inputClasses = "w-full p-3 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-[var(--color-border)]";
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
-            <div className="relative w-full max-w-md bg-white rounded-xl shadow-2xl text-slate-900 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div 
+                className="relative w-full max-w-md rounded-xl shadow-2xl overflow-hidden" 
+                onClick={e => e.stopPropagation()}
+                style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)'}}
+            >
                 <div className="p-8">
                     <h3 className="text-xl font-semibold mb-4 text-center" style={{ color: 'var(--color-accent)' }}>Edit Class</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Class Name</label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} />
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Class Name</label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Subject</label>
-                            <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className={inputClasses} />
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Subject</label>
+                            <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">School</label>
-                            <select value={schoolId} onChange={e => setSchoolId(e.target.value)} className={inputClasses}>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">School</label>
+                            <select value={schoolId} onChange={e => setSchoolId(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}}>
                                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
                     </div>
                     <div className="mt-6 flex justify-end gap-3">
                         <button onClick={onClose} className="py-2 px-4 rounded-lg text-sm blueprint-button-secondary">Cancel</button>
-                        <button onClick={handleSave} className="py-2 px-4 rounded-lg text-sm text-white blueprint-button">Save Changes</button>
+                        <button onClick={handleSave} className="py-2 px-4 rounded-lg text-sm blueprint-button">Save Changes</button>
                     </div>
                 </div>
             </div>

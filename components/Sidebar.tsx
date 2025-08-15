@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { AppView, ThemeSettings, AccentColor, User } from '../types';
 import { 
@@ -33,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { view: 'lessonPlanner' as AppView, label: 'Lesson Planner', Icon: LessonPlanIcon, isPremium: false },
     { view: 'flashcardGenerator' as AppView, label: 'Flashcards', Icon: FlashcardIcon, isPremium: false },
     { view: 'timetableEditor' as AppView, label: 'Timetable', Icon: TimetableIcon, isPremium: false },
-    { view: 'savedPlans' as AppView, label: 'Saved Plans', Icon: BookmarkSquareIcon, isPremium: false },
+    { view: 'savedPlans' as AppView, label: 'Saved Plans', Icon: BookmarkSquareIcon, isPremium: true },
     { view: 'curriculumOverview' as AppView, label: 'Curriculum', Icon: CurriculumOverviewIcon, isPremium: true },
     { view: 'schoolCalendar' as AppView, label: 'School Calendar', Icon: CalendarDaysIcon, isPremium: true },
   ];
@@ -91,6 +92,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-[var(--color-text-secondary)] truncate">{user.email}</p>
+                 {isOpen && user.plan === 'free' && (
+                    <div className="text-xs text-[var(--color-text-secondary)] mt-1 space-y-0.5">
+                        <p>Lesson Credits: {user.lesson_credits_remaining}</p>
+                        <p>Image Credits: {user.image_credits_remaining}</p>
+                    </div>
+                )}
               </div>
             )}
           </button>

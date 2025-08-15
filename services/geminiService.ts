@@ -1,16 +1,8 @@
 
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { LessonPlan, CurriculumLevel, LessonDetailLevel, CreativityLevel, PromptMode } from '../types';
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  console.error("API_KEY environment variable is not set.");
-  // Potentially throw an error or handle this state in the UI
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// The GoogleGenAI instance will be created inside each function to ensure the API_KEY is available at runtime.
 
 const LESSON_PLAN_INTERFACE_STRING = `
 // Represents a single row in the procedure table from the new template
@@ -57,6 +49,12 @@ export const generateLessonPlanWithGemini = async (
   promptMode: PromptMode,
   customPrompt: string
 ): Promise<LessonPlan> => {
+
+  const API_KEY = process.env.API_KEY;
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable is not set. Please ensure it is configured in your environment.");
+  }
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   const temperatureMap: Record<CreativityLevel, number> = {
     focused: 0.2,
@@ -183,6 +181,12 @@ Ensure the final output is ONLY the raw, valid JSON object.
 
 
 export const generateFlashcardImageWithGemini = async (prompt: string, aspectRatio: string): Promise<string> => {
+  const API_KEY = process.env.API_KEY;
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable is not set. Please ensure it is configured in your environment.");
+  }
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
   try {
     const response = await ai.models.generateImages({
       model: 'imagen-3.0-generate-002',

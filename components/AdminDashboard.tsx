@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
-import { getUsers, getAdminStats, AdminStats, updateUserByAdmin, getUserById } from '../services/dbService';
+import { getAllUsers, updateUserByAdmin, getUserById } from '../services/dbService';
 import AdminUserEditModal from './AdminUserEditModal';
 import LoadingSpinner from './LoadingSpinner';
 import { SparklesIcon } from '../constants';
@@ -10,39 +10,46 @@ interface AdminDashboardProps {
   setCurrentUser: (user: User) => void;
 }
 
-const PAGE_SIZE = 20;
-
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setCurrentUser }) => {
   const [users, setUsers] = useState<User[]>([]);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const loadData = async (page: number, forceRefreshStats: boolean = false) => {
+  const loadUsers = async () => {
     setIsLoading(true);
-    setError(null);
+    setError(null); // Reset error state on new load attempt
+
+    // Promise that rejects after a timeout
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('The request timed out after 15 seconds.')), 15000)
+    );
+
     try {
-        if (forceRefreshStats || !stats) {
-            const fetchedStats = await getAdminStats();
-            setStats(fetchedStats);
-            setTotalPages(Math.ceil(fetchedStats.totalUsers / PAGE_SIZE));
-        }
-        const paginatedUsers = await getUsers(page, PAGE_SIZE);
-        setUsers(paginatedUsers);
-        setCurrentPage(page);
+      // Race the getAllUsers call against the timeout
+      const allUsers = await Promise.race([
+        getAllUsers(),
+        timeoutPromise
+      ]);
+      setUsers(allUsers);
     } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load dashboard data.');
+      let message = 'Failed to load users.';
+      if (e instanceof Error) {
+        if (e.message.includes('timed out')) {
+            message += ' The request timed out. This often indicates a database security policy (RLS) is blocking the query without returning an error. Please ensure admins have SELECT permissions on the users table.';
+        } else {
+            message += ` Details: ${e.message}`;
+        }
+      }
+      setError(message);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData(1);
+    loadUsers();
   }, []);
 
   const handleEditUser = (user: User) => {
@@ -54,24 +61,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setCurrent
     try {
       await updateUserByAdmin(userId, updates);
       
+      // If the admin is editing their own profile, update the app state in real-time
       if (userId === currentUser.uid) {
         const updatedCurrentUser = await getUserById(userId);
         if (updatedCurrentUser) {
             setCurrentUser(updatedCurrentUser);
         }
       }
-      
-      await loadData(currentPage, true); // Force a refresh of stats and current user page
+
+      // Refresh the user list to show updated data for the dashboard itself
+      await loadUsers();
       setIsEditModalOpen(false);
       setSelectedUser(null);
     } catch (e) {
-      setError('Failed to update user subscription.');
+        let message = 'Failed to update user subscription.';
+        if (e instanceof Error) {
+            if (e.message.includes('security policy')) {
+                message += ' This is likely a database permissions issue. Please ensure your user has the "admin" role and that the RLS policy for admin updates is correctly configured in your Supabase project.';
+            } else {
+                message += ` Details: ${e.message}`;
+            }
+        }
+        setError(message);
     }
   };
 
-
-  if (isLoading && !stats) { // Show initial loading spinner only on first load
-    return <LoadingSpinner text="Loading dashboard..." />;
+  if (isLoading) {
+    return <LoadingSpinner text="Loading users..." />;
   }
 
   return (
@@ -84,23 +100,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setCurrent
         <p className="text-[var(--color-text-secondary)] mt-2">Manage user subscriptions and access.</p>
       </div>
 
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="aurora-card p-4 text-center">
-            <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Total Users</h3>
-            <p className="text-3xl font-bold text-[var(--color-text-primary)]">{isLoading && !stats ? '...' : stats?.totalUsers}</p>
+      {error && (
+        <div 
+            className="aurora-card p-4 mb-4 text-sm" 
+            role="alert"
+            style={{
+                '--color-surface': 'var(--color-error-surface)',
+                '--color-border': 'var(--color-error-border)',
+                color: 'var(--color-error-text)'
+            } as React.CSSProperties}
+        >
+          <p className="font-bold" style={{ color: 'var(--color-error-accent)' }}>Error</p>
+          <p>{error}</p>
         </div>
-        <div className="aurora-card p-4 text-center">
-            <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Total Lesson Plans Generated</h3>
-            <p className="text-3xl font-bold text-[var(--color-text-primary)]">{isLoading && !stats ? '...' : stats?.totalLessons}</p>
-        </div>
-        <div className="aurora-card p-4 text-center">
-            <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Total Flashcards Generated</h3>
-            <p className="text-3xl font-bold text-[var(--color-text-primary)]">{isLoading && !stats ? '...' : stats?.totalFlashcards}</p>
-        </div>
-      </div>
+      )}
 
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
       <div className="aurora-card p-4 sm:p-6 overflow-x-auto">
         <table className="w-full text-left">
@@ -110,8 +124,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setCurrent
               <th className="p-3 text-sm font-semibold">Email</th>
               <th className="p-3 text-sm font-semibold">Plan</th>
               <th className="p-3 text-sm font-semibold">Role</th>
-              <th className="p-3 text-sm font-semibold">Lessons Used</th>
-              <th className="p-3 text-sm font-semibold">Flashcards Used</th>
+              <th className="p-3 text-sm font-semibold">Lesson Credits</th>
+              <th className="p-3 text-sm font-semibold">Image Credits</th>
               <th className="p-3 text-sm font-semibold">Actions</th>
             </tr>
           </thead>
@@ -130,8 +144,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setCurrent
                     {user.role}
                   </span>
                 </td>
-                <td className="p-3 text-sm text-[var(--color-text-secondary)]">{user.lessonGenerations}</td>
-                <td className="p-3 text-sm text-[var(--color-text-secondary)]">{user.flashcardGenerations}</td>
+                <td className="p-3 text-sm text-[var(--color-text-secondary)]">{user.lesson_credits_remaining}</td>
+                <td className="p-3 text-sm text-[var(--color-text-secondary)]">{user.image_credits_remaining}</td>
                 <td className="p-3 text-sm">
                   <button onClick={() => handleEditUser(user)} className="font-medium text-[var(--color-accent)] hover:underline">
                     Edit
@@ -141,25 +155,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser, setCurrent
             ))}
           </tbody>
         </table>
-        <div className="flex justify-between items-center mt-6">
-            <button 
-                onClick={() => loadData(currentPage - 1)} 
-                disabled={currentPage <= 1 || isLoading}
-                className="blueprint-button-secondary py-2 px-4 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Previous
-            </button>
-            <span className="text-sm text-[var(--color-text-secondary)]">
-                Page {currentPage} of {totalPages}
-            </span>
-            <button 
-                onClick={() => loadData(currentPage + 1)} 
-                disabled={currentPage >= totalPages || isLoading}
-                className="blueprint-button-secondary py-2 px-4 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                Next
-            </button>
-        </div>
       </div>
 
       {isEditModalOpen && selectedUser && (

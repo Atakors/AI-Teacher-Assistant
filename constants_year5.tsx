@@ -1,5 +1,4 @@
-
-import { CanvasSequence, BookActivity } from './types';
+import { CanvasSequence } from './types';
 
 export const YEAR_5_PRIMARY_CURRICULUM_CONTENT = `
 Year 5 Planning Learning
@@ -306,251 +305,139 @@ Values: Appreciate others’ writings.
 PAUSE 3: REMEDIATION & STANDARDISATION
 `;
 
-const Y5_SEQ1_OBJECT: CanvasSequence = {
-  id: "Y5_SEQ1",
-  title: "SEQUENCE 1: Jobs, Occupations and Hobbies",
-  objectives: [
-    "Name/identify common jobs and occupations.",
-    "Ask and answer questions about family members and friends’ jobs and occupations.",
-    "Name/identify common places of work.",
-    "Identify the gist of the oral message.",
-    "Interact orally.",
-    "Recognize simple words in familiar context using phonemic awareness.",
-    "Act a scene out."
-  ],
-  sections: [
-    {
-      id: "Y5_S1.1",
-      name: "Jobs and Occupations",
-      detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- SEQUENCE 1: Jobs, Occupations and Hobbies ---"),
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Jobs and Occupations ---") + "--- END SECTION: Jobs and Occupations ---".length
-      ),
-      lessons: [
-        { name: "I Get Ready", timing: "45mn", bookActivities: [
-            { page: 10, description: "My Project: Describe your favourite job.", taskType: "Project Kick-off"},
-            { page: 73, activityNumber: "DG Appx. Task 1", description: "Didactic Guide Initial Situation (p.73): Listen to Djamila talk about her father's job/hobbies (Script: Djawad & Jack, DG p.80) and tick the right answer.", taskType: "Listening (DG Appendix)" },
-            { page: 73, activityNumber: "DG Appx. Task 2", description: "Didactic Guide Initial Situation (p.73): Identify Djamila's father from pictures based on listening script (DG p.80).", taskType: "Listening & Visual (DG Appendix)" },
-            { page: 74, activityNumber: "DG Appx. Reading Task", description: "Didactic Guide Initial Situation (p.74): Read text about Uncle Sofiane (manager, likes swimming/reading) and answer true/false.", taskType: "Reading (DG Appendix)" },
-            { page: 74, activityNumber: "DG Appx. Form Task", description: "Didactic Guide Initial Situation (p.74): Read text about Uncle Sofiane and complete the form (Name, Job, Place of work, Hobbies).", taskType: "Reading & Writing (DG Appendix)" },
-            { page: 74, activityNumber: "DG Appx. Writing Task", description: "Didactic Guide Initial Situation (p.74): Use information in the form about Sophia (journalist) to write a paragraph.", taskType: "Writing (DG Appendix)" },
-          ]
-        },
-        { name: "I Listen & Interact", timing: "45mn", bookActivities: [{ page: 11, activityNumber: "Section 1 - I sing and have fun", description: "Sing 'What do you want to be?'", taskType: "Singing & Listening"}, { page: 11, description: "I listen and repeat: I am a barber. I cut hair...", taskType: "Listening & Speaking"}] },
-        { name: "I Listen & Discover", timing: "45mn", bookActivities: [{ page: 12, activityNumber: "Task One", description: "Listen and choose the right answer (Tarek's father, where he works).", taskType: "Listening Comprehension"}, { page: 12, activityNumber: "Task Two", description: "Look at pictures and guess the job.", taskType: "Visual & Speaking"}] },
-        { name: "I Read & Understand", timing: "40mn", bookActivities: [{ page: 13, description: "Read about Djamel the Engineer. Read and repeat words.", taskType: "Reading Comprehension"}, { page: 13, activityNumber: "Task One", description: "Copy words with the same sound as in 'bridge'.", taskType: "Phonics"}] },
-        { name: "I Read & Discover", timing: "45mn", bookActivities: [{ page: 14, activityNumber: "Task Two", description: "Copy words with the same sound as in 'huge'.", taskType: "Phonics"}, { page: 14, activityNumber: "Task Three", description: "Read the text and find the mistakes.", taskType: "Reading Comprehension & Error Correction"}] },
-        { name: "I Learn & Enjoy", timing: "40mn", bookActivities: [{ page: 14, activityNumber: "Task Four", description: "Read the text and complete the conversation on your copybook.", taskType: "Reading & Writing"}, { page: 14, description: "I read and enjoy: Guess who I am. I am a teacher...", taskType: "Reading & Game"}] },
-        { name: "I Learn to Write", timing: "45mn", bookActivities: [{ page: 15, description: "Read text about Julia the Artisan. Task One: Read and fill table.", taskType: "Reading & Writing"}, { page: 15, activityNumber: "Task Two", description: "Punctuate and capitalize conversation.", taskType: "Writing Mechanics"}] },
-        { name: "I Write", timing: "45mn", bookActivities: [{ page: 15, description: "Written Production: Use info in table and write sentences.", taskType: "Writing"}] },
-      ],
-    },
-    {
-      id: "Y5_S1.2",
-      name: "Hobbies",
-      detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 2: Hobbies"),
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Hobbies ---") + "--- END SECTION: Hobbies ---".length
-      ),
-      lessons: [
-        { name: "I Listen & Interact", timing: "45mn", bookActivities: [{ page: 24, description: "My Hobby song. I listen and repeat: I like playing with dolls...", taskType: "Singing & Listening"}] },
-        { name: "I Listen & Discover", timing: "45mn", bookActivities: [{ page: 25, activityNumber: "Task One", description: "Listen and say what the right hobby is.", taskType: "Listening Comprehension"}, { page: 25, activityNumber: "Task Two", description: "Listen and choose the right word.", taskType: "Listening Vocabulary"}] },
-        { name: "I Read & Understand", timing: "45mn", bookActivities: [{ page: 26, activityNumber: "Task Three", description: "Read the text, copy and complete sentences.", taskType: "Reading Comprehension & Writing"}] },
-        { name: "I Read & Discover", timing: "45mn", bookActivities: [{ page: 26, description: "Phonics: Read and repeat words. Task One: Copy words that contain same sound as in 'playing'. Task Two: Read text, copy and fill in table.", taskType: "Phonics & Reading"}] },
-        { name: "I Learn & Enjoy", timing: "45mn", bookActivities: [{ page: 27, description: "I read and enjoy: a. Guess hobby from picture, complete crossword. b. Simon says: choose picture, hop to number and stop.", taskType: "Game & Vocabulary"}] },
-        { name: "I Learn to Write", timing: "45mn", bookActivities: [{ page: 28, description: "At the Library text. Task One: Read text, fill in table. Task Two: Reorder words, write correct sentence.", taskType: "Reading & Writing"}] },
-        { name: "I Write", timing: "45mn", bookActivities: [{ page: 28, description: "Written Production: Reorder sentences to get coherent paragraph.", taskType: "Writing"}] },
-        { name: "I Check my Progress", timing: "45mn", bookActivities: [{ page: 23, description: "My Project: Stick your hobby's picture.", taskType: "Project Completion"}] },
-      ],
-    },
-  ]
-};
-
-const Y5_PAUSE1_OBJECT: CanvasSequence = {
-  id: "Y5_PAUSE1",
-  title: "PAUSE 1: REMEDIATION & STANDARDISATION",
-  isPause: true,
-  pauseTitle: "PAUSE 1: REMEDIATION & STANDARDISATION",
-  pauseDuration: "2h", // Duration from original data
-  sections: [],
-};
-
-const Y5_SEQ2_OBJECT: CanvasSequence = {
-  id: "Y5_SEQ2",
-  title: "SEQUENCE 2: Hometown/City/Village: Amenities, Directions & Signs",
-  objectives: [
-    "Name/identify different amenities in city/ hometown/village.",
-    "Ask and answer questions about different amenities in city/ hometown/village and their location.",
-    "Identify the gist.",
-    "Recognize simple words in familiar context using phonemic awareness.",
-    "Act a scene out."
-  ],
-  sections: [
-    {
-      id: "Y5_S2.1",
-      name: "Amenities",
-      detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- SEQUENCE 2: Hometown/City/Village: Amenities, Directions & Signs ---"),
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Amenities ---") + "--- END SECTION: Amenities ---".length
-      ),
-      lessons: [
-        { name: "I Get Ready", timing: "45mn", bookActivities: [
-            { page: 36, description: "My Project: Locate your hometown.", taskType: "Project Kick-off"},
-            { page: 0, activityNumber: "DG Appx. General Intro", description: "Didactic Guide based: General introduction to hometowns and common amenities discussions.", taskType: "Oral Introduction (DG Inspired)"}
-          ]
-        },
-        { name: "I Listen & Interact", timing: "45mn", bookActivities: [
-            { page: 37, description: "'Our Town' song. I listen and repeat: Town, City, Seaside town, Village.", taskType: "Singing & Listening"},
-            { page: 82, activityNumber: "DG Appx. Listening", description: "Didactic Guide Appendix (Listening Script p.82): Listen to Amine describe his hometown amenities to Jack.", taskType: "Listening (DG Appendix)" }
-          ]
-        },
-        { name: "I Listen & Discover", timing: "45mn", bookActivities: [{ page: 38, activityNumber: "Task One", description: "Listen and choose the right city.", taskType: "Listening Comprehension"}, { page: 38, activityNumber: "Task Two", description: "Listen and find the right answer (Ténès is a...).", taskType: "Listening Comprehension"}] },
-        { name: "I Read & Understand", timing: "40mn", bookActivities: [{ page: 39, description: "Read texts about Ali, Walid, Wafa, Widad. Read and repeat words.", taskType: "Reading Comprehension"}, { page: 40, activityNumber: "Task One", description: "Copy words with same sound as in 'what'.", taskType: "Phonics"}] },
-        { name: "I Read & Discover", timing: "45mn", bookActivities: [{ page: 40, activityNumber: "Task Two", description: "Read texts and match pairs.", taskType: "Reading Comprehension & Matching"}, { page: 41, activityNumber: "Task Three", description: "Read texts, copy and complete with north/south/east/west.", taskType: "Reading & Writing"}] },
-        { name: "I Learn & Enjoy", timing: "40mn", bookActivities: [{ page: 41, description: "I read and enjoy: Word Search.", taskType: "Game & Vocabulary"}] },
-        { name: "I Learn to Write", timing: "45mn", bookActivities: [{ page: 42, description: "A Nice Village text. Task One: Read text and fill table. Task Two: Look at picture, find what word is.", taskType: "Reading & Writing"}] },
-        { name: "I Write", timing: "45mn", bookActivities: [{ page: 42, description: "Written Production: Use info in table to write about your hometown.", taskType: "Writing"}] },
-      ],
-    },
-    {
-      id: "Y5_S2.2",
-      name: "Directions and Signs",
-      detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 2: Directions and Signs"),
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Directions and Signs ---") + "--- END SECTION: Directions and Signs ---".length
-      ),
-      lessons: [
-        { name: "I Listen & Interact", timing: "45mn", bookActivities: [
-            { page: 51, description: "'Twinkle, Twinkle' traffic light song. I listen and repeat: Go straight ahead! Turn right! Turn left!", taskType: "Singing & Listening"},
-            { page: 75, activityNumber: "DG Appx. Task 1", description: "Didactic Guide Initial Situation (p.75): Listen to Razane showing Akram the way to the hotel (Script on DG p.82/p.75) and write 'true' or 'false'.", taskType: "Listening (DG Appendix)" },
-          ]
-        },
-        { name: "I Listen & Discover", timing: "45mn", bookActivities: [
-            { page: 52, activityNumber: "Task One", description: "Listen and choose right answer (Can you show me way to...).", taskType: "Listening Comprehension"},
-            { page: 52, activityNumber: "Task Two", description: "Listen and draw Nadjib's route.", taskType: "Listening & Drawing"},
-            { page: 75, activityNumber: "DG Appx. Task 2", description: "Didactic Guide Initial Situation (p.75): Listen to Razane & Akram and locate the hotel on the map.", taskType: "Listening & Mapping (DG Appendix)" }
-          ]
-        },
-        { name: "I Read & Understand", timing: "45mn", bookActivities: [
-            { page: 53, description: "A New Friend text (Yacine from Yemen). Read and repeat words.", taskType: "Reading Comprehension"},
-            { page: 54, activityNumber: "Task One", description: "Copy words that have the same sound as in 'yellow'.", taskType: "Phonics"},
-            { page: 76, activityNumber: "DG Appx. Reading Task 1", description: "Didactic Guide Initial Situation (p.76): Read conversation (Mohamed & Ania - bookshop) and answer the question.", taskType: "Reading (DG Appendix)" }
-          ]
-        },
-        { name: "I Read & Discover", timing: "45mn", bookActivities: [
-            { page: 54, description: "Show Me the Way, Please! text. Task One: Read text, copy and fill table.", taskType: "Reading Comprehension & Writing"},
-            { page: 76, activityNumber: "DG Appx. Reading Task 2", description: "Didactic Guide Initial Situation (p.76): Scan conversation (Mohamed & Ania) to find where the bookshop is.", taskType: "Reading & Scanning (DG Appendix)" }
-          ]
-        },
-        { name: "I Learn & Enjoy", timing: "45mn", bookActivities: [{ page: 55, description: "I read and enjoy: a. Draw route on each maze game. b. Show way to each place.", taskType: "Game & Directions"}] },
-        { name: "I Learn to Write", timing: "45mn", bookActivities: [
-            { page: 54, activityNumber: "Task Two", description: "Order the cards on your slate (ahead, left, is, supermarket, ?, the, Where).", taskType: "Sentence Order & Writing"},
-            { page: 77, activityNumber: "DG Appx. Map Task", description: "Didactic Guide Initial Situation (p.77): Use map to complete conversation (Meriem & Nazim - toy shop).", taskType: "Mapping & Writing (DG Appendix)" }
-          ]
-        },
-        { name: "I Write", timing: "45mn", bookActivities: [{ page: 54, description: "Written Production: Draw route on maze, write paragraph.", taskType: "Writing & Drawing"}] },
-        { name: "I Check my Progress", timing: "45mn", bookActivities: [{ page: 50, description: "My Project: Collect pictures and design a road safety set.", taskType: "Project Completion"}] },
-      ],
-    },
-  ]
-};
-
-const Y5_PAUSE2_OBJECT: CanvasSequence = {
-  id: "Y5_PAUSE2",
-  title: "PAUSE 2: REMEDIATION & STANDARDISATION",
-  isPause: true,
-  pauseTitle: "PAUSE 2: REMEDIATION & STANDARDISATION",
-  pauseDuration: "2h", // Duration from original data
-  sections: [],
-};
-
-const Y5_SEQ3_OBJECT: CanvasSequence = {
-  id: "Y5_SEQ3",
-  title: "SEQUENCE 3: Holidays and Travelling",
-  objectives: [
-    "Name common places/ destinations for holidays.",
-    "Ask and answer questions about destinations / places for holidays.",
-    "Identify the gist of the oral message.",
-    "Recognize simple words in familiar context using phonemic awareness.",
-    "Act a scene out."
-  ],
-  sections: [
-    {
-      id: "Y5_S3.1",
-      name: "Holidays",
-      detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- SEQUENCE 3: Holidays and Travelling ---"),
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Holidays ---") + "--- END SECTION: Holidays ---".length
-      ),
-      lessons: [
-        { name: "I Get Ready", timing: "45mn", bookActivities: [
-            { page: 76, description: "My Project: Draw a picture of your favourite season and choose a destination for your holidays.", taskType: "Project Kick-off"},
-            { page: 78, activityNumber: "DG Appx. Task 1", description: "Didactic Guide Initial Situation (p.78): Listen about summer holidays and travel (Script: Sami & Asma, DG p.84) and tick the right answer.", taskType: "Listening (DG Appendix)" },
-            { page: 78, activityNumber: "DG Appx. Task 2", description: "Didactic Guide Initial Situation (p.78): Based on listening (DG p.84), circle means of transport mentioned.", taskType: "Listening & Vocabulary (DG Appendix)" },
-          ]
-        },
-        { name: "I Listen & Interact", timing: "45mn", bookActivities: [{ page: 77, description: "'Let's Put Some HA! HA! HA!' song. I listen and repeat: It is summer holidays!...", taskType: "Singing & Listening"}] },
-        { name: "I Listen & Discover", timing: "45mn", bookActivities: [{ page: 78, activityNumber: "Task One", description: "Listen and say yes or no.", taskType: "Listening Comprehension"}, { page: 78, activityNumber: "Task Two", description: "Listen and complete the table (Mom, Fatima and Meriem, Nadjib - Where do they want to go?).", taskType: "Listening & Writing"}] },
-        { name: "I Read & Understand", timing: "40mn", bookActivities: [
-            { page: 79, description: "Read text about Malaysia. Read and repeat words.", taskType: "Reading Comprehension"},
-            { page: 79, activityNumber: "Task One", description: "Copy words with same sound as in 'Malaysia'.", taskType: "Phonics"},
-            { page: 79, activityNumber: "DG Appx. Reading Task", description: "Didactic Guide Initial Situation (p.79): Read text about winter holidays in Djurdjura and answer question.", taskType: "Reading (DG Appendix)" },
-          ]
-        },
-        { name: "I Read & Discover", timing: "45mn", bookActivities: [
-            { page: 80, description: "I read and enjoy: With members of your group, choose from table the right info to build story.", taskType: "Collaborative Writing & Reading"},
-            { page: 79, activityNumber: "DG Appx. Chart Task", description: "Didactic Guide Initial Situation (p.79): Read text about winter holidays and complete the chart (Season, Weather, Destination, Transport, Activity).", taskType: "Reading & Writing (DG Appendix)" }
-          ]
-        },
-        { name: "I Learn & Enjoy", timing: "40mn", bookActivities: [{ page: 80, activityNumber: "Task Two", description: "Read and complete table on copybook (Destination, Location, Means of Transport, Occasion).", taskType: "Reading & Writing"}, { page: 80, activityNumber: "Task Three", description: "Copy right mode of transport on slate (fly, sail).", taskType: "Vocabulary & Writing"}] },
-        { name: "I Learn to Write", timing: "45mn", bookActivities: [
-            { page: 81, description: "My Winter Holidays text. Task One: Read text and fill table. Task Two: On slate, copy right word. Task Three: Write missing letters.", taskType: "Reading & Writing"},
-            { page: 79, activityNumber: "DG Appx. Writing Task", description: "Didactic Guide Initial Situation (p.79): Use information from chart (Autumn, Windy, Leisure park, Bike, Fly kite) to write a paragraph.", taskType: "Writing (DG Appendix)" }
-          ]
-        },
-        { name: "I Write", timing: "45mn", bookActivities: [] },
-      ],
-    },
-    {
-      id: "Y5_S3.2",
-      name: "Travelling",
-      detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 2: Travelling"),
-        YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Travelling ---") + "--- END SECTION: Travelling ---".length
-      ),
-      lessons: [
-        { name: "I Listen & Interact", timing: "45mn", bookActivities: [
-            { page: 64, description: "'We All Go Travelling by' song. I listen and repeat: boat, train, bus, plane, taxi, car.", taskType: "Singing & Listening"},
-            { page: 85, activityNumber: "DG Appx. Listening", description: "Didactic Guide Appendix (Listening Script p.85): Listen to Mary and John talk about spring holidays and travel preferences.", taskType: "Listening (DG Appendix)" }
-          ]
-        },
-        { name: "I Listen & Discover", timing: "45mn", bookActivities: [{ page: 65, activityNumber: "Task One", description: "Listen and match pairs on copybook.", taskType: "Listening & Matching"}, { page: 65, activityNumber: "Task Two", description: "Listen and complete table (Land/Air/Water Transport).", taskType: "Listening & Writing"}] },
-        { name: "I Read & Understand", timing: "45mn", bookActivities: [{ page: 66, description: "A Magic Journey text. Read and repeat words.", taskType: "Reading Comprehension"}, { page: 66, activityNumber: "Task One", description: "Copy words with same sound as in 'journey'.", taskType: "Phonics"}] },
-        { name: "I Read & Discover", timing: "45mn", bookActivities: [{ page: 67, description: "Travelling by Boat text. Task One: Read text, copy and fill table.", taskType: "Reading Comprehension & Writing"}] },
-        { name: "I Learn & Enjoy", timing: "45mn", bookActivities: [{ page: 67, description: "I read and enjoy: a. Look at example, do same. b. With group members, find words, write them.", taskType: "Game & Vocabulary"}] },
-        { name: "I Learn to Write", timing: "45mn", bookActivities: [{ page: 67, activityNumber: "Task Two", description: "Reorder coloured letters, write correct words (transport, anlpae, truck).", taskType: "Spelling & Writing"}, { page: 67, activityNumber: "Task Three", description: "Reorder and copy right words. b. Write correct word under each picture.", taskType: "Vocabulary & Writing"}] },
-        { name: "I Write", timing: "45mn", bookActivities: [{ page: 68, description: "Written Production: Use info in table to write paragraph about trip to Tunis.", taskType: "Writing"}] },
-        { name: "I Check my Progress", timing: "45mn", bookActivities: [{ page: 63, description: "My Project: Stick a picture of your favourite means of transport.", taskType: "Project Completion"}] },
-      ],
-    },
-  ]
-};
-
-// The original Y5_PAUSE3_OBJECT is defined but will not be used in the reordered array.
-// const Y5_PAUSE3_OBJECT: CanvasSequence = {
-//   id: "Y5_PAUSE3",
-//   title: "PAUSE 3: REMEDIATION & STANDARDISATION",
-//   isPause: true,
-//   pauseTitle: "PAUSE 3: REMEDIATION & STANDARDISATION",
-//   pauseDuration: "2h",
-//   sections: [],
-// };
-
 export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
-  Y5_SEQ1_OBJECT,
-  Y5_PAUSE1_OBJECT, 
-  Y5_SEQ2_OBJECT,
-  Y5_PAUSE2_OBJECT,
-  Y5_SEQ3_OBJECT,
-  // Y5_PAUSE3_OBJECT, // Assuming the final pause is after the last sequence. If it's meant to be a general end-of-year, it can be added if needed.
+    // This data needs to be structured based on the YEAR_5_PRIMARY_CURRICULUM_CONTENT
+    // For now, providing a placeholder structure.
+    {
+        id: "Y5_SEQ1",
+        title: "SEQUENCE 1: Jobs, Occupations and Hobbies",
+        objectives: [
+          "Name/identify common jobs and occupations.",
+          "Ask and answer questions about family members and friends’ jobs and occupations.",
+        ],
+        sections: [
+          {
+            id: "Y5_S1.1",
+            name: "Jobs and Occupations",
+            detailedContent: "...",
+            lessons: [
+              { name: "I Get Ready", timing: "45mn" },
+              { name: "I Listen & Interact", timing: "45mn" },
+              { name: "I Listen & Discover", timing: "45mn" },
+              { name: "I Read & Understand", timing: "40mn" },
+              { name: "I Read & Discover", timing: "45mn" },
+              { name: "I Learn & Enjoy", timing: "40mn" },
+              { name: "I Learn to Write", timing: "45mn" },
+              { name: "I Write", timing: "45mn" },
+            ],
+          },
+          {
+            id: "Y5_S1.2",
+            name: "Hobbies",
+            detailedContent: "...",
+            lessons: [
+              { name: "I Listen & Interact", timing: "45mn" },
+              { name: "I Listen & Discover", timing: "45mn" },
+              { name: "I Read & Understand", timing: "45mn" },
+              { name: "I Read & Discover", timing: "45mn" },
+              { name: "I Learn & Enjoy", timing: "45mn" },
+              { name: "I Learn to Write", timing: "45mn" },
+              { name: "I Write", timing: "45mn" },
+              { name: "I Check my Progress", timing: "45mn" },
+            ],
+          },
+        ]
+    },
+    {
+        id: "Y5_PAUSE1",
+        title: "PAUSE 1: REMEDIATION & STANDARDISATION",
+        isPause: true,
+        sections: [],
+    },
+    {
+        id: "Y5_SEQ2",
+        title: "SEQUENCE 2: Hometown/City/Village",
+        objectives: [
+            "Name/identify different amenities in city/ hometown/village.",
+            "Ask and answer questions about different amenities.",
+        ],
+        sections: [
+          {
+            id: "Y5_S2.1",
+            name: "Amenities",
+            detailedContent: "...",
+            lessons: [
+                { name: "I Get Ready", timing: "45mn" },
+                { name: "I Listen & Interact", timing: "45mn" },
+                { name: "I Listen & Discover", timing: "45mn" },
+                { name: "I Read & Understand", timing: "40mn" },
+                { name: "I Read & Discover", timing: "45mn" },
+                { name: "I Learn & Enjoy", timing: "40mn" },
+                { name: "I Learn to Write", timing: "45mn" },
+                { name: "I Write", timing: "45mn" },
+            ],
+          },
+          {
+            id: "Y5_S2.2",
+            name: "Directions and Signs",
+            detailedContent: "...",
+            lessons: [
+                { name: "I Listen & Interact", timing: "45mn" },
+                { name: "I Listen & Discover", timing: "45mn" },
+                { name: "I Read & Understand", timing: "45mn" },
+                { name: "I Read & Discover", timing: "45mn" },
+                { name: "I Learn & Enjoy", timing: "45mn" },
+                { name: "I Learn to Write", timing: "45mn" },
+                { name: "I Write", timing: "45mn" },
+                { name: "I Check my Progress", timing: "45mn" },
+            ],
+          },
+        ]
+    },
+     {
+        id: "Y5_PAUSE2",
+        title: "PAUSE 2: REMEDIATION & STANDARDISATION",
+        isPause: true,
+        sections: [],
+    },
+    {
+        id: "Y5_SEQ3",
+        title: "SEQUENCE 3: Holidays and Travelling",
+        objectives: [
+            "Name common places/ destinations for holidays.",
+            "Ask and answer questions about destinations.",
+        ],
+        sections: [
+          {
+            id: "Y5_S3.1",
+            name: "Holidays",
+            detailedContent: "...",
+            lessons: [
+                 { name: "I Get Ready", timing: "45mn" },
+                { name: "I Listen & Interact", timing: "45mn" },
+                { name: "I Listen & Discover", timing: "45mn" },
+                { name: "I Read & Understand", timing: "40mn" },
+                { name: "I Read & Discover", timing: "45mn" },
+                { name: "I Learn & Enjoy", timing: "40mn" },
+                { name: "I Learn to Write", timing: "45mn" },
+                { name: "I Write", timing: "45mn" },
+            ],
+          },
+          {
+            id: "Y5_S3.2",
+            name: "Travelling",
+            detailedContent: "...",
+            lessons: [
+                { name: "I Listen & Interact", timing: "45mn" },
+                { name: "I Listen & Discover", timing: "45mn" },
+                { name: "I Read & Understand", timing: "45mn" },
+                { name: "I Read & Discover", timing: "45mn" },
+                { name: "I Learn & Enjoy", timing: "45mn" },
+                { name: "I Learn to Write", timing: "45mn" },
+                { name: "I Write", timing: "45mn" },
+                { name: "I Check my Progress", timing: "45mn" },
+            ],
+          },
+        ]
+    },
 ];

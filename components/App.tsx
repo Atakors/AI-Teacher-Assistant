@@ -1,5 +1,6 @@
+
+
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom/client';
 import LandingPage from './components/LandingPage';
 import MainApplication from './components/MainApplication';
 import ProfileModal from './components/ProfileModal';
@@ -78,22 +79,50 @@ const App: React.FC = () => {
           setAppState('landing');
         }
       } catch (error) {
-          console.error("Critical error during session handling:", error);
-          setCurrentUser(null);
-          setAppState('landing');
+          // This catch is for background refreshes. A failure here should not log the user out.
+          // The initial load failure is handled by the `catch` block in `checkInitialSession`.
+          console.warn("Failed to update session in background:", error);
       }
     };
 
-    // We set a flag to ensure the loading screen is hidden only once, after the initial session is processed.
-    let initialCheckCompleted = false;
-
-    // The onAuthStateChange listener is the single source of truth for authentication state.
-    // It fires once on initial load with the current session, and then for any subsequent auth events.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      await handleSession(session);
-      if (!initialCheckCompleted) {
+    // Check for an active session when the app first loads.
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const userProfile = await getUserById(session.user.id);
+            if (userProfile) {
+                setCurrentUser(userProfile);
+                setAppState('app');
+                if (!userProfile.hasCompletedTour) {
+                    setIsTourActive(true);
+                }
+            } else {
+                // If there's a session but no profile, it might be a new user, but something is wrong.
+                // It's safer to treat as logged out and let them log in again to create a profile.
+                throw new Error("Session found but no user profile. Forcing re-authentication.");
+            }
+        } else {
+            setCurrentUser(null);
+            setAppState('landing');
+        }
+      } catch (error) {
+        console.error("Critical error during initial session check:", error);
+        setCurrentUser(null);
+        setAppState('landing');
+      } finally {
+        // This is crucial: always hide the loading screen, even if errors occur.
         setIsAuthLoading(false);
-        initialCheckCompleted = true;
+      }
+    };
+
+    checkInitialSession();
+
+    // Set up a listener for auth events like sign-in/sign-out.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // The initial session is handled by getSession(). We only handle subsequent changes here.
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        await handleSession(session);
       }
     });
 
@@ -290,14 +319,4 @@ const App: React.FC = () => {
   );
 };
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
-
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+export default App;

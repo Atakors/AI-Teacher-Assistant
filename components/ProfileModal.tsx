@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef } from 'react';
 import { User, CurriculumLevel } from '../types';
 import { XIcon, SaveIcon, UserCircleIcon, ExclamationTriangleIcon, CURRICULUM_LEVEL_OPTIONS_FOR_VIEW } from '../constants';
@@ -92,20 +90,24 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, currentUse
     // }
   };
   
-  const inputClasses = "w-full p-3 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-slate-300 bg-slate-50";
+  const inputClasses = "w-full p-3 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-[var(--color-border)]";
   const TabButton: React.FC<{tabId: ActiveTab, children: React.ReactNode, isDanger?: boolean}> = ({tabId, children, isDanger}) => (
-    <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === tabId ? `border-b-2 ${isDanger ? 'text-red-600 border-red-600' : 'text-[var(--color-accent)] border-[var(--color-accent)]'}` : 'text-slate-500 hover:text-slate-800'}`}>
+    <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === tabId ? `border-b-2 ${isDanger ? 'text-red-600 border-red-600' : 'text-[var(--color-accent)] border-[var(--color-accent)]'}` : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}>
         {children}
     </button>
   );
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
-      <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl text-slate-900 overflow-hidden" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-800 transition-colors z-20">
+      <div 
+        className="relative w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden" 
+        onClick={e => e.stopPropagation()}
+        style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
+      >
+        <button onClick={onClose} className="absolute top-3 right-3 p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors z-20">
           <XIcon className="w-6 h-6" />
         </button>
-        <div className="border-b border-slate-200">
+        <div className="border-b border-[var(--color-border)]">
             <nav className="flex items-center justify-center -mb-px">
                 <TabButton tabId="profile">Profile</TabButton>
                 <TabButton tabId="preferences">Preferences</TabButton>
@@ -118,46 +120,46 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, currentUse
             {activeTab === 'profile' && (
                 <form onSubmit={handleProfileSave}>
                     <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
-                        {avatar ? <img src={avatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover"/> : <UserCircleIcon className="w-24 h-24 text-slate-300" />}
+                        {avatar ? <img src={avatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover"/> : <UserCircleIcon className="w-24 h-24 text-[var(--color-border)]" />}
                         <div className="text-center sm:text-left">
                             <input type="file" ref={fileInputRef} onChange={handleAvatarChange} style={{display: 'none'}} accept="image/*" />
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="text-sm font-semibold py-2 px-4 rounded-lg blueprint-button-secondary">Change Picture</button>
-                            <p className="text-xs text-slate-500 mt-2">Recommended: Square image (e.g., 200x200px)</p>
+                            <p className="text-xs text-[var(--color-text-secondary)] mt-2">Recommended: Square image (e.g., 200x200px)</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Title</label>
-                            <select value={title} onChange={e => setTitle(e.target.value)} className={inputClasses}>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Title</label>
+                            <select value={title} onChange={e => setTitle(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}}>
                                 <option value="">None</option>
                                 <option>Mr.</option><option>Mrs.</option><option>Ms.</option><option>Dr.</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Full Name</label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} required />
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Full Name</label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} required />
                         </div>
                          <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Primary School</label>
-                            <input type="text" value={primarySchool} onChange={e => setPrimarySchool(e.target.value)} className={inputClasses} placeholder="e.g., Oakwood Primary"/>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Primary School</label>
+                            <input type="text" value={primarySchool} onChange={e => setPrimarySchool(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} placeholder="e.g., Oakwood Primary"/>
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Specialization</label>
-                            <input type="text" value={specialization} onChange={e => setSpecialization(e.target.value)} className={inputClasses} placeholder="e.g., English, Year 3 Lead" />
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Specialization</label>
+                            <input type="text" value={specialization} onChange={e => setSpecialization(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} placeholder="e.g., English, Year 3 Lead" />
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Professional Bio</label>
-                            <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className={`${inputClasses} resize-y`} placeholder="A short 'About Me' to personalize your experience."></textarea>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Professional Bio</label>
+                            <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className={`${inputClasses} resize-y`} style={{ backgroundColor: 'var(--color-input-bg)'}} placeholder="A short 'About Me' to personalize your experience."></textarea>
                         </div>
                          <div className="sm:col-span-2">
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Email</label>
-                            <input type="email" value={currentUser.email || 'N/A'} className={`${inputClasses} bg-slate-200 cursor-not-allowed`} readOnly />
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Email</label>
+                            <input type="email" value={currentUser.email || 'N/A'} className={`${inputClasses} bg-[var(--color-inset-bg)] cursor-not-allowed`} readOnly />
                         </div>
                     </div>
                      {profileMessage && <p className={`mt-4 text-sm text-center ${profileMessage.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>{profileMessage.text}</p>}
-                    <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
                         <button type="button" onClick={onClose} className="py-2 px-4 rounded-lg text-sm blueprint-button-secondary">Close</button>
-                        <button type="submit" className="py-2 px-4 rounded-lg text-sm text-white blueprint-button flex items-center gap-2">
+                        <button type="submit" className="py-2 px-4 rounded-lg text-sm blueprint-button flex items-center gap-2">
                             <SaveIcon className="w-5 h-5" /> Save Profile
                         </button>
                     </div>
@@ -165,21 +167,21 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, currentUse
             )}
              {activeTab === 'preferences' && (
                 <form onSubmit={handlePreferencesSave}>
-                    <h3 className="text-lg font-semibold mb-4 text-slate-800">App Preferences</h3>
+                    <h3 className="text-lg font-semibold mb-4">App Preferences</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Default Curriculum</label>
-                             <select value={defaultCurriculum} onChange={e => setDefaultCurriculum(e.target.value as CurriculumLevel)} className={inputClasses}>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Default Curriculum</label>
+                             <select value={defaultCurriculum} onChange={e => setDefaultCurriculum(e.target.value as CurriculumLevel)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}}>
                                 <option value={CurriculumLevel.SELECT_YEAR}>None (Select on start)</option>
                                 {CURRICULUM_LEVEL_OPTIONS_FOR_VIEW.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                             </select>
-                            <p className="text-xs text-slate-500 mt-1">This curriculum will be automatically selected when you open the Lesson Planner.</p>
+                            <p className="text-xs text-[var(--color-text-secondary)] mt-1">This curriculum will be automatically selected when you open the Lesson Planner.</p>
                         </div>
                     </div>
                      {prefsMessage && <p className={`mt-4 text-sm text-center ${prefsMessage.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>{prefsMessage.text}</p>}
-                    <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
                         <button type="button" onClick={onClose} className="py-2 px-4 rounded-lg text-sm blueprint-button-secondary">Close</button>
-                        <button type="submit" className="py-2 px-4 rounded-lg text-sm text-white blueprint-button flex items-center gap-2">
+                        <button type="submit" className="py-2 px-4 rounded-lg text-sm blueprint-button flex items-center gap-2">
                             <SaveIcon className="w-5 h-5" /> Save Preferences
                         </button>
                     </div>
@@ -187,15 +189,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, currentUse
             )}
             {activeTab === 'dangerZone' && (
                 <div>
-                    <div className="p-4 rounded-lg border border-red-300 bg-red-50">
-                        <h3 className="text-lg font-semibold text-red-800 flex items-center gap-2">
+                    <div className="p-4 rounded-lg border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+                        <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 flex items-center gap-2">
                             <ExclamationTriangleIcon className="w-6 h-6" />
                             Danger Zone
                         </h3>
-                        <p className="mt-2 text-sm text-red-700">Deleting your account is a permanent action. All your data, including schools, classes, timetables, and calendar events, will be removed forever. This cannot be undone.</p>
+                        <p className="mt-2 text-sm text-red-700 dark:text-red-400">Deleting your account is a permanent action. All your data, including schools, classes, timetables, and calendar events, will be removed forever. This cannot be undone.</p>
                         <div className="mt-4">
-                            <label htmlFor="delete-confirm" className="text-sm font-medium text-red-800 mb-1 block">To confirm, type "delete" below:</label>
-                            <input id="delete-confirm" type="text" value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} className={`${inputClasses} border-red-400 focus:ring-red-500`} />
+                            <label htmlFor="delete-confirm" className="text-sm font-medium text-red-800 dark:text-red-300 mb-1 block">To confirm, type "delete" below:</label>
+                            <input id="delete-confirm" type="text" value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} className={`${inputClasses} !border-red-400 focus:!ring-red-500 !bg-red-50 dark:!bg-red-900/30 dark:!text-white`} />
                         </div>
                         <button onClick={handleDelete} className="w-full mt-4 py-2 px-4 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg">
                             Delete My Account

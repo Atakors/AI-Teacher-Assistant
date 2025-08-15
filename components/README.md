@@ -41,7 +41,7 @@ A powerful, database-backed tool for complete schedule management.
 ### 6. Admin Dashboard
 - **Role-Based Access**: The dashboard is only visible and accessible to users with the `admin` role.
 - **Full User Management**: View a table of all registered users in the application.
-- **Edit User Details**: Admins can click "Edit" on any user to modify their subscription plan (`free`/`premium`), role (`user`/`admin`), and reset their AI generation credits.
+- **Edit User Details**: Admins can click "Edit" on any user to modify their subscription plan (`free`/`premium`), role (`user`/`admin`), and reset their AI generation usage counts.
 
 ## Tech Stack
 
@@ -57,43 +57,39 @@ To run this project locally or deploy it, you need to configure the following se
 **1. Supabase Backend:**
    - Create a project at [supabase.com](https://supabase.com/).
    - In `services/supabase.ts`, replace the placeholder `supabaseUrl` and `supabaseAnonKey` with your project's API credentials.
-   - In your Supabase project dashboard, navigate to the **SQL Editor**. You will need to create several tables. If you are starting a new project, you can ask me to "generate the full SQL setup script for all tables". The required tables are: `users`, `schools`, `classes`, `timetables`, `calendars`, `reviews`, and `saved_lesson_plans`.
+   - In your Supabase project dashboard, navigate to the **SQL Editor**. You will need to create several tables. If you are starting a new project, you can ask me to "generate the full SQL setup script for all tables". If you are adding a feature to an existing project, see the migration scripts below. The required tables are: `users`, `schools`, `classes`, `timetables`, `calendars`, `reviews`, and `saved_lesson_plans`.
+   - In the **SQL Editor**, create the two required RPC functions for atomically incrementing usage counts. **Run these corrected scripts to fix the generation counting bug:**
+     ```sql
+     -- Function to increment lesson generations (CORRECTED)
+     create or replace function increment_lesson_generations(user_id uuid)
+     returns void
+     language plpgsql
+     as $$
+     begin
+       update public.users
+       set lesson_generations = lesson_generations + 1
+       where uid = user_id;
+     end;
+     $$;
+
+     -- Function to increment flashcard generations (CORRECTED)
+     create or replace function increment_flashcard_generations(user_id uuid)
+     returns void
+     language plpgsql
+     as $$
+     begin
+       update public.users
+       set flashcard_generations = flashcard_generations + 1
+       where uid = user_id;
+     end;
+     $$;
+     ```
    - Under **Authentication > Providers**, enable the Google provider and configure it with your Google Cloud OAuth credentials.
    - Under **Authentication > URL Configuration**, set the **Site URL** to your development URL (e.g., `http://localhost:3000`) and add your deployed site URL.
 
 **2. Google Gemini API Key:**
    - Obtain an API key from [Google AI Studio](https://aistudio.google.com/).
    - The application is configured to read this key from the environment variable `API_KEY`. You will need to set this up in your development/deployment environment.
-
-## Mandatory Update: RPC Functions for Credit System
-
-The new freemium plan uses a credit system. To ensure that credit usage is tracked correctly and to prevent race conditions, you **must create the following two RPC functions** in your Supabase database. Run these scripts in your project's **SQL Editor**.
-
-```sql
--- Function to atomically decrement lesson credits
-create or replace function decrement_lesson_credits(user_id uuid)
-returns void
-language plpgsql
-as $$
-begin
-  update public.users
-  set lesson_credits_remaining = lesson_credits_remaining - 1
-  where uid = user_id and lesson_credits_remaining > 0;
-end;
-$$;
-
--- Function to atomically decrement image credits
-create or replace function decrement_image_credits(user_id uuid)
-returns void
-language plpgsql
-as $$
-begin
-  update public.users
-  set image_credits_remaining = image_credits_remaining - 1
-  where uid = user_id and image_credits_remaining > 0;
-end;
-$$;
-```
 
 ## Feature Update: Admin RLS Policy
 
@@ -115,7 +111,7 @@ WITH CHECK (
 
 ## Feature Update: Database Migration for "Saved Plans"
 
-If you are updating an existing project to include the **Saved Lesson Plans** feature, you must run the following SQL script in your Supabase project's **SQL Editor**.
+If you are updating an existing project to include the **Saved Lesson Plans** feature, you must run the following SQL script in your Supabase project's **SQL Editor**. The 404 error you are seeing is because this table does not exist in your database yet.
 
 ```sql
 -- 1. Create the saved_lesson_plans table

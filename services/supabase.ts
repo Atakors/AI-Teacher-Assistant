@@ -1,7 +1,8 @@
 
 
+
 import { createClient } from '@supabase/supabase-js';
-import { User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, CurriculumLevel, CalendarEventType, DbSavedLessonPlan, LessonPlan, SavedLessonPlanContext } from '../types';
+import type { User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, CurriculumLevel, CalendarEventType, DbSavedLessonPlan, LessonPlan, SavedLessonPlanContext } from '../types';
 
 
 // ============================================================================

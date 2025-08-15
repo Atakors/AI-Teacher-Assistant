@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { CurriculumLevel, SelectOption, Day, TimePeriod, AccentColor } from './types';
 

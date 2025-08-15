@@ -1,4 +1,6 @@
-import { CanvasSequence } from './types';
+
+
+import { CanvasSequence, BookActivity } from './types';
 
 export const YEAR_4_PRIMARY_CURRICULUM_CONTENT = `
 MINISTRY OF NATIONAL EDUCATION
