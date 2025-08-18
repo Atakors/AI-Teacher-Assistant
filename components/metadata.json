@@ -1,6 +1,0 @@
-{
-  "name": "AI Teacher Assistant",
-  "description": "A web application that uses AI to generate detailed lesson plans for primary school curriculums (Years 3, 4, and 5), simple flashcard images, and includes a Timetable Editor for managing school schedules. Users can specify curriculum details for lesson plans, enter prompts for images, or organize classes and schools into a weekly timetable.",
-  "requestFramePermissions": [],
-  "prompt": ""
-}

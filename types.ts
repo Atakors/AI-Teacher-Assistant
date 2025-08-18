@@ -1,4 +1,4 @@
-
+import { SupabaseClient as Client } from '@supabase/supabase-js';
 
 export enum CurriculumLevel {
   SELECT_YEAR = "Select Year", // Added for UI consistency if a default "unselected" state is needed
@@ -15,9 +15,8 @@ export interface ProcedureTableRow {
   interaction: string; // e.g., "T-Ls", "Individual work"
 }
 
-// The main LessonPlan type, redesigned to match the new user's template.
+// The main LessonPlan type, matching the AI's expected JSON output.
 export interface LessonPlan {
-  // --- Header Information ---
   school: string;
   teacher: string;
   level: string;
@@ -32,13 +31,10 @@ export interface LessonPlan {
   subsidiaryObjective: string;
   anticipatedProblems: string;
   solutions: string;
-  materials: string[]; // e.g., ["Whiteboard", "Markers", "Textbook"]
+  materials: string[];
   crossCurricularCompetence: string;
-
-  // --- Procedure Table ---
   procedureTable: ProcedureTableRow[];
 }
-
 
 // Props for UI components
 export interface SelectOption<T> {
@@ -81,9 +77,7 @@ export interface CanvasSequence {
 }
 
 // For App Navigation
-export type AppView = 'lessonPlanner' | 'flashcardGenerator' | 'timetableEditor' | 'curriculumOverview' | 'schoolCalendar' | 'adminDashboard' | 'savedPlans';
-export type CurriculumOverviewSubView = 'yearly' | 'monthly' | 'detailedMonthly';
-
+export type AppView = 'lessonPlanner' | 'timetableEditor' | 'curriculumOverview' | 'schoolCalendar' | 'adminDashboard' | 'savedPlans' | 'examGenerator' | 'savedExams' | 'creatorStudio' | 'savedCanvas' | 'flashcardGenerator' | 'savedFlashcards';
 
 // Timetable Editor Types
 export interface User {
@@ -100,12 +94,17 @@ export interface User {
   defaultCurriculum?: CurriculumLevel;
   // --- NEW Subscription & Credit Fields ---
   plan: 'free' | 'premium';
-  subscription_status: 'active' | 'expired' | 'cancelled' | 'trialing';
-  lesson_credits_remaining: number;
-  image_credits_remaining: number;
+  subscriptionStatus: 'active' | 'expired' | 'cancelled' | 'trialing';
+  lessonCreditsRemaining: number;
+  imageCreditsRemaining: number;
   // App-specific fields
   hasCompletedTour: boolean;
   role: 'user' | 'admin';
+}
+
+// Extended user type for admin view, including join date
+export interface AdminUserView extends User {
+  createdAt: string;
 }
 
 
@@ -151,6 +150,7 @@ export type TimetableDaySchedule = (string | null)[];
 export type TimetableData = Record<Day, TimetableDaySchedule>;
 
 // For Curriculum Overview
+export type CurriculumOverviewSubView = 'yearly' | 'monthly' | 'detailedMonthly';
 export interface MonthlyDistribution {
   [month: string]: CanvasSequence[];
 }
@@ -223,15 +223,15 @@ export interface Review {
   createdAt: Date; // Converted to a Date object for easy use in the UI
 }
 
-// DB Review Type (matches the Supabase table, where createdAt is a string)
+// DB Review Type (matches the Supabase table)
 export interface DbReview {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
+  user_id: string;
+  user_name: string;
+  user_avatar?: string;
   rating: number;
   comment: string;
-  createdAt: string; // The database timestamp is a string
+  created_at: string;
 }
 
 // Saved Lesson Plan Types
@@ -253,9 +253,439 @@ export interface SavedLessonPlan {
 
 export interface DbSavedLessonPlan {
     id: string;
+    user_id: string;
+    name: string;
+    plan_data: any;
+    created_at: string;
+    curriculum_context: any;
+}
+
+// Exam Generator Types
+export type ExamSource = 'curriculum' | 'topic' | 'custom';
+export type ExamDifficulty = 'Easy' | 'Medium' | 'Hard';
+export type QuestionType = 'Multiple Choice' | 'Short Answer' | 'Essay';
+
+export interface ExamQuestion {
+  questionText: string;
+  options?: string[]; // For multiple choice
+}
+
+export interface ExamSection {
+  title: string;
+  questions: ExamQuestion[];
+  questionType: QuestionType; // To help rendering
+}
+
+export interface Exam {
+  title: string;
+  instructions: string;
+  sections: ExamSection[];
+  answerKey: string[][]; // Array of arrays of strings
+}
+
+export interface SavedExam {
+  id: string;
+  userId: string;
+  name: string;
+  examData: Exam;
+  createdAt: string;
+}
+
+export interface DbSavedExam {
+  id: string;
+  user_id: string;
+  name: string;
+  exam_data: any;
+  created_at: string;
+}
+
+export interface FlashcardIdea {
+  term: string;
+  description: string;
+}
+
+export interface SavedFlashcard {
+  id: string;
+  userId: string;
+  name: string;
+  prompt: string;
+  style: string;
+  aspectRatio: string;
+  imageData: string; // base64 string
+  createdAt: string;
+}
+
+export interface DbSavedFlashcard {
+  id: string;
+  user_id: string;
+  name: string;
+  prompt: string;
+  style: string;
+  aspect_ratio: string;
+  image_data: string;
+  created_at: string;
+}
+
+
+// --- Creator Studio Types ---
+export type CanvasTool = 'select' | 'text' | 'image' | 'rectangle' | 'ellipse';
+
+interface CanvasElementBase {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  opacity: number;
+}
+
+export interface TextElement extends CanvasElementBase {
+  type: 'text';
+  text: string;
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: 'normal' | 'bold';
+  fontStyle: 'normal' | 'italic';
+  textAlign: 'left' | 'center' | 'right';
+  color: string;
+}
+
+export interface ImageElement extends CanvasElementBase {
+  type: 'image';
+  src: string;
+}
+
+export interface ShapeElement extends CanvasElementBase {
+  type: 'shape';
+  shape: 'rectangle' | 'ellipse';
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+}
+
+export type CanvasElement = TextElement | ImageElement | ShapeElement;
+
+export interface SavedCanvas {
+    id: string;
     userId: string;
     name: string;
-    planData: LessonPlan;
+    canvasData: {
+        elements: CanvasElement[];
+        width: number;
+        height: number;
+        backgroundColor: string;
+    };
     createdAt: string;
-    curriculumContext: SavedLessonPlanContext;
 }
+
+
+// Supabase Types
+export type Json = any;
+
+export interface Database {
+  public: {
+    Tables: {
+      calendars: {
+        Row: {
+          data: Json | null
+          id: number
+          user_id: string
+        }
+        Insert: {
+          data?: Json | null
+          id?: number
+          user_id: string
+        }
+        Update: {
+          data?: Json | null
+          id?: number
+          user_id?: string
+        }
+      }
+      classes: {
+        Row: {
+          id: string
+          name: string
+          school_id: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          school_id: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          school_id?: string
+          subject?: string
+          user_id?: string
+        }
+      }
+      reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          rating: number
+          user_avatar: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          rating: number
+          user_avatar?: string | null
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          user_avatar?: string | null
+          user_id?: string
+          user_name?: string
+        }
+      }
+      saved_canvases: {
+        Row: {
+          canvas_data: Json
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          canvas_data: Json
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          canvas_data?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+      }
+      saved_flashcards: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          prompt: string;
+          style: string;
+          aspect_ratio: string;
+          image_data: string;
+          created_at: string;
+        }
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          prompt: string;
+          style: string;
+          aspect_ratio: string;
+          image_data: string;
+          created_at?: string;
+        }
+        Update: {
+          id?: string;
+          name?: string;
+          prompt?: string;
+          style?: string;
+          aspect_ratio?: string;
+          image_data?: string;
+        }
+      }
+      saved_exams: {
+        Row: {
+          created_at: string
+          exam_data: Json | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_data?: Json | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_data?: Json | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+      }
+      saved_lesson_plans: {
+        Row: {
+          created_at: string
+          curriculum_context: Json | null
+          id: string
+          name: string
+          plan_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          curriculum_context?: Json | null
+          id?: string
+          name: string
+          plan_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          curriculum_context?: Json | null
+          id?: string
+          name?: string
+          plan_data?: Json | null
+          user_id?: string
+        }
+      }
+      schools: {
+        Row: {
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          user_id?: string
+        }
+      }
+      timetables: {
+        Row: {
+          data: Json | null
+          id: number
+          user_id: string
+        }
+        Insert: {
+          data?: Json | null
+          id?: number
+          user_id: string
+        }
+        Update: {
+          data?: Json | null
+          id?: number
+          user_id?: string
+        }
+      }
+      users: {
+        Row: {
+          avatar: string | null
+          bio: string | null
+          default_curriculum: string | null
+          email: string | null
+          has_completed_tour: boolean
+          image_credits_remaining: number
+          lesson_credits_remaining: number
+          name: string
+          plan: "free" | "premium"
+          primary_school: string | null
+          role: "user" | "admin"
+          specialization: string | null
+          subscription_status: "active" | "expired" | "cancelled" | "trialing"
+          title: string | null
+          uid: string
+        }
+        Insert: {
+          avatar?: string | null
+          bio?: string | null
+          default_curriculum?: string | null
+          email?: string | null
+          has_completed_tour?: boolean
+          image_credits_remaining?: number
+          lesson_credits_remaining?: number
+          name: string
+          plan?: "free" | "premium"
+          primary_school?: string | null
+          role?: "user" | "admin"
+          specialization?: string | null
+          subscription_status?: "active" | "expired" | "cancelled" | "trialing"
+          title?: string | null
+          uid: string
+        }
+        Update: {
+          avatar?: string | null
+          bio?: string | null
+          default_curriculum?: string | null
+          email?: string | null
+          has_completed_tour?: boolean
+          image_credits_remaining?: number
+          lesson_credits_remaining?: number
+          name?: string
+          plan?: "free" | "premium"
+          primary_school?: string | null
+          role?: "user" | "admin"
+          specialization?: string | null
+          subscription_status?: "active" | "expired" | "cancelled" | "trialing"
+          title?: string | null
+          uid?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      admin_update_user_details: {
+        Args: {
+          p_target_uid: string
+          p_updates: Json
+        }
+        Returns: undefined
+      }
+      atomic_decrement_image_credits: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      atomic_decrement_lesson_credits: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      delete_user_admin: {
+        Args: {
+          target_uid: string
+        }
+        Returns: undefined
+      }
+      get_all_user_details_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+export type SupabaseClient = Client<Database>;

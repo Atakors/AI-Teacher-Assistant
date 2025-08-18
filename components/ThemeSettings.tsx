@@ -1,7 +1,8 @@
 
+
 import React from 'react';
 import { ThemeSettings, AccentColor } from '../types';
-import { SunIcon, MoonIcon, ACCENT_COLORS } from '../constants';
+import { SunIcon, MoonIcon, ACCENT_COLORS } from './constants';
 
 interface ThemeSettingsProps {
   settings: ThemeSettings;

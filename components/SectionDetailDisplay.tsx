@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CanvasSection, CanvasLesson, CurriculumLevel } from '../types'; 
-import { ListBulletIcon, ChevronDownIcon, ChevronUpIcon, BookOpenIcon } from '../constants'; 
+import { ListBulletIcon, ChevronDownIcon, ChevronUpIcon, BookOpenIcon } from './constants'; 
 
 interface SectionDetailDisplayProps {
   section: CanvasSection | null;

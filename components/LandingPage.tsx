@@ -4,8 +4,8 @@ import { getReviews } from '../services/dbService';
 import AuthModal from './AuthModal';
 import { 
     SparklesIcon, HeroAppPreview,
-    LessonPlanIcon, FlashcardIcon, TimetableIcon, CurriculumOverviewIcon, StarIcon, UserCircleIcon
-} from '../constants';
+    LessonPlanIcon, TimetableIcon, CurriculumOverviewIcon, StarIcon, UserCircleIcon, FlashcardIcon
+} from './constants';
 
 interface LandingPageProps {
   // onLogin prop is no longer needed, App.tsx's auth listener handles it.
@@ -51,7 +51,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
         },
         {
             title: "Flashcard Generator",
-            description: "Instantly create vibrant, style-consistent flashcard images from a simple text prompt.",
+            description: "Create beautiful, styled images for your flashcards instantly with AI.",
             Icon: FlashcardIcon,
         },
         {

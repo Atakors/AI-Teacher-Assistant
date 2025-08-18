@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { School, ClassEntry, TimetableData, Day, User } from '../types';
-import { TIMETABLE_DAYS, TIME_PERIODS, SparklesIcon, DownloadIcon, ChevronDownIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, SaveIcon } from '../constants';
+import { TIMETABLE_DAYS, TIME_PERIODS, SparklesIcon, DownloadIcon, ChevronDownIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, SaveIcon } from './constants';
 import { getSchools, addSchool as dbAddSchool, updateSchool, deleteSchoolAndRelatedData, getClasses, addClass as dbAddClass, updateClass, deleteClassAndCleanTimetable, getTimetable, saveTimetable } from '../services/dbService';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, VerticalAlign, Footer, Header, BorderStyle, PageOrientation } from 'docx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
+import ErrorMessage from './ErrorMessage';
 
 interface TimetableEditorProps {
   userId: string;
@@ -17,6 +17,69 @@ const initialTimetableData = (): TimetableData => {
   TIMETABLE_DAYS.forEach(day => { data[day] = Array(TIME_PERIODS.length).fill(null); });
   return data as TimetableData;
 };
+
+// --- Color Utility for Timetable ---
+const colorPalette = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
+const getEventColorFromString = (str: string): string => {
+  if (!str) return colorPalette[0];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash |= 0; // Convert to 32bit integer
+  }
+  const index = Math.abs(hash) % colorPalette.length;
+  return colorPalette[index];
+};
+
+const EditClassModal: React.FC<{
+    classEntry: ClassEntry;
+    schools: School[];
+    onSave: (updatedClass: ClassEntry) => void;
+    onClose: () => void;
+}> = ({ classEntry, schools, onSave, onClose }) => {
+    const [name, setName] = useState(classEntry.name);
+    const [subject, setSubject] = useState(classEntry.subject);
+    const [schoolId, setSchoolId] = useState(classEntry.schoolId);
+
+    const handleSave = () => {
+        onSave({ ...classEntry, name, subject, schoolId });
+    };
+
+    const inputClasses = "w-full p-3 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-slate-300 bg-slate-50";
+    
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
+            <div className="relative w-full max-w-md bg-white rounded-xl shadow-2xl text-slate-900 overflow-hidden" onClick={e => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-800 transition-colors z-20">
+                    <XIcon className="w-6 h-6" />
+                </button>
+                <div className="p-8">
+                    <h3 className="text-xl font-semibold mb-6 text-center text-slate-800">Edit Class</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-sm font-medium text-slate-600 mb-1 block">Class Name</label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-600 mb-1 block">Subject</label>
+                            <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className={inputClasses} />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-600 mb-1 block">School</label>
+                            <select value={schoolId} onChange={e => setSchoolId(e.target.value)} className={inputClasses}>
+                                {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                        </div>
+                        <button onClick={handleSave} className="w-full mt-6 py-3 font-semibold rounded-lg blueprint-button">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }) => {
   // Main Data State
@@ -53,6 +116,9 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
         ]);
         setSchools(loadedSchools);
         setClasses(loadedClasses);
+        if (loadedSchools.length > 0 && selectedSchoolForNewClass === '') {
+            setSelectedSchoolForNewClass(loadedSchools[0].id);
+        }
         if (loadedTimetable) {
             setTimetableData(loadedTimetable);
         } else {
@@ -84,7 +150,9 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
     const newSchoolData: Omit<School, 'id'> = { name: newSchoolName.trim(), userId };
     try {
         const newSchoolId = await dbAddSchool(newSchoolData);
-        setSchools([...schools, { id: newSchoolId, ...newSchoolData }]);
+        const newSchool = { id: newSchoolId, ...newSchoolData };
+        setSchools([...schools, newSchool]);
+        if(schools.length === 0) setSelectedSchoolForNewClass(newSchool.id);
         setNewSchoolName('');
         setError(null);
     } catch (dbError) {
@@ -255,12 +323,21 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
             didDrawPage: function (data) {
                 // Footer
                 const pageHeight = doc.internal.pageSize.getHeight();
-                doc.setFontSize(10);
-                const footerY = pageHeight - 10;
-        
-                doc.text("Teacher:", data.settings.margin.left, footerY, { align: 'left' });
-                doc.text("Headmaster:", pageWidth / 2, footerY, { align: 'center' });
-                doc.text("Inspector:", pageWidth - data.settings.margin.right, footerY, { align: 'right' });
+                const footerTextY = pageHeight - 10;
+                const signatureLineY = footerTextY - 2;
+                doc.setFontSize(8);
+
+                // Teacher
+                doc.text("Teacher:", data.settings.margin.left, footerTextY);
+                doc.line(data.settings.margin.left, signatureLineY, data.settings.margin.left + 40, signatureLineY);
+
+                // Headmaster
+                doc.text("Headmaster:", pageWidth / 2, footerTextY, { align: 'center' });
+                doc.line(pageWidth / 2 - 20, signatureLineY, pageWidth / 2 + 20, signatureLineY);
+
+                // Inspector
+                doc.text("Inspector:", pageWidth - data.settings.margin.right, footerTextY, { align: 'right' });
+                doc.line(pageWidth - data.settings.margin.right - 40, signatureLineY, pageWidth - data.settings.margin.right, signatureLineY);
             },
         });
         
@@ -269,365 +346,249 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
     };
 
     const handleExportWord = () => {
-        const createCell = (text: string, isHeader = false) => new TableCell({
-            children: [new Paragraph({ children: [new TextRun({ text, bold: isHeader, color: isHeader ? "FFFFFF" : "000000" })], alignment: AlignmentType.CENTER })],
-            shading: isHeader ? { fill: "4F46E5", type: ShadingType.CLEAR, color: "auto" } : undefined,
-            verticalAlign: VerticalAlign.CENTER,
-        });
-    
-        const createSpecialCell = (text: string) => new TableCell({
-            children: [new Paragraph({ children: [new TextRun(text)], alignment: AlignmentType.CENTER })],
-            shading: { fill: "E5E7EB", type: ShadingType.CLEAR, color: "auto" },
-            verticalAlign: VerticalAlign.CENTER,
-        });
-        
-        const createClassCell = (classEntry: ClassEntry) => {
-            const school = getSchoolDetails(classEntry.schoolId);
+        if (!currentUser) return;
+        const teacherName = currentUser.name;
+        const schoolsInTimetable = getSchoolsInTimetable();
+
+        const createCell = (text: string, options: any = {}) => {
+            const paragraphs = text.split('\n').map(line => new Paragraph({
+                children: [new TextRun(line)],
+                alignment: AlignmentType.CENTER,
+            }));
             return new TableCell({
-                children: [
-                    new Paragraph({ children: [new TextRun({ text: classEntry.name, bold: true })] }),
-                    new Paragraph(classEntry.subject),
-                    new Paragraph({ children: [new TextRun({ text: school?.name || 'N/A', italics: true, color: "555555" })]}),
-                ],
-                verticalAlign: VerticalAlign.TOP,
-            })
+                children: paragraphs,
+                verticalAlign: VerticalAlign.CENTER,
+                ...options
+            });
         };
-    
+        
         const headerRow = new TableRow({
-            children: [createCell('Time', true), ...TIMETABLE_DAYS.map(day => createCell(day, true))],
-            tableHeader: true,
+            children: ['Time', ...TIMETABLE_DAYS].map(text => new TableCell({
+                children: [new Paragraph({
+                    children: [new TextRun({ text, bold: true, color: "FFFFFF" })],
+                    alignment: AlignmentType.CENTER,
+                })],
+                shading: { fill: "6366f1", type: ShadingType.SOLID },
+                verticalAlign: VerticalAlign.CENTER,
+            })),
         });
-    
+
         const bodyRows = TIME_PERIODS.map((period, periodIndex) => {
-            const cells: TableCell[] = [createCell(period)];
+            const rowCells = [createCell(period)];
             TIMETABLE_DAYS.forEach(day => {
                 const classId = timetableData[day]?.[periodIndex];
                 const classEntry = getClassDetails(classId);
                 const isLunch = period === "11:15 - 13:00";
                 const isPause = period === "09:30 - 09:45";
-    
-                if (isLunch) cells.push(createSpecialCell("Lunch Break"));
-                else if (isPause) cells.push(createSpecialCell("Pause"));
-                else if (classEntry) cells.push(createClassCell(classEntry));
-                else cells.push(new TableCell({ children: [new Paragraph('')], verticalAlign: VerticalAlign.CENTER }));
-            });
-            return new TableRow({ children: cells });
-        });
-    
-        const table = new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: [headerRow, ...bodyRows],
-        });
-    
-        const footer = new Footer({
-            children: [
-                new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    children: [new Paragraph("Teacher:")],
-                                    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                                }),
-                                new TableCell({
-                                    children: [new Paragraph({ text: "Headmaster:", alignment: AlignmentType.CENTER })],
-                                    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                                }),
-                                new TableCell({
-                                    children: [new Paragraph({ text: "Inspector:", alignment: AlignmentType.RIGHT })],
-                                    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                                }),
-                            ],
-                        }),
-                    ],
-                }),
-            ],
-        });
 
-        const header = new Header({
-            children: [
-                new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    borders: {
-                        top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto" },
-                        left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE },
-                        insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE },
-                    },
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    children: [new Paragraph(`Teacher: ${currentUser.name}`)],
-                                    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                                }),
-                                new TableCell({
-                                    children: [new Paragraph({ children: [new TextRun({ text: "English Timetable", bold: true})], alignment: AlignmentType.CENTER })],
-                                    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                                }),
-                                new TableCell({
-                                    children: [new Paragraph({ text: `School: ${getSchoolsInTimetable()}`, alignment: AlignmentType.RIGHT })],
-                                    borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                                }),
-                            ],
-                        }),
-                    ],
-                }),
-            ],
+                if (isLunch) {
+                    rowCells.push(createCell("Lunch Break", { shading: { fill: "e5e7eb", type: ShadingType.SOLID } }));
+                } else if (isPause) {
+                    rowCells.push(createCell("Pause", { shading: { fill: "e5e7eb", type: ShadingType.SOLID } }));
+                } else if (classEntry) {
+                    const school = getSchoolDetails(classEntry.schoolId);
+                    rowCells.push(createCell(`${classEntry.name} - ${classEntry.subject}\n${school?.name || 'N/A'}`));
+                } else {
+                    rowCells.push(createCell(""));
+                }
+            });
+            return new TableRow({ children: rowCells });
+        });
+        
+        const table = new Table({
+            rows: [headerRow, ...bodyRows],
+            width: { size: 100, type: WidthType.PERCENTAGE },
         });
 
         const doc = new Document({
             sections: [{
                 properties: {
                     page: {
-                        margin: { top: 1440, right: 720, bottom: 720, left: 720 },
-                        size: { orientation: PageOrientation.LANDSCAPE },
+                        size: {
+                           orientation: PageOrientation.LANDSCAPE,
+                        },
                     },
                 },
                 headers: {
-                    default: header,
+                    default: new Header({
+                        children: [new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            children: [
+                                new TextRun(`Teacher: ${teacherName}\t\t`),
+                                new TextRun({text: "English Timetable", bold: true}),
+                                new TextRun(`\t\tSchool: ${schoolsInTimetable}`),
+                            ],
+                        })],
+                    }),
                 },
                 footers: {
-                    default: footer,
+                    default: new Footer({
+                        children: [new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            children: [
+                                new TextRun("Teacher: __________\t\tHeadmaster: __________\t\tInspector: __________"),
+                            ],
+                        })],
+                    }),
                 },
-                children: [
-                    table,
-                ],
+                children: [table],
             }],
         });
-    
+
         Packer.toBlob(doc).then(blob => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `timetable.docx`;
+            link.download = 'timetable.docx';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         });
-        
+
         setIsExportMenuOpen(false);
     };
-
-  const inputClasses = "w-full p-2 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none border border-[var(--color-border)]";
-  const buttonClasses = "blueprint-button-secondary w-full py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed";
-
-  return (
-    <div className="w-full max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left mb-8">
-        <div>
-            <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
-            Timetable Editor
-            <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
-            </h2>
-            <p className="text-[var(--color-text-secondary)] mt-2 px-4 sm:px-0">Manage schools, classes, and weekly schedule.</p>
-        </div>
-        <div className="relative mt-4 sm:mt-0" ref={exportMenuRef}>
-            <button
-                onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-                className="interactive-glow bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center py-2 px-4 text-sm font-medium rounded-lg"
-                aria-haspopup="true" aria-expanded={isExportMenuOpen}
-            >
-                <DownloadIcon className="w-5 h-5 mr-2" />
-                Export
-                <ChevronDownIcon className={`w-5 h-5 ml-1 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {isExportMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 origin-top-right bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md shadow-lg z-20">
-                    <div className="py-1">
-                        <button onClick={handleExportWord} className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-inset-bg)]">As Word (.docx)</button>
-                        <button onClick={handleExportPdf} className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-inset-bg)]">As PDF</button>
-                    </div>
-                </div>
-            )}
-        </div>
-      </div>
-
-
-      {error && <div className="mb-4 blueprint-card p-3" style={{'--color-surface': 'var(--color-error-surface)', '--color-border': 'var(--color-error-border)', color: 'var(--color-error-text)'} as React.CSSProperties}>{error}</div>}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* School Management */}
-        <div className="blueprint-card p-6">
-          <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-accent)' }}>Manage Schools</h3>
-          <div className="space-y-3 mb-4">
-            <input type="text" value={newSchoolName} onChange={(e) => setNewSchoolName(e.target.value)} placeholder="New School Name" className={inputClasses} style={{backgroundColor: 'var(--color-input-bg)'}} />
-            <button onClick={handleAddSchool} className={buttonClasses}>Add School</button>
-          </div>
-          <h4 className="text-md font-medium mb-1 text-[var(--color-text-primary)]">Existing Schools:</h4>
-           <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar-container">
-              {schools.length === 0 ? <p className="text-sm text-[var(--color-text-secondary)]">No schools added.</p> :
-                  schools.map(school => (
-                      <div key={school.id} className="group flex items-center justify-between p-1 rounded-md hover:bg-[var(--color-inset-bg)]">
-                          {editingSchoolId === school.id ? (
-                              <>
-                                <input type="text" value={editingSchoolName} onChange={e => setEditingSchoolName(e.target.value)}
-                                  className={`${inputClasses} text-sm p-1 flex-grow mr-2`} style={{ backgroundColor: 'var(--color-surface)' }} autoFocus/>
-                                <div className="flex items-center">
-                                    <button onClick={handleUpdateSchool} className="p-1 text-emerald-500 hover:bg-emerald-500/10 rounded-full"><CheckIcon className="w-5 h-5"/></button>
-                                    <button onClick={() => setEditingSchoolId(null)} className="p-1 text-slate-500 hover:bg-slate-500/10 rounded-full"><XIcon className="w-5 h-5"/></button>
-                                </div>
-                              </>
-                          ) : (
-                              <>
-                                <span className="text-sm text-[var(--color-text-secondary)]">{school.name}</span>
-                                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => { setEditingSchoolId(school.id); setEditingSchoolName(school.name); }} className="p-1 text-slate-500 hover:text-[var(--color-accent)]"><PencilIcon className="w-4 h-4"/></button>
-                                    <button onClick={() => handleDeleteSchool(school.id)} className="p-1 text-slate-500 hover:text-rose-500"><TrashIcon className="w-4 h-4"/></button>
-                                </div>
-                              </>
-                          )}
-                      </div>
-                  ))
-              }
-            </div>
-        </div>
-
-        {/* Class Management */}
-        <div className="blueprint-card p-6">
-          <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-accent)' }}>Manage Classes</h3>
-          <div className="space-y-3 mb-4">
-            <input type="text" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} placeholder="Class Name (e.g., Year 3A)" className={inputClasses} style={{backgroundColor: 'var(--color-input-bg)'}} />
-            <input type="text" value={newClassSubject} onChange={(e) => setNewClassSubject(e.target.value)} placeholder="Subject (e.g., Maths)" className={inputClasses} style={{backgroundColor: 'var(--color-input-bg)'}} />
-            <select value={selectedSchoolForNewClass} onChange={(e) => setSelectedSchoolForNewClass(e.target.value)} disabled={schools.length === 0} className={`${inputClasses} disabled:opacity-50`} style={{backgroundColor: 'var(--color-input-bg)'}}>
-              <option value="">{schools.length === 0 ? "Add a school first" : "Select School"}</option>
-              {schools.map(school => <option key={school.id} value={school.id}>{school.name}</option>)}
-            </select>
-            <button onClick={handleAddClass} disabled={schools.length === 0} className={buttonClasses}>Add Class</button>
-          </div>
-        </div>
-        
-        {/* Available Classes */}
-        <div className="blueprint-card p-6">
-            <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-accent)' }}>Available Classes</h3>
-            {classes.length === 0 ? <p className="text-sm text-[var(--color-text-secondary)]">No classes added.</p> :
-                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar-container pr-2">
-                {classes.map(cls => (
-                    <div key={cls.id} className="group p-2 rounded-lg transition-all"
-                        style={{ backgroundColor: selectedClassForAssignment === cls.id ? 'var(--color-inset-bg)' : 'transparent' }}
-                    >
-                        <div onClick={() => setSelectedClassForAssignment(cls.id === selectedClassForAssignment ? null : cls.id)} className="cursor-pointer">
-                            <p className="font-medium text-[var(--color-text-primary)]">{cls.name} - {cls.subject}</p>
-                            <p className="text-xs text-[var(--color-text-secondary)]">{getSchoolDetails(cls.schoolId)?.name || 'Unknown School'}</p>
-                        </div>
-                        <div className="flex items-center justify-end space-x-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => { setClassToEdit(cls); setIsEditClassModalOpen(true); }} className="p-1 text-slate-500 hover:text-[var(--color-accent)]"><PencilIcon className="w-4 h-4"/></button>
-                            <button onClick={() => handleDeleteClass(cls.id)} className="p-1 text-slate-500 hover:text-rose-500"><TrashIcon className="w-4 h-4"/></button>
-                        </div>
-                    </div>
-                ))}
-                </div>
-            }
-            {selectedClassForAssignment && <p className="mt-3 text-sm" style={{color: 'var(--color-accent)'}}>Selected: {getClassDetails(selectedClassForAssignment)?.name}. Click a slot to assign/unassign.</p>}
-        </div>
-      </div>
-
-      {/* Timetable */}
-      <div className="blueprint-card p-4 sm:p-6 overflow-x-auto">
-        <div className="grid border-separate" style={{ gridTemplateColumns: `minmax(100px, auto) repeat(${TIMETABLE_DAYS.length}, minmax(120px, 1fr))`, borderSpacing: '4px' }}>
-          <div className="p-2 font-semibold text-center sticky left-0 z-10 text-[var(--color-text-primary)] bg-[var(--color-surface)]">Time</div>
-          {TIMETABLE_DAYS.map(day => <div key={day} className="p-2 font-semibold text-center text-[var(--color-text-primary)]">{day}</div>)}
-          {TIME_PERIODS.map((period, periodIndex) => (
-            <React.Fragment key={period}>
-              <div className="p-2 font-medium text-center sticky left-0 z-10 flex items-center justify-center text-[var(--color-text-secondary)] text-xs sm:text-sm bg-[var(--color-surface)]">{period}</div>
-              {TIMETABLE_DAYS.map(day => {
-                const classId = timetableData[day]?.[periodIndex];
-                const classEntry = getClassDetails(classId);
-                const school = classEntry ? getSchoolDetails(classEntry.schoolId) : null;
-                const isLunch = period === "11:15 - 13:00";
-                const isPause = period === "09:30 - 09:45";
-                const isSpecialSlot = isLunch || isPause;
-                
-                let cellClasses = "p-1.5 sm:p-2 min-h-[60px] text-xs rounded-lg transition-all duration-150 ease-in-out flex items-center justify-center text-center";
-                if(isSpecialSlot) cellClasses += ' bg-[var(--color-accent)] text-white font-medium';
-                else if (classEntry) cellClasses += ' blueprint-card text-left items-start p-2';
-                else cellClasses += ' rounded-lg cursor-pointer bg-[var(--color-inset-bg)] hover:shadow-inner';
-
-                return (
-                  <div key={`${day}-${period}`} onClick={() => !isSpecialSlot && handleTimetableSlotClick(day, periodIndex)} className={cellClasses} >
-                    {isLunch ? <span>Lunch Break</span> : isPause ? <span>Pause</span> : classEntry ? (
-                      <div className='text-[var(--color-text-primary)]'>
-                        <p className="font-semibold">{classEntry.name}</p>
-                        <p className="text-[10px] sm:text-xs">{classEntry.subject}</p>
-                        <p className="text-[9px] sm:text-[10px] italic text-[var(--color-text-secondary)]">{school?.name || 'N/A'}</p>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-      
-        {isEditClassModalOpen && classToEdit && (
-            <EditClassModal
-                isOpen={isEditClassModalOpen}
-                onClose={() => setIsEditClassModalOpen(false)}
-                classToEdit={classToEdit}
-                onSave={handleUpdateClass}
-                schools={schools}
-            />
-        )}
-    </div>
-  );
-};
-
-
-const EditClassModal: React.FC<{
-    isOpen: boolean,
-    onClose: () => void,
-    classToEdit: ClassEntry,
-    onSave: (updatedClass: ClassEntry) => void,
-    schools: School[]
-}> = ({ isOpen, onClose, classToEdit, onSave, schools }) => {
-    const [name, setName] = useState(classToEdit.name);
-    const [subject, setSubject] = useState(classToEdit.subject);
-    const [schoolId, setSchoolId] = useState(classToEdit.schoolId);
-
-    if (!isOpen) return null;
-
-    const handleSave = () => {
-        onSave({ ...classToEdit, name, subject, schoolId });
-    };
-
-    const inputClasses = "w-full p-3 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-[var(--color-border)]";
-
+    
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
-            <div 
-                className="relative w-full max-w-md rounded-xl shadow-2xl overflow-hidden" 
-                onClick={e => e.stopPropagation()}
-                style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)'}}
-            >
-                <div className="p-8">
-                    <h3 className="text-xl font-semibold mb-4 text-center" style={{ color: 'var(--color-accent)' }}>Edit Class</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Class Name</label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} />
+        <div className="w-full max-w-7xl mx-auto space-y-8">
+            <div className="text-center">
+                <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+                    Timetable Editor
+                    <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+                </h2>
+                <p className="text-[var(--color-text-secondary)] mt-2">Manage schools, classes, and build your weekly schedule.</p>
+            </div>
+            
+            {error && <ErrorMessage message={error} />}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* Left Column: Controls */}
+                <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8 self-start">
+                    {/* Schools Management */}
+                    <div className="aurora-card p-4 sm:p-6">
+                        <h3 className="font-semibold text-lg mb-3">Manage Schools</h3>
+                        <div className="flex gap-2 mb-4">
+                            <input type="text" value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} placeholder="New school name" className="flex-grow p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
+                            <button onClick={handleAddSchool} className="blueprint-button py-2 px-3 rounded-lg text-sm">Add</button>
                         </div>
-                        <div>
-                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Subject</label>
-                            <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}} />
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">School</label>
-                            <select value={schoolId} onChange={e => setSchoolId(e.target.value)} className={inputClasses} style={{ backgroundColor: 'var(--color-input-bg)'}}>
+                        <ul className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar-container pr-2">
+                            {schools.map(school => (
+                                <li key={school.id} className="flex items-center justify-between p-2 rounded-lg bg-[var(--color-inset-bg)] text-sm">
+                                    {editingSchoolId === school.id ? (
+                                        <input type="text" value={editingSchoolName} onChange={e => setEditingSchoolName(e.target.value)} className="flex-grow p-1 rounded bg-transparent border-b border-[var(--color-accent)]"/>
+                                    ) : (
+                                        <span className="font-medium">{school.name}</span>
+                                    )}
+                                    <div className="flex items-center gap-1">
+                                        {editingSchoolId === school.id ? (
+                                            <>
+                                                <button onClick={handleUpdateSchool} className="p-1 text-emerald-500 hover:bg-emerald-500/10 rounded-full"><CheckIcon className="w-4 h-4" /></button>
+                                                <button onClick={() => setEditingSchoolId(null)} className="p-1 text-slate-500 hover:bg-slate-500/10 rounded-full"><XIcon className="w-4 h-4" /></button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button onClick={() => {setEditingSchoolId(school.id); setEditingSchoolName(school.name)}} className="p-1 text-slate-500 hover:bg-slate-500/10 rounded-full"><PencilIcon className="w-4 h-4" /></button>
+                                                <button onClick={() => handleDeleteSchool(school.id)} className="p-1 text-rose-500 hover:bg-rose-500/10 rounded-full"><TrashIcon className="w-4 h-4" /></button>
+                                            </>
+                                        )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    {/* Classes Management */}
+                    <div className="aurora-card p-4 sm:p-6">
+                         <h3 className="font-semibold text-lg mb-3">Manage Classes</h3>
+                         <div className="space-y-2 mb-4">
+                            <input type="text" value={newClassName} onChange={e => setNewClassName(e.target.value)} placeholder="Class name (e.g., 4P1)" className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
+                            <input type="text" value={newClassSubject} onChange={e => setNewClassSubject(e.target.value)} placeholder="Subject (e.g., English)" className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
+                             <select value={selectedSchoolForNewClass} onChange={e => setSelectedSchoolForNewClass(e.target.value)} className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm">
                                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
+                         </div>
+                         <button onClick={handleAddClass} disabled={schools.length === 0} className="w-full blueprint-button py-2 px-3 rounded-lg text-sm disabled:opacity-50">Add Class</button>
+                    </div>
+                </div>
+                {/* Right Column: Timetable */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="aurora-card p-4 sm:p-6">
+                        <h3 className="font-semibold text-lg mb-3">Assign Class</h3>
+                        <p className="text-sm text-[var(--color-text-secondary)] mb-3">Select a class below, then click on a slot in the timetable to assign or unassign it. To clear a slot, ensure no class is selected and click the slot.</p>
+                        <div className="flex flex-wrap gap-2">
+                            {classes.map(c => (
+                                <button key={c.id} onClick={() => setSelectedClassForAssignment(prev => prev === c.id ? null : c.id)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${selectedClassForAssignment === c.id ? 'border-transparent shadow-lg' : 'border-[var(--color-border)]'}`}
+                                    style={{backgroundColor: selectedClassForAssignment === c.id ? getEventColorFromString(c.schoolId) : 'transparent', color: selectedClassForAssignment === c.id ? 'white' : 'inherit'}}
+                                >
+                                    {c.name} - {c.subject} <span className="opacity-70">({getSchoolDetails(c.schoolId)?.name})</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
-                    <div className="mt-6 flex justify-end gap-3">
-                        <button onClick={onClose} className="py-2 px-4 rounded-lg text-sm blueprint-button-secondary">Cancel</button>
-                        <button onClick={handleSave} className="py-2 px-4 rounded-lg text-sm blueprint-button">Save Changes</button>
+                    <div className="aurora-card p-4 sm:p-6 overflow-x-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-semibold text-lg">Weekly Timetable</h3>
+                            {/* Export button */}
+                        </div>
+                        <table className="w-full border-collapse min-w-[800px]">
+                            <thead>
+                                <tr>
+                                    <th className="p-2 border border-[var(--color-border)] bg-[var(--color-inset-bg)] w-28">Time</th>
+                                    {TIMETABLE_DAYS.map(day => <th key={day} className="p-2 border border-[var(--color-border)] bg-[var(--color-inset-bg)]">{day}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {TIME_PERIODS.map((period, periodIndex) => {
+                                    const isLunch = period === "11:15 - 13:00";
+                                    const isPause = period === "09:30 - 09:45";
+
+                                    if (isLunch || isPause) {
+                                        return (
+                                            <tr key={period}>
+                                                <td className="p-2 border border-[var(--color-border)] text-center text-xs font-semibold bg-[var(--color-inset-bg)]">{period}</td>
+                                                <td colSpan={5} className="p-2 border border-[var(--color-border)] text-center font-bold bg-[var(--color-inset-bg)]">{isLunch ? "Lunch Break" : "Pause"}</td>
+                                            </tr>
+                                        )
+                                    }
+
+                                    return (
+                                        <tr key={period}>
+                                            <td className="p-2 border border-[var(--color-border)] text-center text-xs font-semibold bg-[var(--color-inset-bg)]">{period}</td>
+                                            {TIMETABLE_DAYS.map(day => {
+                                                const classId = timetableData[day]?.[periodIndex];
+                                                const classEntry = getClassDetails(classId);
+                                                return (
+                                                    <td key={`${day}-${period}`} className="p-0 border border-[var(--color-border)] h-20">
+                                                        <button onClick={() => handleTimetableSlotClick(day, periodIndex)} className="w-full h-full p-1 text-center text-xs transition-colors hover:bg-[var(--color-accent)]/10">
+                                                            {classEntry && (
+                                                                <div className="h-full flex flex-col justify-center items-center rounded-md p-1" style={{backgroundColor: getEventColorFromString(classEntry.schoolId), color: 'white'}}>
+                                                                    <p className="font-bold">{classEntry.name}</p>
+                                                                    <p>{classEntry.subject}</p>
+                                                                    <p className="text-[10px] opacity-80">{getSchoolDetails(classEntry.schoolId)?.name}</p>
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                    </td>
+                                                )
+                                            })}
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+             {isEditClassModalOpen && classToEdit && (
+                <EditClassModal 
+                    classEntry={classToEdit}
+                    schools={schools}
+                    onSave={handleUpdateClass}
+                    onClose={() => setIsEditClassModalOpen(false)}
+                />
+            )}
         </div>
-    );
-}
-
+    )
+};
 
 export default TimetableEditor;

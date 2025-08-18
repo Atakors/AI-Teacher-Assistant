@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { XIcon } from '../constants';
+import { XIcon } from './constants';
 
 interface ImagePreviewModalProps {
   imageUrl: string;

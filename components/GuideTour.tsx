@@ -1,6 +1,6 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { AppView } from '../types';
-import { SparklesIcon } from '../constants';
+import { SparklesIcon } from './constants';
 
 interface GuideTourProps {
   onComplete: () => void;

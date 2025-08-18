@@ -1,11 +1,12 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import { SavedLessonPlan, User } from '../types';
 import { getSavedLessonPlans, deleteSavedLessonPlan } from '../services/dbService';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
-import { SparklesIcon, TrashIcon, BookOpenIcon } from '../constants';
+import { SparklesIcon, TrashIcon, BookOpenIcon } from './constants';
 
 interface SavedPlansViewProps {
   currentUser: User;

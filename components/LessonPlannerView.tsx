@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonPlan, LessonDetailLevel, CreativityLevel, PromptMode } from '../types';
+import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonPlan, LessonDetailLevel, CreativityLevel, PromptMode, User } from '../types';
 import LessonPlannerControls from './LessonPlannerControls';
 import SectionDetailDisplay from './SectionDetailDisplay';
 import LessonPlanDisplay from './LessonPlanDisplay';
@@ -35,6 +36,7 @@ interface LessonPlannerViewProps {
   setPromptMode: (mode: PromptMode) => void;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
+  currentUser: User;
   // Props for saved plans
   isViewingSavedPlan: boolean;
   onCloseSavedPlan: () => void;

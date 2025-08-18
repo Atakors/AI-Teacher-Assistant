@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CanvasSequence, CanvasLesson } from '../types';
-import { ChevronDownIcon, BookOpenIcon } from '../constants';
+import { ChevronDownIcon, BookOpenIcon } from './constants';
 
 interface CurriculumAccordionProps {
   sequences: CanvasSequence[];

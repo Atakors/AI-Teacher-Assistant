@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonDetailLevel, CreativityLevel, PromptMode } from '../types';
-import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW, SparklesIcon, SaveIcon, CheckIcon, COMMON_MATERIALS, ChevronDownIcon } from '../constants';
+import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonDetailLevel, CreativityLevel, PromptMode, User } from '../types';
+import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW, SparklesIcon, SaveIcon, CheckIcon, COMMON_MATERIALS, ChevronDownIcon } from './constants';
 import CurriculumAccordion from './CurriculumAccordion';
 
 interface LessonPlannerControlsProps {
@@ -29,6 +28,7 @@ interface LessonPlannerControlsProps {
   setPromptMode: (mode: PromptMode) => void;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
+  currentUser: User;
   disabled?: boolean;
 }
 
@@ -62,6 +62,7 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
   selectedMaterials, onSelectedMaterialsChange,
   lessonDetailLevel, setLessonDetailLevel, creativityLevel, setCreativityLevel,
   promptMode, setPromptMode, customPrompt, setCustomPrompt,
+  currentUser,
   disabled = false
 }) => {
   const showTextbookOption = selectedLesson?.bookActivities?.length > 0;
@@ -231,6 +232,11 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
         </div>
 
          <div className="pt-4 border-t border-[var(--color-border)]">
+            {currentUser.plan === 'free' && (
+                <p className="text-xs text-center text-[var(--color-text-secondary)] mb-2">
+                   You have <span className="font-bold text-[var(--color-text-primary)]">{currentUser.lessonCreditsRemaining}</span> lesson credits remaining.
+                </p>
+            )}
             <button
               id="generate-plan-button"
               type="button"

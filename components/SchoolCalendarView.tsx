@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CalendarEvent, CalendarEventType, CalendarData } from '../types';
-import { SparklesIcon, CalendarDaysIcon, FlagIcon, MoonIcon, AcademicCapIcon, PencilIcon, TrashIcon, PlusIcon } from '../constants';
+import { SparklesIcon, CalendarDaysIcon, FlagIcon, MoonIcon, AcademicCapIcon, PencilIcon, TrashIcon, PlusIcon } from './constants';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import { getCustomCalendar, saveCustomCalendar } from '../services/dbService';
-import { CALENDAR_EVENTS } from '../constants_calendar';
+import { CALENDAR_EVENTS } from './constants_calendar';
 
 interface SchoolCalendarViewProps {
     userId: string;

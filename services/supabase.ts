@@ -1,9 +1,5 @@
-
-
-
 import { createClient } from '@supabase/supabase-js';
-import type { User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, CurriculumLevel, CalendarEventType, DbSavedLessonPlan, LessonPlan, SavedLessonPlanContext } from '../types';
-
+import { Database } from '../types';
 
 // ============================================================================
 // IMPORTANT: Supabase Project Setup
@@ -18,69 +14,6 @@ import type { User, School, ClassEntry, TimetableData, Day, CalendarData, Review
 
 const supabaseUrl = 'https://ibjdhcztvnyqavrrazun.supabase.co'; // Replace with your Supabase URL
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImliamRoY3p0dm55cWF2cnJhenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NjEwODIsImV4cCI6MjA3MDUzNzA4Mn0.yA-TYszT2ywOjkOv1fKdnrA90F4EtWEXG3jS4CRYcFs'; // Replace with your Supabase anon key
-
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
-
-export interface Database {
-  public: {
-    Tables: {
-      users: {
-        Row: User;
-        Insert: User;
-        Update: Partial<Omit<User, 'uid'>>;
-      };
-      schools: {
-        Row: School;
-        Insert: Omit<School, 'id'>;
-        Update: Partial<Omit<School, 'id'>>;
-      };
-      classes: {
-        Row: ClassEntry;
-        Insert: Omit<ClassEntry, 'id'>;
-        Update: Partial<Omit<ClassEntry, 'id'>>;
-      };
-      timetables: {
-        Row: { userId: string; data: TimetableData };
-        Insert: { userId: string; data: TimetableData };
-        Update: Partial<{ userId: string; data: TimetableData }>;
-      };
-      calendars: {
-        Row: { userId: string; data: CalendarData };
-        Insert: { userId: string; data: CalendarData };
-        Update: Partial<{ userId: string; data: CalendarData }>;
-      };
-      reviews: {
-        Row: DbReview;
-        Insert: Omit<DbReview, 'id'>;
-        Update: Partial<Omit<DbReview, 'id'>>;
-      };
-      saved_lesson_plans: {
-        Row: DbSavedLessonPlan;
-        Insert: Omit<DbSavedLessonPlan, 'id' | 'createdAt'>;
-        Update: Partial<Omit<DbSavedLessonPlan, 'id' | 'createdAt'>>;
-      };
-    };
-    Functions: {
-        increment_lesson_generations: {
-            Args: { user_id: string };
-            Returns: void;
-        };
-        increment_flashcard_generations: {
-            Args: { user_id: string };
-            Returns: void;
-        }
-    };
-    Enums: {};
-    CompositeTypes: {};
-  };
-}
-
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 

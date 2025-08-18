@@ -1,8 +1,9 @@
 
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { LessonPlan } from '../types';
-import { EmptyLessonPlanStructure, DownloadIcon, ChevronDownIcon, FileWordIcon, FilePdfIcon, BookmarkSquareIcon } from '../constants';
+import { EmptyLessonPlanStructure, DownloadIcon, ChevronDownIcon, FileWordIcon, FilePdfIcon, BookmarkSquareIcon } from './constants';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, VerticalAlign, BorderStyle } from 'docx';

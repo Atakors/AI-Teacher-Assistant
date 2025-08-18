@@ -1,24 +1,24 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import TimetableEditor from './TimetableEditor';
-import CurriculumOverview from './CurriculumOverview';
-import SchoolCalendarView from './SchoolCalendarView';
-import LessonPlannerView from './LessonPlannerView';
-import AdminDashboard from './AdminDashboard';
-import SavedPlansView from './SavedPlansView';
-import SavedExamsView from './SavedExamsView';
-import ExamGeneratorView from './ExamGeneratorView';
-import CreatorStudioView from './CreatorStudioView';
-import SavedCanvasView from './SavedCanvasView';
-import FlashcardGenerator from './FlashcardGenerator';
-import SavedFlashcardsView from './SavedFlashcardsView';
-import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini } from '../services/geminiService';
-import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, CanvasElement, SavedCanvas, SavedFlashcard } from '../types'; 
-import { getUserById, decrementLessonCredits, decrementImageCredits, saveLessonPlan, saveExam, saveCanvas, saveFlashcard } from '../services/dbService';
-import { YEAR_3_PRIMARY_CURRICULUM_CONTENT, YEAR_3_CANVAS_STRUCTURE_DATA } from './constants_year3';
-import { YEAR_4_PRIMARY_CURRICULUM_CONTENT, YEAR_4_CANVAS_STRUCTURE_DATA } from './constants_year4';
-import { YEAR_5_PRIMARY_CURRICULUM_CONTENT, YEAR_5_CANVAS_STRUCTURE_DATA } from './constants_year5';
-import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW } from './constants';
+import Sidebar from './components/Sidebar';
+import TimetableEditor from './components/TimetableEditor';
+import CurriculumOverview from './components/CurriculumOverview';
+import SchoolCalendarView from './components/SchoolCalendarView';
+import LessonPlannerView from './components/LessonPlannerView';
+import AdminDashboard from './components/AdminDashboard';
+import SavedPlansView from './components/SavedPlansView';
+import SavedExamsView from './components/SavedExamsView';
+import ExamGeneratorView from './components/ExamGeneratorView';
+import CreatorStudioView from './components/CreatorStudioView';
+import SavedCanvasView from './components/SavedCanvasView';
+import FlashcardGenerator from './components/FlashcardGenerator';
+import SavedFlashcardsView from './components/SavedFlashcardsView';
+import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini } from './services/geminiService';
+import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, CanvasElement, SavedCanvas, SavedFlashcard } from './types'; 
+import { getUserById, decrementLessonCredits, decrementImageCredits, saveLessonPlan, saveExam, saveCanvas, saveFlashcard } from './services/dbService';
+import { YEAR_3_PRIMARY_CURRICULUM_CONTENT, YEAR_3_CANVAS_STRUCTURE_DATA } from './components/constants_year3';
+import { YEAR_4_PRIMARY_CURRICULUM_CONTENT, YEAR_4_CANVAS_STRUCTURE_DATA } from './components/constants_year4';
+import { YEAR_5_PRIMARY_CURRICULUM_CONTENT, YEAR_5_CANVAS_STRUCTURE_DATA } from './components/constants_year5';
+import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW } from './components/constants';
 
 
 interface MainApplicationProps {

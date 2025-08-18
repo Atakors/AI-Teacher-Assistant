@@ -1,4 +1,4 @@
-import { CanvasSequence } from './types';
+import { CanvasSequence, BookActivity } from './types';
 
 export const YEAR_3_PRIMARY_CURRICULUM_CONTENT = `
 MINISTRY OF NATIONAL EDUCATION
@@ -24,7 +24,7 @@ Methodological Competence: The learner can
 - employ the strategies of decoding symbols as required.
 - implement the features of writing letters appropriately.
 Communicative Competence: The learner can:
-- react to verbal and non-verbal messages to show understanding
+- react to verbal and non verbal messages to show understanding
 - select the appropriate words and chunks to interact orally.
 - communicate the decoding strategies to peers.
 - achieve readability through the appropriate use of the features of writing.

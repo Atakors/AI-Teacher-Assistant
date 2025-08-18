@@ -1,4 +1,4 @@
-import { CanvasSequence } from './types';
+import { CanvasSequence, BookActivity } from './types';
 
 export const YEAR_5_PRIMARY_CURRICULUM_CONTENT = `
 Year 5 Planning Learning
@@ -306,8 +306,6 @@ PAUSE 3: REMEDIATION & STANDARDISATION
 `;
 
 export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
-    // This data needs to be structured based on the YEAR_5_PRIMARY_CURRICULUM_CONTENT
-    // For now, providing a placeholder structure.
     {
         id: "Y5_SEQ1",
         title: "SEQUENCE 1: Jobs, Occupations and Hobbies",
@@ -319,7 +317,10 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           {
             id: "Y5_S1.1",
             name: "Jobs and Occupations",
-            detailedContent: "...",
+            detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 1: Jobs and Occupations"),
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Jobs and Occupations ---") + "--- END SECTION: Jobs and Occupations ---".length
+            ),
             lessons: [
               { name: "I Get Ready", timing: "45mn" },
               { name: "I Listen & Interact", timing: "45mn" },
@@ -334,7 +335,10 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           {
             id: "Y5_S1.2",
             name: "Hobbies",
-            detailedContent: "...",
+            detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 2: Hobbies"),
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Hobbies ---") + "--- END SECTION: Hobbies ---".length
+            ),
             lessons: [
               { name: "I Listen & Interact", timing: "45mn" },
               { name: "I Listen & Discover", timing: "45mn" },
@@ -356,7 +360,7 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
     },
     {
         id: "Y5_SEQ2",
-        title: "SEQUENCE 2: Hometown/City/Village",
+        title: "SEQUENCE 2: Hometown/City/Village: Amenities, Directions & Signs",
         objectives: [
             "Name/identify different amenities in city/ hometown/village.",
             "Ask and answer questions about different amenities.",
@@ -365,7 +369,10 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           {
             id: "Y5_S2.1",
             name: "Amenities",
-            detailedContent: "...",
+            detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 1: Amenities"),
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Amenities ---") + "--- END SECTION: Amenities ---".length
+            ),
             lessons: [
                 { name: "I Get Ready", timing: "45mn" },
                 { name: "I Listen & Interact", timing: "45mn" },
@@ -380,7 +387,10 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           {
             id: "Y5_S2.2",
             name: "Directions and Signs",
-            detailedContent: "...",
+            detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 2: Directions and Signs"),
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Directions and Signs ---") + "--- END SECTION: Directions and Signs ---".length
+            ),
             lessons: [
                 { name: "I Listen & Interact", timing: "45mn" },
                 { name: "I Listen & Discover", timing: "45mn" },
@@ -411,7 +421,10 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           {
             id: "Y5_S3.1",
             name: "Holidays",
-            detailedContent: "...",
+            detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 1: Holidays"),
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Holidays ---") + "--- END SECTION: Holidays ---".length
+            ),
             lessons: [
                  { name: "I Get Ready", timing: "45mn" },
                 { name: "I Listen & Interact", timing: "45mn" },
@@ -426,7 +439,10 @@ export const YEAR_5_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           {
             id: "Y5_S3.2",
             name: "Travelling",
-            detailedContent: "...",
+            detailedContent: YEAR_5_PRIMARY_CURRICULUM_CONTENT.substring(
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("Section 2: Travelling"),
+              YEAR_5_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Travelling ---") + "--- END SECTION: Travelling ---".length
+            ),
             lessons: [
                 { name: "I Listen & Interact", timing: "45mn" },
                 { name: "I Listen & Discover", timing: "45mn" },

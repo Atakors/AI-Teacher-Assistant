@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { CurriculumLevel, CanvasSequence, CurriculumOverviewSubView, MonthlyDistribution, EnrichedLessonInfo } from '../types';
-import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW, ACADEMIC_MONTHS, SparklesIcon } from '../constants';
+import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW, ACADEMIC_MONTHS, SparklesIcon } from './constants';
 import DetailedMonthlyPlanView from './DetailedMonthlyPlanView';
 
 interface CurriculumOverviewProps {

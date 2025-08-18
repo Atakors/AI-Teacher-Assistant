@@ -1,8 +1,16 @@
+import { GoogleGenAI } from '@google/genai';
+import { LessonPlan, CurriculumLevel, LessonDetailLevel, CreativityLevel, PromptMode, Exam, ExamSource, ExamDifficulty, QuestionType } from '../types';
 
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { LessonPlan, CurriculumLevel, LessonDetailLevel, CreativityLevel, PromptMode } from '../types';
+// Pre-flight check for the API key to provide a clearer, more immediate error message.
+// A valid API key is a long string, so we check for a minimum length.
+if (!process.env.API_KEY || process.env.API_KEY.length < 10) {
+  // This is a critical error. The application cannot function without the API key.
+  // The error message is directed to the developer/deployer of the application.
+  throw new Error("CRITICAL: Gemini API Key is missing or invalid. Please ensure the API_KEY environment variable is set correctly in your deployment environment. A valid key is a long string of characters.");
+}
 
-// The GoogleGenAI instance will be created inside each function to ensure the API_KEY is available at runtime.
+// Initialize the Google GenAI client, ensuring the API key is read from environment variables.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const LESSON_PLAN_INTERFACE_STRING = `
 // Represents a single row in the procedure table from the new template
@@ -38,10 +46,9 @@ export interface LessonPlan {
 }
 `;
 
-
 export const generateLessonPlanWithGemini = async (
   curriculum: CurriculumLevel,
-  topicForAI: string, // This is the detailed instruction for the AI's focus
+  topicForAI: string,
   customCurriculumContent: string | null,
   lessonDetailLevel: LessonDetailLevel,
   creativityLevel: CreativityLevel,
@@ -49,12 +56,6 @@ export const generateLessonPlanWithGemini = async (
   promptMode: PromptMode,
   customPrompt: string
 ): Promise<LessonPlan> => {
-
-  const API_KEY = process.env.API_KEY;
-  if (!API_KEY) {
-    throw new Error("API_KEY environment variable is not set. Please ensure it is configured in your environment.");
-  }
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   const temperatureMap: Record<CreativityLevel, number> = {
     focused: 0.2,
@@ -77,7 +78,6 @@ export const generateLessonPlanWithGemini = async (
       --- CUSTOM PROMPT END ---
     `;
   } else {
-    // Structured mode
     userInstructions = `
       **LESSON CONTEXT:**
       - Grade Level: "${curriculum}"
@@ -130,94 +130,183 @@ Ensure the final output is ONLY the raw, valid JSON object.
 `;
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        temperature: temperature, 
-      },
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            temperature: temperature,
+            responseMimeType: "application/json",
+        }
     });
 
-    let jsonStr = response.text.trim();
-    // In case the model still wraps the output in markdown
-    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-    const match = jsonStr.match(fenceRegex);
-    if (match && match[2]) {
-      jsonStr = match[2].trim();
+    const generatedText = response.text;
+
+    if (!generatedText) {
+        throw new Error("The AI returned an empty response. This may be due to the safety policy or an internal error.");
+    }
+    
+    // Clean potential markdown fences from the response
+    let jsonStr = generatedText.trim();
+    if (jsonStr.startsWith('```json')) {
+        jsonStr = jsonStr.substring(7, jsonStr.length - 3).trim();
+    } else if (jsonStr.startsWith('```')) {
+        jsonStr = jsonStr.substring(3, jsonStr.length - 3).trim();
     }
     
     const parsedData = JSON.parse(jsonStr) as LessonPlan;
     
-    // Rigorous validation of the new structure
-    if (!parsedData.level || !parsedData.sequence || !parsedData.session || !parsedData.procedureTable) {
+    // Basic validation of the parsed structure
+    if (!parsedData.level || !parsedData.sequence || !parsedData.session || !parsedData.procedureTable || !Array.isArray(parsedData.procedureTable)) {
         throw new Error("Generated lesson plan is missing one or more essential fields.");
-    }
-    if (!Array.isArray(parsedData.procedureTable) || parsedData.procedureTable.length === 0) {
-        throw new Error("Procedure table must be a non-empty array.");
-    }
-    if (!parsedData.procedureTable[0].stage || !parsedData.procedureTable[0].procedure) {
-        throw new Error("Procedure table rows are missing required fields.");
     }
 
     return parsedData;
 
   } catch (error) {
-    console.error("Error generating lesson plan with Gemini:", error);
-    if (error instanceof Error) {
-        let userMessage = `Failed to generate or parse lesson plan.`;
-        if (error.message.includes("SAFETY")) {
-            userMessage += " The content might have triggered safety filters. Please try selecting a different topic or rephrasing if applicable."
-        } else if (error.message.includes("JSON") || error.message.includes("missing one or more essential")) {
-            userMessage += " The AI's response was not in the expected format or was incomplete. Please try again."
-        } else {
-            userMessage += ` Details: ${error.message}`;
-        }
-        throw new Error(userMessage);
+    console.error("Error generating lesson plan with @google/genai:", error);
+    if (error instanceof Error && (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid'))) {
+      throw new Error("Configuration Error: The application's API key is invalid or missing. Please contact the administrator to configure the deployment environment variables.");
     }
-    throw new Error("An unknown error occurred while generating the lesson plan.");
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    throw new Error(`Failed to generate lesson plan. The AI service reported an error: ${errorMessage}`);
   }
 };
 
+const EXAM_INTERFACE_STRING = `
+export type QuestionType = 'Multiple Choice' | 'Short Answer' | 'Essay';
 
-export const generateFlashcardImageWithGemini = async (prompt: string, aspectRatio: string): Promise<string> => {
-  const API_KEY = process.env.API_KEY;
-  if (!API_KEY) {
-    throw new Error("API_KEY environment variable is not set. Please ensure it is configured in your environment.");
-  }
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+export interface ExamQuestion {
+  questionText: string;
+  options?: string[]; // Only for 'Multiple Choice'
+}
 
-  try {
-    const response = await ai.models.generateImages({
-      model: 'imagen-3.0-generate-002',
-      prompt: prompt,
-      config: { 
-        numberOfImages: 1, 
-        outputMimeType: 'image/png',
-        aspectRatio: aspectRatio // Pass the aspectRatio string here
-      },
-    });
+export interface ExamSection {
+  title: string;
+  questions: ExamQuestion[];
+  questionType: QuestionType;
+}
 
-    if (response.generatedImages && response.generatedImages.length > 0 && response.generatedImages[0].image?.imageBytes) {
-      const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
-      return `data:image/png;base64,${base64ImageBytes}`;
-    } else {
-      throw new Error("No image data received from API.");
+export interface Exam {
+  title: string;
+  instructions: string;
+  sections: ExamSection[];
+  answerKey: string[][]; // A 2D array. First index for section, second for question.
+}
+`;
+
+export const generateExamWithGemini = async (
+    source: ExamSource,
+    context: { curriculum: CurriculumLevel | null; sectionContent: string | null; topic: string; customPrompt: string },
+    sections: { id: number; title: string; questionType: QuestionType; numberOfQuestions: number }[],
+    difficulty: ExamDifficulty,
+    title: string,
+    instructions: string
+): Promise<Exam> => {
+    let sourceInstruction = '';
+    if (source === 'curriculum') {
+        sourceInstruction = `Base the exam on the following curriculum content for ${context.curriculum}:\n${context.sectionContent || 'No content provided.'}`;
+    } else if (source === 'topic') {
+        sourceInstruction = `Base the exam on the following topic: "${context.topic}" for ${context.curriculum} level students.`;
+    } else { // custom
+        sourceInstruction = `Base the exam on the following user prompt:\n${context.customPrompt}`;
     }
-  } catch (error) {
-    console.error("Error generating image with Gemini:", error);
-     if (error instanceof Error) {
-        let userMessage = `Failed to generate image.`;
-        if (error.message.includes("SAFETY")) { // This is a common cause for image generation failure
-            userMessage += " The prompt might have triggered safety filters. Please try a different prompt."
-        } else if (error.message.includes("No image data")) {
-             userMessage += " The AI did not return image data. Please try again."
+
+    const sectionsJSON = JSON.stringify(sections.map(({ id, ...rest }) => rest));
+
+    const prompt = `
+You are an expert educator creating an exam for Algerian primary school students.
+The output MUST be a single, valid JSON object that strictly conforms to the following TypeScript interface. Do NOT include any text or markdown formatting before or after the JSON object.
+
+\`\`\`typescript
+${EXAM_INTERFACE_STRING}
+\`\`\`
+
+**INSTRUCTIONS FOR GENERATING THE EXAM:**
+
+1.  **Source Material**: ${sourceInstruction}
+2.  **Difficulty Level**: The overall difficulty of questions and vocabulary should be '${difficulty}'.
+3.  **Exam Structure**: The exam must have sections matching this structure exactly: ${sectionsJSON}.
+    *   For each section, generate the specified number of questions of the specified type.
+    *   For 'Multiple Choice' questions, provide 4 plausible options.
+    *   For 'Short Answer', the question should elicit a brief response (a few words to a sentence).
+    *   For 'Essay', the question should require a paragraph-level response.
+4.  **Title and Instructions**:
+    *   If the user provided a title, use it: "${title}". Otherwise, create a suitable title based on the source material.
+    *   If the user provided instructions, use them: "${instructions}". Otherwise, create clear and simple instructions for the students.
+5.  **Answer Key**: This is critical. You MUST provide a complete answer key.
+    *   It must be a 2D array of strings: \`string[][] \`.
+    *   The outer array corresponds to the sections. The inner array corresponds to the questions in that section.
+    *   For 'Multiple Choice', the answer must be the full text of the correct option (e.g., "Paris").
+    *   For 'Short Answer', provide a concise, correct answer.
+    *   For 'Essay', provide a model answer or a bulleted list of key points that should be included.
+6.  **Content**: Ensure all questions are relevant to the source material, age-appropriate for primary school students, and grammatically correct.
+
+Generate ONLY the raw, valid JSON object.
+`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                temperature: 0.4,
+                responseMimeType: "application/json",
+            }
+        });
+
+        const generatedText = response.text;
+        if (!generatedText) {
+            throw new Error("The AI returned an empty response.");
         }
-        else {
-            userMessage += ` Details: ${error.message}`;
+        
+        let jsonStr = generatedText.trim();
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.substring(7, jsonStr.length - 3).trim();
         }
+        
+        const parsedData = JSON.parse(jsonStr) as Exam;
+        if (!parsedData.title || !parsedData.sections || !parsedData.answerKey || parsedData.sections.length !== parsedData.answerKey.length) {
+            throw new Error("Generated exam is missing essential fields or has a structural mismatch.");
+        }
+
+        return parsedData;
+
+    } catch (error) {
+        console.error("Error generating exam with @google/genai:", error);
+        if (error instanceof Error && (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid'))) {
+          throw new Error("Configuration Error: The application's API key is invalid or missing. Please contact the administrator to configure the deployment environment variables.");
+        }
+        const userMessage = error instanceof Error ? `Failed to generate exam: ${error.message}` : "An unknown error occurred during exam generation.";
         throw new Error(userMessage);
     }
-    throw new Error("An unknown error occurred while generating the image.");
+};
+
+export const generateFlashcardImageWithGemini = async (prompt: string, aspectRatio: string): Promise<string> => {
+  console.log("Attempting to generate image with Imagen 3 SDK...");
+  try {
+    const response = await ai.models.generateImages({
+        model: 'imagen-3.0-generate-002',
+        prompt: prompt,
+        config: {
+          numberOfImages: 1,
+          outputMimeType: 'image/png',
+          aspectRatio: aspectRatio as '1:1' | '3:4' | '4:3' | '9:16' | '16:9',
+        },
+    });
+
+    const base64ImageBytes = response.generatedImages[0]?.image?.imageBytes;
+    if (!base64ImageBytes) {
+      console.error("Imagen 3 API returned no image data. Response:", response);
+      throw new Error("The AI service did not return any image data. This could be due to a safety filter or an internal API error.");
+    }
+    console.log("Successfully generated image with Imagen 3 SDK.");
+    return `data:image/png;base64,${base64ImageBytes}`;
+  } catch (error) {
+    console.error("Detailed error in generateFlashcardImageWithGemini:", error);
+    if (error instanceof Error && (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid'))) {
+      throw new Error("Configuration Error: The application's API key is invalid or missing. Please contact the administrator to configure the deployment environment variables.");
+    }
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    throw new Error(`SDK Error: Failed to generate image via @google/genai. Details: ${errorMessage}`);
   }
 };

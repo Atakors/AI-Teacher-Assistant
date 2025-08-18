@@ -1,13 +1,11 @@
-
-
-
 import React, { useState } from 'react';
 import { AppView, ThemeSettings, AccentColor, User } from '../types';
 import { 
-  APP_TITLE, APP_VERSION, LessonPlanIcon, FlashcardIcon, TimetableIcon, CurriculumOverviewIcon, SparklesIcon,
+  APP_TITLE, APP_VERSION, LessonPlanIcon, TimetableIcon, CurriculumOverviewIcon, SparklesIcon,
   MenuIcon, ChevronLeftIcon, CogIcon, CalendarDaysIcon, UserIcon, LogoutIcon,
-  ChevronDownIcon, UserCircleIcon, LockClosedIcon, ChatBubbleOvalLeftEllipsisIcon, ShieldCheckIcon, BookmarkSquareIcon
-} from '../constants';
+  ChevronDownIcon, UserCircleIcon, LockClosedIcon, ChatBubbleOvalLeftEllipsisIcon, ShieldCheckIcon, BookmarkSquareIcon, AcademicCapIcon,
+  SaveIcon, PencilIcon as CreatorStudioIcon, FlashcardIcon
+} from './constants';
 import ThemeSettingsComponent from './ThemeSettings';
 
 interface SidebarProps {
@@ -24,38 +22,76 @@ interface SidebarProps {
   setAccentColor: (color: AccentColor) => void;
 }
 
+const NavLink: React.FC<{ view: AppView; label: string; Icon: React.ElementType; activeView: AppView; setActiveView: (view: AppView) => void; isOpen: boolean; isLocked: boolean; }> = ({ view, label, Icon, activeView, setActiveView, isOpen, isLocked }) => {
+  return (
+    <button
+      id={`nav-${view}`}
+      onClick={() => setActiveView(view)}
+      disabled={isLocked && isOpen}
+      className={`flex items-center w-full p-3 my-1 rounded-lg transition-all duration-200 text-left ${activeView === view ? 'bg-[var(--color-accent)] text-white shadow-[0_0_15px_-3px_var(--color-accent)]' : 'hover:bg-[var(--color-inset-bg)]'} ${isLocked && isOpen ? 'opacity-60 cursor-not-allowed' : ''}`}
+      title={isOpen ? '' : label}
+    >
+      <Icon className={`w-6 h-6 flex-shrink-0 ${activeView === view ? 'text-white' : 'text-[var(--color-accent)]'}`} />
+      <span className={`ml-4 font-medium transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 whitespace-nowrap'}`}>{label}</span>
+      {isLocked && isOpen && <LockClosedIcon className="w-4 h-4 ml-auto text-yellow-500" />}
+    </button>
+  );
+};
+
+const NavCategory: React.FC<{ title: string; isOpen: boolean; children: React.ReactNode; isExpanded: boolean; onToggle: () => void; Icon: React.ElementType; }> = ({ title, isOpen, children, isExpanded, onToggle, Icon }) => {
+  if (!isOpen) {
+    return (
+      <div className="p-3 my-1 rounded-lg text-left text-[var(--color-text-secondary)]" title={title}>
+        <Icon className="w-6 h-6 mx-auto" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="flex items-center justify-between w-full p-3 my-1 rounded-lg hover:bg-[var(--color-inset-bg)] text-left"
+      >
+        <div className="flex items-center">
+            <Icon className="w-6 h-6 flex-shrink-0 text-[var(--color-accent)]" />
+            <span className="ml-4 font-medium">{title}</span>
+        </div>
+        <ChevronDownIcon className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+      </button>
+      {isExpanded && <div className="ml-6 pl-3 border-l-2 border-[var(--color-border)]">{children}</div>}
+    </div>
+  );
+};
+
+
 const Sidebar: React.FC<SidebarProps> = ({
   user, onLogout, onEditProfile, onOpenReviewModal, activeView, setActiveView, isOpen, setIsOpen,
   themeSettings, toggleThemeMode, setAccentColor
 }) => {
   const [isThemeSettingsOpen, setIsThemeSettingsOpen] = useState(false);
-
-  const navItems = [
-    { view: 'lessonPlanner' as AppView, label: 'Lesson Planner', Icon: LessonPlanIcon, isPremium: false },
-    { view: 'flashcardGenerator' as AppView, label: 'Flashcards', Icon: FlashcardIcon, isPremium: false },
+  const [creationToolsCategoryExpanded, setCreationToolsCategoryExpanded] = useState(['examGenerator', 'creatorStudio'].includes(activeView));
+  const [savesCategoryExpanded, setSavesCategoryExpanded] = useState(['savedPlans', 'savedExams', 'savedCanvas', 'savedFlashcards'].includes(activeView));
+  
+  const isFreePlan = user.plan === 'free';
+  
+  const topLevelItems = [
+    { view: 'lessonPlanner' as AppView, label: 'Lesson Plan', Icon: LessonPlanIcon, isPremium: false },
+    { view: 'flashcardGenerator' as AppView, label: 'Flashcard Generator', Icon: FlashcardIcon, isPremium: false },
     { view: 'timetableEditor' as AppView, label: 'Timetable', Icon: TimetableIcon, isPremium: false },
-    { view: 'savedPlans' as AppView, label: 'Saved Plans', Icon: BookmarkSquareIcon, isPremium: true },
     { view: 'curriculumOverview' as AppView, label: 'Curriculum', Icon: CurriculumOverviewIcon, isPremium: true },
     { view: 'schoolCalendar' as AppView, label: 'School Calendar', Icon: CalendarDaysIcon, isPremium: true },
   ];
-  
-  const isFreePlan = user.plan === 'free';
-
-  const NavLink: React.FC<{ item: typeof navItems[0] }> = ({ item }) => {
-    const isLocked = isFreePlan && item.isPremium;
-    return (
-    <button
-      id={`nav-${item.view}`}
-      onClick={() => setActiveView(item.view)}
-      disabled={isLocked && isOpen}
-      className={`flex items-center w-full p-3 my-1 rounded-lg transition-all duration-200 text-left ${activeView === item.view ? 'bg-[var(--color-accent)] text-white shadow-[0_0_15px_-3px_var(--color-accent)]' : 'hover:bg-[var(--color-inset-bg)]'} ${isLocked && isOpen ? 'opacity-60 cursor-not-allowed' : 'interactive-glow'}`}
-      title={isOpen ? '' : item.label}
-    >
-      <item.Icon className={`w-6 h-6 flex-shrink-0 ${activeView === item.view ? 'text-white' : 'text-[var(--color-accent)]'}`} />
-      <span className={`ml-4 font-medium transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>{item.label}</span>
-      {isLocked && isOpen && <LockClosedIcon className="w-4 h-4 ml-auto text-yellow-500" />}
-    </button>
-  )};
+  const creationToolsItems = [
+    { view: 'examGenerator' as AppView, label: 'Exam Generator', Icon: AcademicCapIcon, isPremium: true },
+    { view: 'creatorStudio' as AppView, label: 'Creator Studio', Icon: CreatorStudioIcon, isPremium: false },
+  ];
+  const saveItems = [
+    { view: 'savedPlans' as AppView, label: 'Saved Plans', Icon: BookmarkSquareIcon, isPremium: true },
+    { view: 'savedExams' as AppView, label: 'Saved Exams', Icon: BookmarkSquareIcon, isPremium: true },
+    { view: 'savedFlashcards' as AppView, label: 'Saved Flashcards', Icon: BookmarkSquareIcon, isPremium: true },
+    { view: 'savedCanvas' as AppView, label: 'Saved Canvases', Icon: BookmarkSquareIcon, isPremium: true },
+  ];
 
   return (
     <aside className={`blueprint-card fixed top-0 left-0 h-full !rounded-none text-[var(--color-text-primary)] flex flex-col z-50 transition-all duration-300 ease-in-out ${isOpen ? 'w-80' : 'w-20'}`}>
@@ -94,8 +130,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <p className="text-xs text-[var(--color-text-secondary)] truncate">{user.email}</p>
                  {isOpen && user.plan === 'free' && (
                     <div className="text-xs text-[var(--color-text-secondary)] mt-1 space-y-0.5">
-                        <p>Lesson Credits: {user.lesson_credits_remaining}</p>
-                        <p>Image Credits: {user.image_credits_remaining}</p>
+                        <p>Lesson Credits: {user.lessonCreditsRemaining}</p>
+                        <p>Image Credits: {user.imageCreditsRemaining}</p>
                     </div>
                 )}
               </div>
@@ -103,7 +139,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
         
-        <nav id="sidebar-nav" className="p-2">{navItems.map(item => <NavLink key={item.view} item={item} />)}</nav>
+        <nav id="sidebar-nav" className="p-2">
+            {topLevelItems.map(item => (
+                <NavLink key={item.view} {...item} activeView={activeView} setActiveView={setActiveView} isOpen={isOpen} isLocked={isFreePlan && item.isPremium} />
+            ))}
+            <NavCategory title="Creation Tools" isOpen={isOpen} isExpanded={creationToolsCategoryExpanded} onToggle={() => setCreationToolsCategoryExpanded(!creationToolsCategoryExpanded)} Icon={SparklesIcon}>
+                {creationToolsItems.map(item => <NavLink key={item.view} {...item} activeView={activeView} setActiveView={setActiveView} isOpen={isOpen} isLocked={isFreePlan && item.isPremium} />)}
+            </NavCategory>
+            <NavCategory title="My Saves" isOpen={isOpen} isExpanded={savesCategoryExpanded} onToggle={() => setSavesCategoryExpanded(!savesCategoryExpanded)} Icon={SaveIcon}>
+                {saveItems.map(item => <NavLink key={item.view} {...item} activeView={activeView} setActiveView={setActiveView} isOpen={isOpen} isLocked={isFreePlan && item.isPremium} />)}
+            </NavCategory>
+        </nav>
         
         {user.role === 'admin' && (
             <div className="p-2 border-t border-[var(--color-border)]">

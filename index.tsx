@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import LandingPage from './components/LandingPage';
-import MainApplication from './components/MainApplication';
+import MainApplication from './MainApplication';
 import ProfileModal from './components/ProfileModal';
 import PremiumModal from './components/PremiumModal';
 import ReviewModal from './components/ReviewModal';
@@ -14,7 +15,7 @@ import { supabase } from './services/supabase';
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>('landing');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>({
     id: 1,
     mode: 'dark',
@@ -26,81 +27,90 @@ const App: React.FC = () => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isTourActive, setIsTourActive] = useState(false);
   
-  // AI Settings State
+  // Lesson Planner AI Settings State
   const [lessonDetailLevel, setLessonDetailLevel] = useState<LessonDetailLevel>('standard');
   const [creativityLevel, setCreativityLevel] = useState<CreativityLevel>('balanced');
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [promptMode, setPromptMode] = useState<PromptMode>('structured');
   const [customPrompt, setCustomPrompt] = useState<string>('');
-  
+
   // Lifted state for tour control
   const [activeView, setActiveView] = useState<AppView>('lessonPlanner');
 
   useEffect(() => {
-    // This function handles the logic for a given session, either setting the user or landing page.
-    const handleSession = async (session: any) => { // Let TS infer session type
-      try {
-        if (session?.user) {
-          // User is authenticated. Now get or create their profile.
-          const userProfile = await getUserById(session.user.id);
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-          if (userProfile) {
-            // Existing user, set their profile.
-            setCurrentUser(userProfile);
-            setAppState('app');
-            if (!userProfile.hasCompletedTour) {
-                setIsTourActive(true);
-            }
-          } else {
-            // New user, create their profile.
-            const newProfileData: Omit<User, 'uid'> = {
-              name: session.user.user_metadata?.name || session.user.email || 'New User',
-              email: session.user.email!,
-              avatar: session.user.user_metadata?.avatar_url,
-              plan: 'free',
-              subscription_status: 'active',
-              lesson_credits_remaining: 4,
-              image_credits_remaining: 8,
-              hasCompletedTour: false,
-              role: 'user', // Always default to 'user'
-            };
-            await addUser(session.user.id, newProfileData);
-            const createdProfile = { uid: session.user.id, ...newProfileData };
-            
-            setCurrentUser(createdProfile);
-            setAppState('app');
-            // A new user should always see the tour.
-            setIsTourActive(true);
-          }
-        } else {
-          // User is not authenticated.
-          setCurrentUser(null);
-          setAppState('landing');
+    const processSession = async (session: any) => {
+        if (!session?.user) {
+            setCurrentUser(null);
+            setAppState('landing');
+            return;
         }
-      } catch (error) {
-          console.error("Critical error during session handling:", error);
-          setCurrentUser(null);
-          setAppState('landing');
-      }
+
+        try {
+            let userProfile = await getUserById(session.user.id);
+
+            // Retry logic for new sign-ups where the DB trigger might be delayed
+            if (!userProfile) {
+                console.warn("User profile not found on first attempt, retrying in 1.5s...");
+                await delay(1500);
+                userProfile = await getUserById(session.user.id);
+            }
+
+            if (userProfile) {
+                setCurrentUser(userProfile);
+                setAppState('app');
+                if (!userProfile.hasCompletedTour) {
+                    setIsTourActive(true);
+                }
+            } else {
+                console.error("Critical error: User exists in auth but not in public profiles after retry. Logging out.");
+                throw new Error("User profile not found after retry.");
+            }
+        } catch (error) {
+            console.error("Critical error processing user session:", error);
+            try {
+                await supabase.auth.signOut();
+            } catch (signOutError) {
+                console.error("Error signing out after session processing failure:", signOutError);
+            }
+            setCurrentUser(null);
+            setAppState('landing');
+        }
+    };
+    
+    const initializeAuth = async () => {
+        setIsAuthenticating(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            await processSession(session);
+
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                processSession(session);
+            });
+
+            return () => {
+                subscription?.unsubscribe();
+            };
+        } catch (e) {
+            console.error("Fatal error during auth initialization:", e);
+            setCurrentUser(null);
+            setAppState('landing');
+        } finally {
+            setIsAuthenticating(false);
+        }
     };
 
-    // We set a flag to ensure the loading screen is hidden only once, after the initial session is processed.
-    let initialCheckCompleted = false;
-
-    // The onAuthStateChange listener is the single source of truth for authentication state.
-    // It fires once on initial load with the current session, and then for any subsequent auth events.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      await handleSession(session);
-      if (!initialCheckCompleted) {
-        setIsAuthLoading(false);
-        initialCheckCompleted = true;
-      }
-    });
+    const unsubscribePromise = initializeAuth();
 
     return () => {
-        subscription.unsubscribe();
+        unsubscribePromise.then(unsubscribe => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        });
     };
-  }, []); // The empty dependency array ensures this runs only once on mount.
+  }, []);
 
 
   // Theme initialization and persistence effect
@@ -132,7 +142,7 @@ const App: React.FC = () => {
 
   // Landing page background effect
   useEffect(() => {
-    if (appState === 'landing' && !isAuthLoading) {
+    if (appState === 'landing') {
       document.body.classList.add('landing-page-active');
     } else {
       document.body.classList.remove('landing-page-active');
@@ -140,7 +150,7 @@ const App: React.FC = () => {
     return () => {
       document.body.classList.remove('landing-page-active');
     };
-  }, [appState, isAuthLoading]);
+  }, [appState]);
 
   const toggleThemeMode = () => {
     setThemeSettings(prev => ({
@@ -154,11 +164,8 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    // Immediately update UI for a responsive feel
     setCurrentUser(null);
     setAppState('landing');
-    
-    // Perform the actual sign-out in the background
     const { error } = await supabase.auth.signOut();
     if (error) {
         console.error("Error signing out from Supabase: ", error);
@@ -181,15 +188,10 @@ const App: React.FC = () => {
       if (finalUpdates.defaultCurriculum === CurriculumLevel.SELECT_YEAR) {
         finalUpdates.defaultCurriculum = undefined;
       }
-
-      // The `updates` object from ProfileModal doesn't contain `uid`, but to satisfy
-      // the strict type of `updateUser`, we ensure it's not present for TypeScript.
       const { uid, ...updatesForDb } = finalUpdates;
       await updateUser(currentUser.uid, updatesForDb);
-      
       const updatedUser = { ...currentUser, ...finalUpdates };
       setCurrentUser(updatedUser);
-
     } catch (e) {
       console.error("Failed to update user profile:", e);
       throw e;
@@ -217,50 +219,45 @@ const App: React.FC = () => {
       setIsTourActive(false);
     }
   };
-
-  const renderContent = () => {
-    if (isAuthLoading) {
-        return (
-            <div className="fixed inset-0 flex items-center justify-center bg-[#0B0F19] z-[200]">
-                <LoadingSpinner text="Loading your profile..." />
-            </div>
-        );
-    }
-
-    if (appState === 'app' && currentUser) {
-        return (
-            <MainApplication
-                currentUser={currentUser}
-                setCurrentUser={setCurrentUser}
-                onLogout={handleLogout}
-                onEditProfile={handleOpenProfileModal}
-                onOpenPremiumModal={handleOpenPremiumModal}
-                onOpenReviewModal={handleOpenReviewModal}
-                themeSettings={themeSettings}
-                toggleThemeMode={toggleThemeMode}
-                setAccentColor={setAccentColor}
-                lessonDetailLevel={lessonDetailLevel}
-                setLessonDetailLevel={setLessonDetailLevel}
-                creativityLevel={creativityLevel}
-                setCreativityLevel={setCreativityLevel}
-                selectedMaterials={selectedMaterials}
-                setSelectedMaterials={setSelectedMaterials}
-                promptMode={promptMode}
-                setPromptMode={setPromptMode}
-                customPrompt={customPrompt}
-                setCustomPrompt={setCustomPrompt}
-                activeView={activeView}
-                setActiveView={setActiveView}
-            />
-        );
-    }
-    
-    return <LandingPage />;
-  };
+  
+  if (isAuthenticating) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+        <LoadingSpinner text="Authenticating..." />
+      </div>
+    );
+  }
 
   return (
     <>
-      {renderContent()}
+      {appState === 'app' && currentUser ? (
+        <MainApplication
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            onLogout={handleLogout}
+            onEditProfile={handleOpenProfileModal}
+            onOpenPremiumModal={handleOpenPremiumModal}
+            onOpenReviewModal={handleOpenReviewModal}
+            themeSettings={themeSettings}
+            toggleThemeMode={toggleThemeMode}
+            setAccentColor={setAccentColor}
+            lessonDetailLevel={lessonDetailLevel}
+            setLessonDetailLevel={setLessonDetailLevel}
+            creativityLevel={creativityLevel}
+            setCreativityLevel={setCreativityLevel}
+            selectedMaterials={selectedMaterials}
+            setSelectedMaterials={setSelectedMaterials}
+            promptMode={promptMode}
+            setPromptMode={setPromptMode}
+            customPrompt={customPrompt}
+            setCustomPrompt={setCustomPrompt}
+            activeView={activeView}
+            setActiveView={setActiveView}
+        />
+      ) : (
+        <LandingPage />
+      )}
+
       {isProfileModalOpen && currentUser && (
         <ProfileModal
           isOpen={isProfileModalOpen}
