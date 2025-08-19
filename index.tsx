@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import LandingPage from './components/LandingPage';
-import MainApplication from './MainApplication';
+import MainApplication from './components/MainApplication';
 import ProfileModal from './components/ProfileModal';
 import PremiumModal from './components/PremiumModal';
 import ReviewModal from './components/ReviewModal';
@@ -164,12 +163,11 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    setCurrentUser(null);
-    setAppState('landing');
     const { error } = await supabase.auth.signOut();
     if (error) {
         console.error("Error signing out from Supabase: ", error);
     }
+    // onAuthStateChange will handle setting user to null and app state to 'landing'
   };
 
   const handleOpenProfileModal = () => setIsProfileModalOpen(true);
@@ -188,8 +186,7 @@ const App: React.FC = () => {
       if (finalUpdates.defaultCurriculum === CurriculumLevel.SELECT_YEAR) {
         finalUpdates.defaultCurriculum = undefined;
       }
-      const { uid, ...updatesForDb } = finalUpdates;
-      await updateUser(currentUser.uid, updatesForDb);
+      await updateUser(currentUser.uid, finalUpdates);
       const updatedUser = { ...currentUser, ...finalUpdates };
       setCurrentUser(updatedUser);
     } catch (e) {
@@ -199,13 +196,18 @@ const App: React.FC = () => {
   };
 
   const handlePasswordChange = async (currentPass: string, newPass: string) => {
-    console.warn("Password change functionality needs to be implemented with Supabase.");
-    throw new Error("Password change is currently disabled.");
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if (error) {
+        console.error("Failed to update password:", error);
+        throw error;
+    }
   };
 
   const handleDeleteAccount = async () => {
-    console.warn("Account deletion is a sensitive operation and requires server-side logic with Supabase.");
-    throw new Error("Account deletion is currently disabled.");
+    if (window.confirm("Are you sure you want to permanently delete your account? This action is irreversible.")) {
+        console.error("User self-deletion is not implemented. This requires a secure RPC function.");
+        throw new Error("Account deletion is currently disabled for security reasons. Please contact support.");
+    }
   };
 
   const handleTourComplete = async () => {

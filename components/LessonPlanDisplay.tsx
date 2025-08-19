@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { LessonPlan } from '../types';
 import { EmptyLessonPlanStructure, DownloadIcon, ChevronDownIcon, FileWordIcon, FilePdfIcon, BookmarkSquareIcon } from './constants';
@@ -201,7 +198,7 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
             <button
                 onClick={onSavePlan}
                 disabled={!plan}
-                className="interactive-glow bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center py-2 px-4 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="zenith-button-secondary flex items-center py-2 px-4 text-sm font-medium rounded-lg"
             >
                 <BookmarkSquareIcon className="w-5 h-5 mr-2" />
                 Save Plan
@@ -211,7 +208,7 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
           <button
             onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
             disabled={!plan}
-            className="interactive-glow bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center py-2 px-4 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="zenith-button-secondary flex items-center py-2 px-4 text-sm font-medium rounded-lg"
             aria-haspopup="true" aria-expanded={isExportMenuOpen}
           >
             <DownloadIcon className="w-5 h-5 mr-2" />

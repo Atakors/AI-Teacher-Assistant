@@ -1,3 +1,5 @@
+
+
 import { SupabaseClient as Client } from '@supabase/supabase-js';
 
 export enum CurriculumLevel {
@@ -77,7 +79,7 @@ export interface CanvasSequence {
 }
 
 // For App Navigation
-export type AppView = 'lessonPlanner' | 'timetableEditor' | 'curriculumOverview' | 'schoolCalendar' | 'adminDashboard' | 'savedPlans' | 'examGenerator' | 'savedExams' | 'creatorStudio' | 'savedCanvas' | 'flashcardGenerator' | 'savedFlashcards';
+export type AppView = 'lessonPlanner' | 'timetableEditor' | 'curriculumOverview' | 'schoolCalendar' | 'adminDashboard' | 'savedPlans' | 'examGenerator' | 'savedExams' | 'flashcardGenerator' | 'savedFlashcards' | 'pricing' | 'flashcardWizard' | 'creatorStudio' | 'savedCanvas';
 
 // Timetable Editor Types
 export interface User {
@@ -255,9 +257,9 @@ export interface DbSavedLessonPlan {
     id: string;
     user_id: string;
     name: string;
-    plan_data: any;
+    plan_data: Json;
     created_at: string;
-    curriculum_context: any;
+    curriculum_context: Json;
 }
 
 // Exam Generator Types
@@ -295,7 +297,7 @@ export interface DbSavedExam {
   id: string;
   user_id: string;
   name: string;
-  exam_data: any;
+  exam_data: Json;
   created_at: string;
 }
 
@@ -326,39 +328,32 @@ export interface DbSavedFlashcard {
   created_at: string;
 }
 
-
-// --- Creator Studio Types ---
-export type CanvasTool = 'select' | 'text' | 'image' | 'rectangle' | 'ellipse';
-
-interface CanvasElementBase {
+// Creator Studio Types
+interface BaseElement {
   id: string;
   x: number;
   y: number;
   width: number;
   height: number;
   rotation: number;
-  opacity: number;
 }
 
-export interface TextElement extends CanvasElementBase {
+export interface TextElement extends BaseElement {
   type: 'text';
   text: string;
-  fontFamily: string;
   fontSize: number;
-  fontWeight: 'normal' | 'bold';
-  fontStyle: 'normal' | 'italic';
-  textAlign: 'left' | 'center' | 'right';
+  fontFamily: string;
   color: string;
 }
 
-export interface ImageElement extends CanvasElementBase {
+export interface ImageElement extends BaseElement {
   type: 'image';
   src: string;
 }
 
-export interface ShapeElement extends CanvasElementBase {
+export interface ShapeElement extends BaseElement {
   type: 'shape';
-  shape: 'rectangle' | 'ellipse';
+  shapeType: 'rectangle' | 'circle';
   fill: string;
   stroke: string;
   strokeWidth: number;
@@ -366,22 +361,30 @@ export interface ShapeElement extends CanvasElementBase {
 
 export type CanvasElement = TextElement | ImageElement | ShapeElement;
 
+export interface CanvasData {
+    elements: CanvasElement[];
+    width: number;
+    height: number;
+    backgroundColor: string;
+}
+
 export interface SavedCanvas {
-    id: string;
-    userId: string;
-    name: string;
-    canvasData: {
-        elements: CanvasElement[];
-        width: number;
-        height: number;
-        backgroundColor: string;
-    };
-    createdAt: string;
+  id: string;
+  userId: string;
+  name: string;
+  canvasData: CanvasData;
+  createdAt: string;
 }
 
 
 // Supabase Types
-export type Json = any;
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[]
 
 export interface Database {
   public: {
@@ -457,25 +460,23 @@ export interface Database {
       }
       saved_canvases: {
         Row: {
-          canvas_data: Json
-          created_at: string
-          id: string
-          name: string
-          user_id: string
+          id: string;
+          user_id: string;
+          name: string;
+          canvas_data: Json;
+          created_at: string;
         }
         Insert: {
-          canvas_data: Json
-          created_at?: string
-          id?: string
-          name: string
-          user_id: string
+          id?: string;
+          user_id: string;
+          name: string;
+          canvas_data: Json;
+          created_at?: string;
         }
         Update: {
-          canvas_data?: Json
-          created_at?: string
-          id?: string
-          name?: string
-          user_id?: string
+          id?: string;
+          name?: string;
+          canvas_data?: Json;
         }
       }
       saved_flashcards: {
@@ -676,7 +677,7 @@ export interface Database {
       }
       get_all_user_details_admin: {
         Args: Record<PropertyKey, never>
-        Returns: Json
+        Returns: Json[]
       }
     }
     Enums: {

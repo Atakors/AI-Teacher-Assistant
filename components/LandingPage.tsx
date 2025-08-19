@@ -79,7 +79,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
   return (
     <>
       <div className="min-h-screen w-full text-slate-300 overflow-x-hidden">
-        <header className="fixed top-0 left-0 w-full p-4 z-50 bg-[#0B0F19]/80 backdrop-blur-sm border-b border-slate-800">
+        <header className="fixed top-0 left-0 w-full p-4 z-50 bg-[#020617]/80 backdrop-blur-sm border-b border-slate-800">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center">
                   <SparklesIcon className="w-7 h-7" style={{ color: 'var(--color-accent)' }} />
@@ -91,7 +91,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                   </button>
                   <button
                     onClick={() => openAuthModal('signup')}
-                    className="blueprint-button text-sm py-2 px-5 rounded-lg"
+                    className="zenith-button text-sm py-2 px-5 rounded-lg"
                   >
                     Sign Up
                   </button>
@@ -99,7 +99,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                <div className="md:hidden">
                     <button
                         onClick={() => openAuthModal('login')}
-                        className="blueprint-button text-sm py-2 px-5 rounded-lg"
+                        className="zenith-button text-sm py-2 px-5 rounded-lg"
                     >
                         Log In / Sign Up
                     </button>
@@ -121,7 +121,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                         </p>
                         <button
                           onClick={() => openAuthModal('signup')}
-                          className="blueprint-button text-lg font-semibold py-4 px-10 rounded-lg"
+                          className="zenith-button text-lg font-semibold py-4 px-10 rounded-lg"
                         >
                           Try It Now
                         </button>
@@ -142,7 +142,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                       {features.map((feature, index) => (
-                          <div key={index} className="feature-card p-6 rounded-lg">
+                          <div key={index} className="aurora-card p-6">
                               <div className="p-2 rounded-lg inline-block mb-4" style={{backgroundColor: 'rgba(var(--color-accent-rgb), 0.1)', border: '1px solid rgba(var(--color-accent-rgb), 0.3)'}}>
                                   <feature.Icon className="w-6 h-6" style={{color: 'var(--color-accent)'}}/>
                               </div>
@@ -163,7 +163,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                           {reviews.map((review) => (
-                              <div key={review.id} className="feature-card p-6 rounded-lg flex flex-col">
+                              <div key={review.id} className="aurora-card p-6 flex flex-col">
                                   <div className="flex-grow mb-4">
                                       {renderStars(review.rating)}
                                       <p className="text-slate-300 mt-4 italic">"{review.comment}"</p>
@@ -195,7 +195,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                   </p>
                   <button
                       onClick={() => openAuthModal('signup')}
-                      className="blueprint-button text-lg font-semibold py-4 px-10 rounded-lg"
+                      className="zenith-button text-lg font-semibold py-4 px-10 rounded-lg"
                   >
                       Start Planning Now
                   </button>

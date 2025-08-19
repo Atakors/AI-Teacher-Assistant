@@ -57,7 +57,7 @@ const SavedFlashcardsView: React.FC<SavedFlashcardsViewProps> = ({ currentUser, 
       
       {!isLoading && !error && (
         savedFlashcards.length === 0 ? (
-          <div className="aurora-card text-center py-16">
+          <div className="blueprint-card text-center py-16">
             <BookOpenIcon className="w-16 h-16 mx-auto text-[var(--color-text-secondary)] opacity-50" />
             <p className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">No Saved Flashcards Yet</p>
             <p className="text-sm max-w-md mx-auto text-[var(--color-text-secondary)]">
@@ -67,7 +67,7 @@ const SavedFlashcardsView: React.FC<SavedFlashcardsViewProps> = ({ currentUser, 
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedFlashcards.map(flashcard => (
-              <div key={flashcard.id} className="aurora-card p-4 flex flex-col justify-between gap-4">
+              <div key={flashcard.id} className="blueprint-card p-4 flex flex-col justify-between gap-4">
                 <div>
                   <div className="w-full aspect-square bg-[var(--color-inset-bg)] rounded-md mb-3 flex items-center justify-center overflow-hidden">
                     <img src={flashcard.imageData} alt={flashcard.name} className="w-full h-full object-contain" />

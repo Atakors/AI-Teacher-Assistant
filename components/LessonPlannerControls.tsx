@@ -216,7 +216,7 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
                 <button
                     onClick={handleSaveSettings}
                     disabled={!haveSettingsChanged || isLoading || disabled}
-                    className="flex-grow blueprint-button-secondary text-sm py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-grow zenith-button-secondary text-sm py-2 px-4 rounded-lg flex items-center justify-center gap-2"
                 >
                     <SaveIcon className="w-4 h-4" />
                     Save AI Settings
@@ -242,8 +242,7 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
               type="button"
               onClick={onGeneratePlan}
               disabled={isLoading || !isGenerationAllowed || disabled}
-              className="w-full flex justify-center items-center py-3 px-4 font-medium rounded-lg transition-colors border border-transparent disabled:opacity-50 disabled:cursor-not-allowed interactive-glow"
-              style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+              className="zenith-button w-full flex justify-center items-center py-3 px-4 font-medium rounded-lg"
             >
               {isLoading ? 'Generating...' : <><SparklesIcon className="w-5 h-5 mr-2" />Generate Lesson Plan</>}
             </button>

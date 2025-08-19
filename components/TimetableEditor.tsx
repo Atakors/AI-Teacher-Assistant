@@ -45,27 +45,27 @@ const EditClassModal: React.FC<{
         onSave({ ...classEntry, name, subject, schoolId });
     };
 
-    const inputClasses = "w-full p-3 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-slate-300 bg-slate-50";
+    const inputClasses = "w-full p-3 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-[var(--color-border)] bg-[var(--color-input-bg)]";
     
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
-            <div className="relative w-full max-w-md bg-white rounded-xl shadow-2xl text-slate-900 overflow-hidden" onClick={e => e.stopPropagation()}>
-                <button onClick={onClose} className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-800 transition-colors z-20">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={onClose}>
+            <div className="relative w-full max-w-md bg-[var(--color-surface)] rounded-xl shadow-2xl text-[var(--color-text-primary)] overflow-hidden" onClick={e => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-3 right-3 p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors z-20">
                     <XIcon className="w-6 h-6" />
                 </button>
                 <div className="p-8">
-                    <h3 className="text-xl font-semibold mb-6 text-center text-slate-800">Edit Class</h3>
+                    <h3 className="text-xl font-semibold mb-6 text-center">Edit Class</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Class Name</label>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Class Name</label>
                             <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">Subject</label>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Subject</label>
                             <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className={inputClasses} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-slate-600 mb-1 block">School</label>
+                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">School</label>
                             <select value={schoolId} onChange={e => setSchoolId(e.target.value)} className={inputClasses}>
                                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
@@ -465,11 +465,11 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                 {/* Left Column: Controls */}
                 <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8 self-start">
                     {/* Schools Management */}
-                    <div className="aurora-card p-4 sm:p-6">
+                    <div className="blueprint-card p-4 sm:p-6">
                         <h3 className="font-semibold text-lg mb-3">Manage Schools</h3>
                         <div className="flex gap-2 mb-4">
                             <input type="text" value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} placeholder="New school name" className="flex-grow p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
-                            <button onClick={handleAddSchool} className="blueprint-button py-2 px-3 rounded-lg text-sm">Add</button>
+                            <button onClick={handleAddSchool} disabled={!newSchoolName.trim()} className="blueprint-button py-2 px-3 rounded-lg text-sm">Add</button>
                         </div>
                         <ul className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar-container pr-2">
                             {schools.map(school => (
@@ -497,7 +497,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                         </ul>
                     </div>
                     {/* Classes Management */}
-                    <div className="aurora-card p-4 sm:p-6">
+                    <div className="blueprint-card p-4 sm:p-6">
                          <h3 className="font-semibold text-lg mb-3">Manage Classes</h3>
                          <div className="space-y-2 mb-4">
                             <input type="text" value={newClassName} onChange={e => setNewClassName(e.target.value)} placeholder="Class name (e.g., 4P1)" className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
@@ -506,12 +506,12 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                          </div>
-                         <button onClick={handleAddClass} disabled={schools.length === 0} className="w-full blueprint-button py-2 px-3 rounded-lg text-sm disabled:opacity-50">Add Class</button>
+                         <button onClick={handleAddClass} disabled={schools.length === 0 || !newClassName.trim() || !newClassSubject.trim()} className="w-full blueprint-button py-2 px-3 rounded-lg text-sm">Add Class</button>
                     </div>
                 </div>
                 {/* Right Column: Timetable */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="aurora-card p-4 sm:p-6">
+                    <div className="blueprint-card p-4 sm:p-6">
                         <h3 className="font-semibold text-lg mb-3">Assign Class</h3>
                         <p className="text-sm text-[var(--color-text-secondary)] mb-3">Select a class below, then click on a slot in the timetable to assign or unassign it. To clear a slot, ensure no class is selected and click the slot.</p>
                         <div className="flex flex-wrap gap-2">
@@ -525,7 +525,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                             ))}
                         </div>
                     </div>
-                    <div className="aurora-card p-4 sm:p-6 overflow-x-auto">
+                    <div className="blueprint-card p-4 sm:p-6 overflow-x-auto">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-semibold text-lg">Weekly Timetable</h3>
                             {/* Export button */}

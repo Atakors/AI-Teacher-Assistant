@@ -1,5 +1,6 @@
+
 import { GoogleGenAI } from '@google/genai';
-import { LessonPlan, CurriculumLevel, LessonDetailLevel, CreativityLevel, PromptMode, Exam, ExamSource, ExamDifficulty, QuestionType } from '../types';
+import { LessonPlan, CurriculumLevel, LessonDetailLevel, CreativityLevel, PromptMode, Exam, ExamSource, ExamDifficulty, QuestionType, FlashcardIdea } from '../types';
 
 // Pre-flight check for the API key to provide a clearer, more immediate error message.
 // A valid API key is a long string, so we check for a minimum length.
@@ -170,6 +171,70 @@ Ensure the final output is ONLY the raw, valid JSON object.
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
     throw new Error(`Failed to generate lesson plan. The AI service reported an error: ${errorMessage}`);
   }
+};
+
+const FLASHCARD_IDEAS_INTERFACE_STRING = `
+export interface FlashcardIdea {
+  term: string; // The specific word or concept for the flashcard (e.g., "Lion", "Apple", "Triangle").
+  description: string; // A very brief, child-friendly description of the term.
+}
+`;
+
+export const generateFlashcardIdeasWithGemini = async (topic: string): Promise<FlashcardIdea[]> => {
+    const prompt = `
+You are a creative assistant for a primary school teacher. Your task is to generate a list of 10 simple, concrete, and visually distinct flashcard ideas based on a given topic.
+The output MUST be a single, valid JSON object that is an array of objects strictly conforming to the following TypeScript interface. Do NOT include any text or markdown formatting before or after the JSON object.
+
+\`\`\`typescript
+${FLASHCARD_IDEAS_INTERFACE_STRING}
+\`\`\`
+
+**Topic:** "${topic}"
+
+**Instructions:**
+1.  Generate exactly 10 ideas.
+2.  Each 'term' should be a single, concrete noun or concept that is easy to illustrate.
+3.  Each 'description' should be very simple, one short sentence, suitable for a young child.
+4.  Ensure the ideas are diverse within the topic. For "Jungle Animals", don't list 10 types of monkeys.
+
+Generate ONLY the raw, valid JSON array.
+`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                temperature: 0.7,
+                responseMimeType: "application/json",
+            }
+        });
+
+        const generatedText = response.text;
+        if (!generatedText) {
+            throw new Error("The AI returned an empty response for flashcard ideas.");
+        }
+
+        let jsonStr = generatedText.trim();
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.substring(7, jsonStr.length - 3).trim();
+        }
+        
+        const parsedData = JSON.parse(jsonStr) as FlashcardIdea[];
+        if (!Array.isArray(parsedData) || parsedData.length === 0 || !parsedData[0].term || !parsedData[0].description) {
+            throw new Error("Generated flashcard ideas have an invalid structure.");
+        }
+
+        return parsedData;
+
+    } catch (error) {
+        console.error("Error generating flashcard ideas with @google/genai:", error);
+        if (error instanceof Error && (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid'))) {
+          throw new Error("Configuration Error: The application's API key is invalid or missing.");
+        }
+        const userMessage = error instanceof Error ? `Failed to generate ideas: ${error.message}` : "An unknown error occurred during idea generation.";
+        throw new Error(userMessage);
+    }
 };
 
 const EXAM_INTERFACE_STRING = `

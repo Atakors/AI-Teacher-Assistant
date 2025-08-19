@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { ThemeSettings, AccentColor } from '../types';
 import { SunIcon, MoonIcon, ACCENT_COLORS } from './constants';
@@ -12,7 +10,7 @@ interface ThemeSettingsProps {
 
 const ThemeSettingsComponent: React.FC<ThemeSettingsProps> = ({ settings, onModeToggle, onAccentChange }) => {
   return (
-    <div className="aurora-card p-4 space-y-4">
+    <div className="blueprint-card p-4 space-y-4">
       <div>
         <h4 className="text-xs uppercase font-semibold text-[var(--color-text-secondary)] mb-2">Mode</h4>
         <div className="flex items-center p-1 rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>

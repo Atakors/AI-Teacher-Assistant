@@ -219,7 +219,7 @@ const GuideTour: React.FC<GuideTourProps> = ({ onComplete, setActiveView }) => {
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      goToStep(currentStep - 1);
+      goToStep(currentStep + 1);
     }
   };
 
@@ -242,9 +242,9 @@ const GuideTour: React.FC<GuideTourProps> = ({ onComplete, setActiveView }) => {
                 <button onClick={onComplete} className="text-sm text-slate-500 hover:underline">Skip Tour</button>
                 <div className="flex items-center gap-2">
                     {currentStep > 0 && (
-                        <button onClick={handlePrev} className="blueprint-button-secondary text-sm py-2 px-4 rounded-lg">Back</button>
+                        <button onClick={handlePrev} className="zenith-button-secondary text-sm py-2 px-4 rounded-lg">Back</button>
                     )}
-                    <button onClick={handleNext} className="blueprint-button text-white text-sm py-2 px-4 rounded-lg">
+                    <button onClick={handleNext} className="zenith-button text-white text-sm py-2 px-4 rounded-lg">
                         {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'}
                     </button>
                 </div>

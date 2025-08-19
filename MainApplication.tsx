@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import TimetableEditor from './components/TimetableEditor';
 import CurriculumOverview from './components/CurriculumOverview';
-import SchoolCalendarView from './components/SchoolCalendarView';
+import { SchoolCalendarView } from './components/SchoolCalendarView';
 import LessonPlannerView from './components/LessonPlannerView';
 import AdminDashboard from './components/AdminDashboard';
 import SavedPlansView from './components/SavedPlansView';
@@ -12,6 +12,7 @@ import CreatorStudioView from './components/CreatorStudioView';
 import SavedCanvasView from './components/SavedCanvasView';
 import FlashcardGenerator from './components/FlashcardGenerator';
 import SavedFlashcardsView from './components/SavedFlashcardsView';
+import PricingView from './components/PricingView';
 import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini } from './services/geminiService';
 import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, CanvasElement, SavedCanvas, SavedFlashcard } from './types'; 
 import { getUserById, decrementLessonCredits, decrementImageCredits, saveLessonPlan, saveExam, saveCanvas, saveFlashcard } from './services/dbService';
@@ -195,6 +196,11 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   const handleLessonChange = (lesson: CanvasLesson | null) => setSelectedLessonDetails(lesson);
   
   const handleViewChange = (view: AppView) => {
+     if (view === 'creatorStudio' && currentUser.role !== 'admin') {
+      onOpenPremiumModal('Creator Studio (Admin Only)');
+      return;
+    }
+
     if (currentUser.plan === 'free' && (view === 'curriculumOverview' || view === 'schoolCalendar' || view === 'savedPlans' || view === 'examGenerator' || view === 'savedExams' || view === 'savedCanvas' || view === 'savedFlashcards')) {
       const featureMap: Record<string, string> = {
         curriculumOverview: 'Curriculum Overview',
@@ -490,6 +496,8 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
         return <CurriculumOverview curriculumDataMap={curriculumDataMap} />;
       case 'schoolCalendar':
         return <SchoolCalendarView userId={currentUser.uid} />;
+      case 'pricing':
+        return <PricingView />;
       case 'savedPlans':
         return <SavedPlansView currentUser={currentUser} onLoadPlan={handleLoadPlan} />;
       case 'savedExams':
@@ -515,19 +523,19 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
           activeView={activeView} setActiveView={handleViewChange} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen}
           themeSettings={themeSettings} toggleThemeMode={toggleThemeMode} setAccentColor={setAccentColor}
         />
-        <div className={`flex-grow main-content ${isSidebarOpen ? 'ml-80' : 'ml-20'} flex flex-col h-screen`}>
-            <div className={`flex-grow text-[var(--color-text-primary)] overflow-y-auto ${mainContentPaddingClass}`}>
+        <main className={`flex-grow main-content ${isSidebarOpen ? 'ml-80' : 'ml-20'} flex flex-col h-screen`}>
+            <div className={`flex-grow text-[var(--color-text-primary)] overflow-y-auto custom-scrollbar-container ${mainContentPaddingClass}`}>
                 {renderCurrentView()}
             </div>
             {activeView !== 'creatorStudio' && (
-              <footer className="flex-shrink-0 text-[var(--color-text-secondary)] text-center p-4 text-sm" style={{ backgroundColor: 'var(--color-bg)' }}>
+              <footer className="flex-shrink-0 text-[var(--color-text-secondary)] text-center p-4 text-sm border-t border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-bg)' }}>
                   <p>&copy; {new Date().getFullYear()} Designed and made by MKS. Powered by Gemini.</p>
                   <p className="mt-2">
                       Contact: <a href="mailto:dz.ai.teacher.assistant@gmail.com" className="hover:text-[var(--color-text-primary)] underline">dz.ai.teacher.assistant@gmail.com</a>
                   </p>
               </footer>
             )}
-        </div>
+        </main>
       </div>
       {notification && (
         <div 

@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { SavedLessonPlan, User } from '../types';
 import { getSavedLessonPlans, deleteSavedLessonPlan } from '../services/dbService';
@@ -82,7 +79,7 @@ const SavedPlansView: React.FC<SavedPlansViewProps> = ({ currentUser, onLoadPlan
                   <p className="text-xs text-[var(--color-text-secondary)] mt-1">Saved on: {new Date(plan.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2 mt-4 sm:mt-0">
-                  <button onClick={() => onLoadPlan(plan)} className="blueprint-button py-2 px-4 rounded-lg text-sm">Load</button>
+                  <button onClick={() => onLoadPlan(plan)} className="zenith-button py-2 px-4 rounded-lg text-sm">Load</button>
                   <button onClick={() => handleDelete(plan.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
                     <TrashIcon className="w-5 h-5" />
                   </button>

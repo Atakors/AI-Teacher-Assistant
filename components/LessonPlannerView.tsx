@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonPlan, LessonDetailLevel, CreativityLevel, PromptMode, User } from '../types';
 import LessonPlannerControls from './LessonPlannerControls';
@@ -76,7 +74,7 @@ const LessonPlannerView: React.FC<LessonPlannerViewProps> = (props) => {
         {isViewingSavedPlan && (
             <div className="aurora-card p-4 mb-6 flex items-center justify-between">
                 <p className="font-semibold">Viewing: <span className="text-[var(--color-accent)]">{viewingSavedPlanName}</span></p>
-                <button onClick={onCloseSavedPlan} className="blueprint-button-secondary text-sm py-1 px-3 rounded-lg">Close</button>
+                <button onClick={onCloseSavedPlan} className="zenith-button-secondary text-sm py-1 px-3 rounded-lg">Close</button>
             </div>
         )}
         {error && !isLoading && (

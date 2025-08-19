@@ -139,7 +139,7 @@ const CurriculumOverview: React.FC<CurriculumOverviewProps> = ({ curriculumDataM
   const SubViewButton: React.FC<{ view: CurriculumOverviewSubView, label: string }> = ({ view, label }) => (
     <button
       onClick={() => setActiveSubView(view)}
-      className={`interactive-glow px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${activeSubView === view ? 'bg-[var(--color-accent)] text-white border-transparent' : 'bg-[var(--color-surface)] border-[var(--color-border)]'}`}
+      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${activeSubView === view ? 'zenith-button text-white border-transparent' : 'zenith-button-secondary'}`}
       aria-pressed={activeSubView === view}
     >{label}</button>
   );

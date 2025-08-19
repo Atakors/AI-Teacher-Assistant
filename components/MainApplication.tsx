@@ -1,8 +1,9 @@
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TimetableEditor from './TimetableEditor';
 import CurriculumOverview from './CurriculumOverview';
-import SchoolCalendarView from './SchoolCalendarView';
+import { SchoolCalendarView } from './SchoolCalendarView';
 import LessonPlannerView from './LessonPlannerView';
 import AdminDashboard from './AdminDashboard';
 import SavedPlansView from './SavedPlansView';
@@ -10,11 +11,13 @@ import SavedExamsView from './SavedExamsView';
 import ExamGeneratorView from './ExamGeneratorView';
 import CreatorStudioView from './CreatorStudioView';
 import SavedCanvasView from './SavedCanvasView';
-import FlashcardGenerator from './FlashcardGenerator';
 import SavedFlashcardsView from './SavedFlashcardsView';
-import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini } from '../services/geminiService';
-import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, CanvasElement, SavedCanvas, SavedFlashcard } from '../types'; 
-import { getUserById, decrementLessonCredits, decrementImageCredits, saveLessonPlan, saveExam, saveCanvas, saveFlashcard } from '../services/dbService';
+import PricingView from './PricingView';
+import FlashcardGenerator from './FlashcardGenerator';
+import FlashcardGeneratorV2 from './FlashcardGeneratorV2';
+import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini, generateFlashcardIdeasWithGemini } from '../services/geminiService';
+import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, SavedFlashcard, FlashcardIdea, CanvasElement, SavedCanvas } from '../types'; 
+import { getUserById, decrementLessonCredits, decrementImageCredits, saveLessonPlan, saveExam, saveFlashcard, saveCanvas } from '../services/dbService';
 import { YEAR_3_PRIMARY_CURRICULUM_CONTENT, YEAR_3_CANVAS_STRUCTURE_DATA } from './constants_year3';
 import { YEAR_4_PRIMARY_CURRICULUM_CONTENT, YEAR_4_CANVAS_STRUCTURE_DATA } from './constants_year4';
 import { YEAR_5_PRIMARY_CURRICULUM_CONTENT, YEAR_5_CANVAS_STRUCTURE_DATA } from './constants_year5';
@@ -91,12 +94,11 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   const [examSelectedCurriculum, setExamSelectedCurriculum] = useState<CurriculumLevel | null>(null);
   const [selectedExamSectionIds, setSelectedExamSectionIds] = useState<string[]>([]);
 
-  // Creator Studio State
-  const [canvasElements, setCanvasElements] = useState<CanvasElement[]>([]);
-  
   // Flashcard State
   const [viewingSavedFlashcard, setViewingSavedFlashcard] = useState<SavedFlashcard | null>(null);
-
+  
+  // Creator Studio State
+  const [canvasElements, setCanvasElements] = useState<CanvasElement[]>([]);
 
   // Effect to initialize and reset state on user load/refresh
   useEffect(() => {
@@ -195,15 +197,20 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   const handleLessonChange = (lesson: CanvasLesson | null) => setSelectedLessonDetails(lesson);
   
   const handleViewChange = (view: AppView) => {
-    if (currentUser.plan === 'free' && (view === 'curriculumOverview' || view === 'schoolCalendar' || view === 'savedPlans' || view === 'examGenerator' || view === 'savedExams' || view === 'savedCanvas' || view === 'savedFlashcards')) {
+    if (view === 'creatorStudio' && currentUser.role !== 'admin') {
+      onOpenPremiumModal('Creator Studio (Admin Only)');
+      return;
+    }
+    
+    if (currentUser.plan === 'free' && (view === 'curriculumOverview' || view === 'schoolCalendar' || view === 'savedPlans' || view === 'examGenerator' || view === 'savedExams' || view === 'savedFlashcards' || view === 'savedCanvas')) {
       const featureMap: Record<string, string> = {
         curriculumOverview: 'Curriculum Overview',
         schoolCalendar: 'School Calendar',
         savedPlans: 'Saved Plans',
         examGenerator: 'Exam Generator',
         savedExams: 'Saved Exams',
-        savedCanvas: 'Saved Canvases',
         savedFlashcards: 'Saved Flashcards',
+        savedCanvas: 'Saved Canvases',
       };
       onOpenPremiumModal(featureMap[view]);
     } else {
@@ -280,6 +287,26 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
         if (updatedUser) setCurrentUser(updatedUser);
       }
       return imageUrl;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const handleGenerateFlashcardIdeas = async (topic: string): Promise<FlashcardIdea[]> => {
+    const freshUser = await getUserById(currentUser.uid);
+    if (!freshUser) throw new Error("Could not verify your account status.");
+    if (freshUser.plan === 'free' && freshUser.lessonCreditsRemaining <= 0) {
+        onOpenPremiumModal('Flashcard Idea Generations');
+        throw new Error("Credit limit reached. Upgrade to Premium.");
+    }
+    try {
+      const ideas = await generateFlashcardIdeasWithGemini(topic);
+      if (freshUser.plan === 'free') {
+        await decrementLessonCredits(currentUser.uid); // It uses 1 lesson credit
+        const updatedUser = await getUserById(currentUser.uid);
+        if (updatedUser) setCurrentUser(updatedUser);
+      }
+      return ideas;
     } catch (err) {
       throw err;
     }
@@ -474,8 +501,6 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
             selectedCurriculum={examSelectedCurriculum} onCurriculumChange={handleExamCurriculumChange} sequences={examAvailableSequences}
             selectedExamSectionIds={selectedExamSectionIds} onSelectedExamSectionIdsChange={setSelectedExamSectionIds}
           />;
-       case 'creatorStudio':
-        return <CreatorStudioView elements={canvasElements} setElements={setCanvasElements} onSave={handleSaveCanvas} />;
       case 'flashcardGenerator':
         return <FlashcardGenerator
                     onGenerate={handleFlashcardGeneration}
@@ -484,22 +509,32 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
                     viewingSavedFlashcard={viewingSavedFlashcard}
                     setViewingSavedFlashcard={setViewingSavedFlashcard}
                 />;
+      case 'flashcardWizard':
+        return <FlashcardGeneratorV2
+            onGenerateIdeas={handleGenerateFlashcardIdeas}
+            onGenerateImage={handleFlashcardGeneration}
+            currentUser={currentUser}
+        />;
       case 'timetableEditor':
         return <TimetableEditor userId={currentUser.uid} currentUser={currentUser} />;
       case 'curriculumOverview':
         return <CurriculumOverview curriculumDataMap={curriculumDataMap} />;
       case 'schoolCalendar':
         return <SchoolCalendarView userId={currentUser.uid} />;
+      case 'pricing':
+        return <PricingView />;
       case 'savedPlans':
         return <SavedPlansView currentUser={currentUser} onLoadPlan={handleLoadPlan} />;
       case 'savedExams':
         return <SavedExamsView currentUser={currentUser} onLoadExam={handleLoadExam} />;
-      case 'savedCanvas':
-          return <SavedCanvasView currentUser={currentUser} onLoadCanvas={handleLoadCanvas} />;
       case 'savedFlashcards':
           return <SavedFlashcardsView currentUser={currentUser} onLoadFlashcard={handleLoadFlashcard} />;
       case 'adminDashboard':
         return currentUser.role === 'admin' ? <AdminDashboard currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <p>Access Denied.</p>;
+      case 'creatorStudio':
+        return <CreatorStudioView elements={canvasElements} setElements={setCanvasElements} onSave={handleSaveCanvas} />;
+      case 'savedCanvas':
+        return <SavedCanvasView currentUser={currentUser} onLoadCanvas={handleLoadCanvas} />;
       default:
         return <p>View not found.</p>;
     }
@@ -519,14 +554,16 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
             <div className={`flex-grow text-[var(--color-text-primary)] overflow-y-auto ${mainContentPaddingClass}`}>
                 {renderCurrentView()}
             </div>
+            
             {activeView !== 'creatorStudio' && (
-              <footer className="flex-shrink-0 text-[var(--color-text-secondary)] text-center p-4 text-sm" style={{ backgroundColor: 'var(--color-bg)' }}>
+              <footer className="flex-shrink-0 text-[var(--color-text-secondary)] text-center p-4 text-sm border-t border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-surface)' }}>
                   <p>&copy; {new Date().getFullYear()} Designed and made by MKS. Powered by Gemini.</p>
                   <p className="mt-2">
                       Contact: <a href="mailto:dz.ai.teacher.assistant@gmail.com" className="hover:text-[var(--color-text-primary)] underline">dz.ai.teacher.assistant@gmail.com</a>
                   </p>
               </footer>
             )}
+            
         </div>
       </div>
       {notification && (

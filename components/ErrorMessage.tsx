@@ -13,8 +13,6 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
         style={{
             '--color-surface': 'var(--color-error-surface)',
             '--color-border': 'var(--color-error-border)',
-            '--color-aurora-start': 'var(--color-error-aurora-start)',
-            '--color-aurora-end': 'var(--color-error-aurora-end)',
             color: 'var(--color-error-text)'
         } as React.CSSProperties}
     >

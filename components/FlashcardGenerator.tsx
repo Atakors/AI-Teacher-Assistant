@@ -110,8 +110,6 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
     '9:16': 'aspect-[9/16]',
   }[selectedAspectRatio];
 
-  const buttonClasses = "interactive-glow w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed";
-
   return (
     <>
       <div className="w-full max-w-6xl mx-auto">
@@ -135,7 +133,7 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
                 <textarea
                   id="image-prompt"
                   rows={3}
-                  className="mt-1 block w-full p-3 text-base rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none sm:text-sm resize-none border border-[var(--color-border)]"
+                  className="mt-1 block w-full p-3 text-base rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] sm:text-sm resize-none border border-[var(--color-border)]"
                   style={{ backgroundColor: 'var(--color-input-bg)'}}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -156,8 +154,8 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
                       onClick={() => { setSelectedStyle(style.value); setSelectedStyleName(style.name); }}
                       className={`p-2 text-xs font-medium rounded-lg transition-all border ${
                         selectedStyle === style.value
-                          ? 'bg-[var(--color-accent)] text-white border-transparent shadow-[0_0_8px_var(--color-accent)]'
-                          : 'bg-transparent border-[var(--color-border)] hover:bg-[var(--color-inset-bg)]'
+                          ? 'zenith-button text-white border-transparent'
+                          : 'zenith-button-secondary'
                       }`}
                     >
                       {style.name}
@@ -198,8 +196,7 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
                   type="button"
                   onClick={handleGenerateImage}
                   disabled={isLoading || !prompt.trim()}
-                  className={buttonClasses}
-                  style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+                  className="zenith-button w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg"
                 >
                   {isLoading ? 'Generating your image...' : <><SparklesIcon className="w-5 h-5 mr-2" />Generate Image</>}
                 </button>
@@ -209,12 +206,11 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
                       <button 
                         type="button" 
                         onClick={handleSaveImage} 
-                        className={buttonClasses}
-                        style={{ backgroundColor: 'var(--color-accent)', color: 'white' }}
+                        className="zenith-button w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg"
                       >
                         <BookmarkSquareIcon className="w-5 h-5 mr-2" /> Save to Collection
                       </button>
-                      <button type="button" onClick={handleDownloadImage} className={`${buttonClasses} blueprint-button-secondary`}>
+                      <button type="button" onClick={handleDownloadImage} className="zenith-button-secondary w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg">
                         <DownloadIcon className="w-5 h-5 mr-2" /> Download
                       </button>
                    </div>

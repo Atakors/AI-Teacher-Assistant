@@ -35,7 +35,7 @@ const getEventColor = (type: CalendarEventType): string => {
     }
 }
 
-const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }) => {
+export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }) => {
     const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -113,108 +113,81 @@ const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }) => {
         setEditableEvents(currentEvents => [...currentEvents, eventToAdd].sort((a, b) => new Date(a.date.split(' - ')[0]).getTime() - new Date(b.date.split(' - ')[0]).getTime()));
         setNewEvent({ name: '', date: '', type: CalendarEventType.SCHOOL_EVENT });
     };
-    
-    const eventsByMonth = useMemo(() => {
-        const eventsToDisplay = isEditMode ? editableEvents : calendarData?.events;
-        if (!eventsToDisplay) return [];
-        const grouped: { [month: string]: CalendarEvent[] } = {};
-        [...eventsToDisplay].sort((a, b) => new Date(a.date.split(' - ')[0]).getTime() - new Date(b.date.split(' - ')[0]).getTime()).forEach(event => {
-            const month = new Date(event.date.split(' - ')[0]).toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-            if (!grouped[month]) {
-                grouped[month] = [];
-            }
-            grouped[month].push(event);
-        });
-        return Object.entries(grouped);
-    }, [calendarData, isEditMode, editableEvents]);
-    
 
-    if (isLoading) return <LoadingSpinner text="Loading Calendar..." />;
-    
     return (
         <div className="w-full max-w-6xl mx-auto">
-            <div className="text-center mb-8">
-                <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
-                School Calendar
-                <SparklesIcon className="w-7 h-7 ml-2" style={{color: 'var(--color-accent)'}} />
-                </h2>
-                <p className="text-[var(--color-text-secondary)] mt-2 px-4">
-                Official holidays and school events for the 2025-2026 academic year.
-                </p>
-            </div>
-
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+              School Calendar
+              <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+            </h2>
+            <p className="text-[var(--color-text-secondary)] mt-2">View and manage important school and holiday dates.</p>
+          </div>
+    
+          {isLoading && <LoadingSpinner text="Loading calendar..." />}
+          {error && <ErrorMessage message={error} />}
+    
+          {!isLoading && !error && calendarData && (
             <div className="aurora-card p-6 sm:p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Events Timeline</h3>
-                        {calendarData && <p className="text-xs text-[var(--color-text-secondary)]">Last updated: {new Date(calendarData.lastUpdated).toLocaleDateString()}</p>}
-                    </div>
-                    <div>
-                        {isEditMode ? (
-                            <div className="flex gap-2">
-                                <button onClick={handleSaveChanges} className="blueprint-button py-2 px-4 rounded-lg text-sm">Save Changes</button>
-                                <button onClick={() => setIsEditMode(false)} className="blueprint-button-secondary py-2 px-4 rounded-lg text-sm">Cancel</button>
-                            </div>
-                        ) : (
-                            <button onClick={handleToggleEditMode} className="blueprint-button-secondary py-2 px-4 rounded-lg text-sm flex items-center gap-2">
-                                <PencilIcon className="w-4 h-4" /> Customize
-                            </button>
-                        )}
-                    </div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold">Events</h3>
+                <div className="flex gap-2">
+                  {isEditMode && <button onClick={handleSaveChanges} className="zenith-button py-2 px-4 rounded-lg text-sm">Save Changes</button>}
+                  <button onClick={handleToggleEditMode} className="zenith-button-secondary py-2 px-4 rounded-lg text-sm">
+                    {isEditMode ? 'Cancel' : 'Edit Calendar'}
+                  </button>
                 </div>
-
-                {error && <ErrorMessage message={error} />}
-                
-                {isEditMode ? (
-                    <div className="space-y-4">
-                        {editableEvents.map(event => (
-                            <div key={event.id} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center p-2 rounded-lg bg-[var(--color-inset-bg)]">
-                                <input type="text" value={event.name} onChange={e => handleEventChange(event.id, 'name', e.target.value)} className="md:col-span-4 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]"/>
-                                <input type="text" value={event.date} onChange={e => handleEventChange(event.id, 'date', e.target.value)} className="md:col-span-4 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]"/>
-                                <select value={event.type} onChange={e => handleEventChange(event.id, 'type', e.target.value as CalendarEventType)} className="md:col-span-3 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]">
-                                    {Object.values(CalendarEventType).map(type => <option key={type} value={type}>{type}</option>)}
-                                </select>
-                                <button onClick={() => handleDeleteEvent(event.id)} className="md:col-span-1 p-2 flex justify-center items-center text-rose-500 hover:bg-rose-500/10 rounded-full">
-                                    <TrashIcon className="w-5 h-5"/>
-                                </button>
-                            </div>
-                        ))}
-                         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center p-2 rounded-lg border-2 border-dashed border-[var(--color-border)]">
-                            <input type="text" placeholder="New Event Name" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} className="md:col-span-4 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]"/>
-                            <input type="text" placeholder="Date (e.g., July 10, 2026)" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="md:col-span-4 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]"/>
-                            <select value={newEvent.type} onChange={e => setNewEvent({...newEvent, type: e.target.value as CalendarEventType})} className="md:col-span-3 p-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)]">
-                                {Object.values(CalendarEventType).map(type => <option key={type} value={type}>{type}</option>)}
-                            </select>
-                            <button onClick={handleAddNewEvent} className="md:col-span-1 p-2 flex justify-center items-center text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded-full">
-                                <PlusIcon className="w-5 h-5"/>
-                            </button>
-                        </div>
+              </div>
+              
+              <div className="space-y-4">
+                {(isEditMode ? editableEvents : calendarData.events).map((event) => (
+                  <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg bg-[var(--color-inset-bg)]">
+                    <div className="p-2 rounded-full" style={{ backgroundColor: `${getEventColor(event.type)}20` }}>
+                      <EventIcon type={event.type} className="w-6 h-6" style={{ color: getEventColor(event.type) }}/>
                     </div>
-                ) : (
-                    <div className="space-y-6">
-                    {eventsByMonth.map(([month, events]) => (
-                        <div key={month}>
-                            <h4 className="font-semibold text-lg text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2 mb-3">{month}</h4>
-                            <ul className="space-y-3">
-                                {events.map(event => (
-                                    <li key={event.id} className="flex items-center gap-4">
-                                        <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: getEventColor(event.type) + '20' }}>
-                                            <EventIcon type={event.type} className="w-6 h-6" style={{ color: getEventColor(event.type) }}/>
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-[var(--color-text-primary)]">{event.name}</p>
-                                            <p className="text-sm text-[var(--color-text-secondary)]">{event.date}</p>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
+                    <div className="flex-grow">
+                      {isEditMode ? (
+                        <input type="text" value={event.name} onChange={(e) => handleEventChange(event.id, 'name', e.target.value)} className="w-full bg-transparent font-semibold border-b border-transparent focus:border-[var(--color-accent)] outline-none" />
+                      ) : (
+                        <p className="font-semibold text-[var(--color-text-primary)]">{event.name}</p>
+                      )}
+                      {isEditMode ? (
+                         <input type="text" value={event.date} onChange={(e) => handleEventChange(event.id, 'date', e.target.value)} className="w-full bg-transparent text-sm mt-1 border-b border-transparent focus:border-[var(--color-accent)] outline-none" />
+                      ) : (
+                        <p className="text-sm text-[var(--color-text-secondary)]">{event.date}</p>
+                      )}
                     </div>
-                )}
+                    {isEditMode && (
+                      <>
+                        <select value={event.type} onChange={(e) => handleEventChange(event.id, 'type', e.target.value as CalendarEventType)} className="bg-transparent text-sm p-1 rounded border border-[var(--color-border)] outline-none focus:ring-1 focus:ring-[var(--color-accent)]" style={{backgroundColor: 'var(--color-input-bg)'}}>
+                          {Object.values(CalendarEventType).map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                        <button onClick={() => handleDeleteEvent(event.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
+                          <TrashIcon className="w-5 h-5"/>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {isEditMode && (
+                <div className="mt-8 pt-6 border-t border-[var(--color-border)]">
+                  <h4 className="font-semibold mb-3">Add New Event</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                     <input type="text" placeholder="Event Name" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} className="md:col-span-1 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm"/>
+                     <input type="text" placeholder="Date (e.g., July 4, 2026)" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="md:col-span-1 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm"/>
+                     <select value={newEvent.type} onChange={e => setNewEvent({...newEvent, type: e.target.value as CalendarEventType})} className="md:col-span-1 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm">
+                        {Object.values(CalendarEventType).map(type => <option key={type} value={type}>{type}</option>)}
+                     </select>
+                  </div>
+                  <button onClick={handleAddNewEvent} className="mt-3 zenith-button w-full md:w-auto py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                    <PlusIcon className="w-4 h-4" /> Add Event
+                  </button>
+                </div>
+              )}
             </div>
+          )}
         </div>
-    );
+      );
 };
-
-export default SchoolCalendarView;

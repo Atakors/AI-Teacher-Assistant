@@ -1,8 +1,7 @@
 
 
-
 import { supabase } from './supabase';
-import { Database, User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, LessonPlan, SavedLessonPlan, SavedLessonPlanContext, AdminUserView, DbSavedLessonPlan, Exam, SavedExam, DbSavedExam, Json, CurriculumLevel, CanvasElement, SavedCanvas, SavedFlashcard } from '../types';
+import { Database, User, School, ClassEntry, TimetableData, Day, CalendarData, Review, DbReview, LessonPlan, SavedLessonPlan, SavedLessonPlanContext, AdminUserView, DbSavedLessonPlan, Exam, SavedExam, DbSavedExam, Json, CurriculumLevel, SavedFlashcard, SavedCanvas, CanvasData } from '../types';
 
 // =================================================================================
 // SQL function for Atomic Decrements (NEW - MUST BE RUN)
@@ -47,18 +46,18 @@ export const addUser = async (uid: string, userData: Omit<User, 'uid'>): Promise
         uid,
         name: userData.name,
         email: userData.email,
-        avatar: userData.avatar,
+        avatar: userData.avatar ?? null,
         plan: userData.plan,
         subscription_status: userData.subscriptionStatus,
         lesson_credits_remaining: userData.lessonCreditsRemaining,
         image_credits_remaining: userData.imageCreditsRemaining,
         has_completed_tour: userData.hasCompletedTour,
         role: userData.role,
-        title: userData.title,
-        primary_school: userData.primarySchool,
-        specialization: userData.specialization,
-        bio: userData.bio,
-        default_curriculum: userData.defaultCurriculum,
+        title: userData.title ?? null,
+        primary_school: userData.primarySchool ?? null,
+        specialization: userData.specialization ?? null,
+        bio: userData.bio ?? null,
+        default_curriculum: userData.defaultCurriculum ?? null,
     };
     
     const { error } = await supabase.from('users').insert([payload]);
@@ -70,13 +69,23 @@ export const addUser = async (uid: string, userData: Omit<User, 'uid'>): Promise
 
 
 export const updateUser = async (uid: string, updates: Partial<Omit<User, 'uid'>>): Promise<void> => {
-    const dbUpdates: Partial<Database['public']['Tables']['users']['Update']> = {};
-
-    for (const key of Object.keys(updates) as Array<keyof typeof updates>) {
-        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`) as keyof Database['public']['Tables']['users']['Update'];
-        (dbUpdates as any)[snakeKey] = updates[key];
-    }
+    const dbUpdates: Database['public']['Tables']['users']['Update'] = {};
     
+    // Type-safe mapping from camelCase to snake_case
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.avatar !== undefined) dbUpdates.avatar = updates.avatar;
+    if (updates.plan !== undefined) dbUpdates.plan = updates.plan;
+    if (updates.subscriptionStatus !== undefined) dbUpdates.subscription_status = updates.subscriptionStatus;
+    if (updates.lessonCreditsRemaining !== undefined) dbUpdates.lesson_credits_remaining = updates.lessonCreditsRemaining;
+    if (updates.imageCreditsRemaining !== undefined) dbUpdates.image_credits_remaining = updates.imageCreditsRemaining;
+    if (updates.hasCompletedTour !== undefined) dbUpdates.has_completed_tour = updates.hasCompletedTour;
+    if (updates.role !== undefined) dbUpdates.role = updates.role;
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.primarySchool !== undefined) dbUpdates.primary_school = updates.primarySchool;
+    if (updates.specialization !== undefined) dbUpdates.specialization = updates.specialization;
+    if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
+    if (updates.defaultCurriculum !== undefined) dbUpdates.default_curriculum = updates.defaultCurriculum;
+
     if (Object.keys(dbUpdates).length > 0) {
         const { error } = await supabase.from('users').update(dbUpdates).eq('uid', uid);
         if (error) throw error;
@@ -127,7 +136,7 @@ export const updateUserByAdmin = async (uid: string, updates: Partial<User>): Pr
     
     const { error } = await supabase.rpc('admin_update_user_details', {
         p_target_uid: uid,
-        p_updates: snakeCaseUpdates as unknown as Json,
+        p_updates: snakeCaseUpdates,
     });
 
     if (error) {
@@ -270,7 +279,7 @@ export const getTimetable = async (userId: string): Promise<TimetableData | null
 };
 
 export const saveTimetable = async (userId: string, data: TimetableData): Promise<void> => {
-    const payload = { user_id: userId, data: data as unknown as Json };
+    const payload = { user_id: userId, data: data as Json };
     const { error } = await supabase.from('timetables').upsert([payload]);
     if (error) throw error;
 };
@@ -283,7 +292,7 @@ export const getCustomCalendar = async (userId: string): Promise<CalendarData | 
 };
 
 export const saveCustomCalendar = async (userId: string, data: CalendarData): Promise<void> => {
-    const payload = { user_id: userId, data: data as unknown as Json };
+    const payload = { user_id: userId, data: data as Json };
     const { error } = await supabase.from('calendars').upsert([payload]);
     if (error) throw error;
 };
@@ -322,11 +331,11 @@ export const getReviews = async (limitCount: number = 5): Promise<Review[]> => {
 
 // --- Saved Lesson Plan Functions ---
 export const saveLessonPlan = async (userId: string, name: string, planData: LessonPlan, curriculumContext: SavedLessonPlanContext): Promise<void> => {
-    const payload: Database['public']['Tables']['saved_lesson_plans']['Insert'] = {
+    const payload = {
         user_id: userId,
         name: name,
-        plan_data: planData as unknown as Json,
-        curriculum_context: curriculumContext as unknown as Json
+        plan_data: planData as Json,
+        curriculum_context: curriculumContext as Json
     };
     const { error } = await supabase.from('saved_lesson_plans').insert([payload]);
     if (error) {
@@ -369,10 +378,10 @@ export const deleteSavedLessonPlan = async (planId: string): Promise<void> => {
 
 // --- Saved Exam Functions ---
 export const saveExam = async (userId: string, name: string, examData: Exam): Promise<void> => {
-    const payload: Database['public']['Tables']['saved_exams']['Insert'] = {
+    const payload = {
         user_id: userId,
         name: name,
-        exam_data: examData as unknown as Json,
+        exam_data: examData as Json,
     };
     const { error } = await supabase.from('saved_exams').insert([payload]);
     if (error) throw error;
@@ -400,40 +409,6 @@ export const getSavedExams = async (userId: string): Promise<SavedExam[]> => {
 
 export const deleteSavedExam = async (examId: string): Promise<void> => {
     const { error } = await supabase.from('saved_exams').delete().eq('id', examId);
-    if (error) throw error;
-};
-
-// --- Saved Canvas Functions ---
-export const saveCanvas = async (userId: string, name: string, canvasData: SavedCanvas['canvasData']): Promise<void> => {
-    const payload: Database['public']['Tables']['saved_canvases']['Insert'] = {
-        user_id: userId,
-        name: name,
-        canvas_data: canvasData as unknown as Json,
-    };
-    const { error } = await supabase.from('saved_canvases').insert([payload]);
-    if (error) throw error;
-};
-
-export const getSavedCanvases = async (userId: string): Promise<SavedCanvas[]> => {
-    const { data, error } = await supabase
-        .from('saved_canvases')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    
-    return (data || []).map((dbItem) => ({
-        id: dbItem.id,
-        userId: dbItem.user_id,
-        name: dbItem.name,
-        canvasData: dbItem.canvas_data as SavedCanvas['canvasData'],
-        createdAt: dbItem.created_at,
-    }));
-};
-
-export const deleteSavedCanvas = async (canvasId: string): Promise<void> => {
-    const { error } = await supabase.from('saved_canvases').delete().eq('id', canvasId);
     if (error) throw error;
 };
 
@@ -486,4 +461,38 @@ export const deleteSavedFlashcard = async (flashcardId: string): Promise<void> =
         console.error("Supabase delete error in deleteSavedFlashcard:", error);
         throw error;
     }
+};
+
+
+// --- Creator Studio / Saved Canvas Functions ---
+export const saveCanvas = async (userId: string, name: string, canvasData: CanvasData): Promise<void> => {
+    const payload: Database['public']['Tables']['saved_canvases']['Insert'] = {
+        user_id: userId,
+        name: name,
+        canvas_data: canvasData as Json,
+    };
+    const { error } = await supabase.from('saved_canvases').insert([payload]);
+    if (error) throw error;
+};
+
+export const getSavedCanvases = async (userId: string): Promise<SavedCanvas[]> => {
+    const { data, error } = await supabase
+        .from('saved_canvases')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    return (data || []).map((dbItem) => ({
+        id: dbItem.id,
+        userId: dbItem.user_id,
+        name: dbItem.name,
+        canvasData: dbItem.canvas_data as CanvasData,
+        createdAt: dbItem.created_at,
+    }));
+};
+
+export const deleteSavedCanvas = async (canvasId: string): Promise<void> => {
+    const { error } = await supabase.from('saved_canvases').delete().eq('id', canvasId);
+    if (error) throw error;
 };
