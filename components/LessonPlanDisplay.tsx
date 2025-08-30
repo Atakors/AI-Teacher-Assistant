@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { LessonPlan } from '../types';
 import { EmptyLessonPlanStructure, DownloadIcon, ChevronDownIcon, FileWordIcon, FilePdfIcon, BookmarkSquareIcon } from './constants';
@@ -19,11 +20,75 @@ const ProcedureCellContent: React.FC<{ text: string }> = ({ text }) => {
 
 // Helper for creating table cells in the display component
 const InfoCell: React.FC<{ label: string; children: React.ReactNode; className?: string; labelClassName?: string; contentClassName?: string; }> = ({ label, children, className = '', labelClassName = '', contentClassName = '' }) => (
-    <div className={`border border-[var(--color-border)] p-1.5 ${className}`}>
-        <p className={`text-xs font-semibold text-[var(--color-text-secondary)] mb-0.5 ${labelClassName}`}>{label}</p>
-        <div className={`text-base text-[var(--color-text-primary)] min-h-[1.25rem] ${contentClassName}`}>{children}</div>
+    <div className={`border border-[var(--color-outline)] p-2 ${className}`}>
+        <p className={`text-xs font-semibold text-[var(--color-on-surface-variant)] mb-0.5 ${labelClassName}`}>{label}</p>
+        <div className={`text-base text-[var(--color-on-surface)] min-h-[1.25rem] break-words ${contentClassName}`}>{children}</div>
     </div>
 );
+
+interface ActionButtonsProps {
+  plan: LessonPlan | null;
+  isViewingSavedPlan: boolean;
+  onSavePlan: () => void;
+  isExportMenuOpen: boolean;
+  setIsExportMenuOpen: (isOpen: boolean) => void;
+  menuRef: React.RefObject<HTMLDivElement>;
+  onExportWord: () => void;
+  onExportPdf: () => void;
+  dropdownDirection?: 'up' | 'down';
+}
+
+const ActionButtons: React.FC<ActionButtonsProps> = ({
+  plan,
+  isViewingSavedPlan,
+  onSavePlan,
+  isExportMenuOpen,
+  setIsExportMenuOpen,
+  menuRef,
+  onExportWord,
+  onExportPdf,
+  dropdownDirection = 'down'
+}) => {
+  const dropdownClasses = dropdownDirection === 'up'
+    ? "absolute right-0 bottom-full mb-2 w-48 origin-bottom-right"
+    : "absolute right-0 top-full mt-2 w-48 origin-top-right";
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:flex-wrap justify-end gap-2">
+      {!isViewingSavedPlan && (
+        <button
+          onClick={onSavePlan}
+          disabled={!plan}
+          className="material-button material-button-secondary flex items-center justify-center text-sm w-full sm:w-auto"
+        >
+          <BookmarkSquareIcon className="w-5 h-5 mr-2" />
+          Save Plan
+        </button>
+      )}
+      <div className="relative w-full sm:w-auto" ref={menuRef}>
+        <button
+          onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+          disabled={!plan}
+          className="material-button material-button-secondary flex items-center justify-center text-sm w-full"
+          aria-haspopup="true" aria-expanded={isExportMenuOpen}
+        >
+          <DownloadIcon className="w-5 h-5 mr-2" />
+          Export
+          <ChevronDownIcon className={`w-5 h-5 ml-1 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {isExportMenuOpen && (
+          <div className={`${dropdownClasses} bg-[var(--color-surface)] border border-[var(--color-outline)] rounded-md shadow-lg z-10`}>
+            <div className="py-1">
+              <button onClick={onExportWord} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]"><FileWordIcon className="w-4 h-4" /> As Word (.docx)</button>
+              <button onClick={onExportPdf} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]"><FilePdfIcon className="w-4 h-4" /> As PDF</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 
 interface LessonPlanDisplayProps {
     plan: LessonPlan | null;
@@ -32,25 +97,30 @@ interface LessonPlanDisplayProps {
 }
 
 const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSavedPlan, onSavePlan }) => {
-  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
-  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [isTopExportMenuOpen, setIsTopExportMenuOpen] = useState(false);
+  const [isBottomExportMenuOpen, setIsBottomExportMenuOpen] = useState(false);
+  const topExportMenuRef = useRef<HTMLDivElement>(null);
+  const bottomExportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-        setIsExportMenuOpen(false);
+      if (topExportMenuRef.current && !topExportMenuRef.current.contains(event.target as Node)) {
+        setIsTopExportMenuOpen(false);
+      }
+      if (bottomExportMenuRef.current && !bottomExportMenuRef.current.contains(event.target as Node)) {
+        setIsBottomExportMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [exportMenuRef]);
+  }, []);
 
   if (!plan) {
     return (
-      <div className="aurora-card text-center p-8 h-full flex flex-col justify-center items-center">
-        <EmptyLessonPlanStructure className="w-16 h-16 mx-auto text-[var(--color-text-secondary)]" />
-        <p className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">Your generated lesson plan will appear here.</p>
-        <p className="text-sm max-w-md mx-auto text-[var(--color-text-secondary)]">
+      <div className="material-card text-center p-8 h-full flex flex-col justify-center items-center">
+        <EmptyLessonPlanStructure className="w-16 h-16 mx-auto text-[var(--color-on-surface-variant)]" />
+        <p className="mt-4 text-lg font-medium text-[var(--color-on-surface)]">Your generated lesson plan will appear here.</p>
+        <p className="text-sm max-w-md mx-auto text-[var(--color-on-surface-variant)]">
           Select a curriculum and a specific lesson from the controls on the left, then click "Generate Lesson Plan".
         </p>
       </div>
@@ -60,7 +130,7 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
   const handleExportPdf = () => {
     if (!plan) return;
     const doc = new jsPDF();
-    const margin = 10;
+    const marginValue = 12.7; // 0.5 inches in mm
 
     // --- Header Part ---
     autoTable(doc, {
@@ -68,12 +138,12 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
             [
                 { content: `School:\n${plan.school}`, styles: { cellWidth: 80 } },
                 { content: `Teacher:\n${plan.teacher}`, styles: { cellWidth: 80 } },
-                { content: `Level:\n${plan.level}`, styles: { cellWidth: 'auto' } },
+                { content: `Number of Ls:\n${plan.numberOfLearners}` },
             ],
             [
-                { content: `Sequence:\n${plan.sequence}` },
+                { content: `${plan.sequence}` },
                 { content: `Section:\n${plan.section}` },
-                { content: `Number of Ls:\n${plan.numberOfLearners}` },
+                { content: `Level:\n${plan.level}` },
             ],
             [
                 { content: `Session:\n${plan.session}` },
@@ -91,7 +161,7 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
             [{ content: `Cross Curricular Competence:\n${plan.crossCurricularCompetence}`, colSpan: 3, styles: { minCellHeight: 25 } }],
         ],
         theme: 'grid',
-        startY: margin,
+        margin: marginValue,
         styles: { fontSize: 8, cellPadding: 1.5 },
     });
     
@@ -107,13 +177,15 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
         ]),
         theme: 'grid',
         startY: lastY,
+        margin: { left: marginValue, right: marginValue, bottom: marginValue },
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: '#333', textColor: '#fff' }
     });
 
     const fileName = `lesson-plan-${plan.session.toLowerCase().replace(/\s+/g, '-')}.pdf`;
     doc.save(fileName);
-    setIsExportMenuOpen(false);
+    setIsTopExportMenuOpen(false);
+    setIsBottomExportMenuOpen(false);
   };
 
   const handleExportWord = () => {
@@ -133,8 +205,8 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
     const headerTable = new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         rows: [
-            new TableRow({ children: [createHeaderCell('School', plan.school), createHeaderCell('Teacher', plan.teacher), createHeaderCell('Level', plan.level)] }),
-            new TableRow({ children: [createHeaderCell('Sequence', plan.sequence), createHeaderCell('Section', plan.section), createHeaderCell('Number of Ls', plan.numberOfLearners)] }),
+            new TableRow({ children: [createHeaderCell('School', plan.school), createHeaderCell('Teacher', plan.teacher), createHeaderCell('Number of Ls', plan.numberOfLearners)] }),
+            new TableRow({ children: [createCell(plan.sequence), createHeaderCell('Section', plan.section), createHeaderCell('Level', plan.level)] }),
             new TableRow({ children: [createHeaderCell('Session', plan.session), createHeaderCell('Session focus', plan.sessionFocus), createHeaderCell('Domain', plan.domain)] }),
             new TableRow({ children: [createHeaderCell('Targeted Competency', plan.targetedCompetency, { columnSpan: 3 })] }),
             new TableRow({ children: [createHeaderCell('Session Objective(s)', plan.sessionObjectives, { columnSpan: 3 })] }),
@@ -168,6 +240,16 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
 
     const doc = new Document({
         sections: [{
+            properties: {
+                page: {
+                    margin: {
+                        top: 720,
+                        right: 720,
+                        bottom: 720,
+                        left: 720,
+                    },
+                }
+            },
             children: [
                 headerTable,
                 new Paragraph({ text: '' }), // Spacer
@@ -187,94 +269,112 @@ const LessonPlanDisplay: React.FC<LessonPlanDisplayProps> = ({ plan, isViewingSa
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     });
-    setIsExportMenuOpen(false);
+    setIsTopExportMenuOpen(false);
+    setIsBottomExportMenuOpen(false);
   };
 
 
   return (
-    <div className="aurora-card p-4 sm:p-6 space-y-4">
-      <div className="flex justify-end gap-2">
-        {!isViewingSavedPlan && (
-            <button
-                onClick={onSavePlan}
-                disabled={!plan}
-                className="zenith-button-secondary flex items-center py-2 px-4 text-sm font-medium rounded-lg"
-            >
-                <BookmarkSquareIcon className="w-5 h-5 mr-2" />
-                Save Plan
-            </button>
-        )}
-        <div className="relative" ref={exportMenuRef}>
-          <button
-            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-            disabled={!plan}
-            className="zenith-button-secondary flex items-center py-2 px-4 text-sm font-medium rounded-lg"
-            aria-haspopup="true" aria-expanded={isExportMenuOpen}
-          >
-            <DownloadIcon className="w-5 h-5 mr-2" />
-            Export
-            <ChevronDownIcon className={`w-5 h-5 ml-1 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {isExportMenuOpen && (
-            <div className="absolute right-0 mt-2 w-48 origin-top-right bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md shadow-lg z-10">
-              <div className="py-1">
-                <button onClick={handleExportWord} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-inset-bg)]"><FileWordIcon className="w-4 h-4" /> As Word (.docx)</button>
-                <button onClick={handleExportPdf} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-inset-bg)]"><FilePdfIcon className="w-4 h-4" /> As PDF</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="material-card p-4 sm:p-6 space-y-4">
+      <ActionButtons
+        plan={plan}
+        isViewingSavedPlan={isViewingSavedPlan}
+        onSavePlan={onSavePlan}
+        isExportMenuOpen={isTopExportMenuOpen}
+        setIsExportMenuOpen={setIsTopExportMenuOpen}
+        menuRef={topExportMenuRef}
+        onExportWord={handleExportWord}
+        onExportPdf={handleExportPdf}
+        dropdownDirection="down"
+      />
       
       {/* Header Info Display */}
-      <div className="grid grid-cols-3 gap-0.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-0.5">
           <InfoCell label="School" className="col-span-1">{plan.school}</InfoCell>
           <InfoCell label="Teacher" className="col-span-1">{plan.teacher}</InfoCell>
-          <InfoCell label="Level" className="col-span-1">{plan.level}</InfoCell>
+          <InfoCell label="Number of Ls" className="col-span-1">{plan.numberOfLearners}</InfoCell>
 
           <InfoCell label="Sequence" className="col-span-1">{plan.sequence}</InfoCell>
           <InfoCell label="Section" className="col-span-1">{plan.section}</InfoCell>
-          <InfoCell label="Number of Ls" className="col-span-1">{plan.numberOfLearners}</InfoCell>
+          <InfoCell label="Level" className="col-span-1">{plan.level}</InfoCell>
 
           <InfoCell label="Session" className="col-span-1">{plan.session}</InfoCell>
           <InfoCell label="Session focus" className="col-span-1">{plan.sessionFocus}</InfoCell>
           <InfoCell label="Domain" className="col-span-1">{plan.domain}</InfoCell>
 
-          <InfoCell label="Targeted Competency" className="col-span-3">{plan.targetedCompetency}</InfoCell>
-          <InfoCell label="Session Objective(s)" className="col-span-3">{plan.sessionObjectives}</InfoCell>
-          <InfoCell label="Subsidiary Objective" className="col-span-3">{plan.subsidiaryObjective}</InfoCell>
-          <InfoCell label="Anticipated Problems" className="col-span-3">{plan.anticipatedProblems}</InfoCell>
-          <InfoCell label="Solutions" className="col-span-3">{plan.solutions}</InfoCell>
+          <InfoCell label="Targeted Competency" className="sm:col-span-3">{plan.targetedCompetency}</InfoCell>
+          <InfoCell label="Session Objective(s)" className="sm:col-span-3">{plan.sessionObjectives}</InfoCell>
+          <InfoCell label="Subsidiary Objective" className="sm:col-span-3">{plan.subsidiaryObjective}</InfoCell>
+          <InfoCell label="Anticipated Problems" className="sm:col-span-3">{plan.anticipatedProblems}</InfoCell>
+          <InfoCell label="Solutions" className="sm:col-span-3">{plan.solutions}</InfoCell>
           
           {plan.materials && plan.materials.length > 0 && (
-            <InfoCell label="Materials" className="col-span-3">{plan.materials.join(', ')}</InfoCell>
+            <InfoCell label="Materials" className="sm:col-span-3">{plan.materials.join(', ')}</InfoCell>
           )}
 
-          <InfoCell label="Cross Curricular Competence" className="col-span-3 min-h-[6rem]">{plan.crossCurricularCompetence}</InfoCell>
+          <InfoCell label="Cross Curricular Competence" className="sm:col-span-3 min-h-[6rem]">{plan.crossCurricularCompetence}</InfoCell>
       </div>
 
       {/* Procedure Table Display */}
-      <div className="overflow-x-auto pt-4">
+      {/* Desktop Table View */}
+      <div className="overflow-x-auto pt-4 hidden md:block">
         <table className="w-full border-collapse text-left">
             <thead>
-                <tr className="bg-[var(--color-inset-bg)]">
+                <tr className="bg-[var(--color-surface-variant)]">
                     {['Time', 'Stages', 'Procedure', 'Interaction'].map(header => (
-                        <th key={header} className="p-2 border border-[var(--color-border)] text-sm font-semibold">{header}</th>
+                        <th key={header} className="p-1 sm:p-2 border border-[var(--color-outline)] text-sm font-semibold text-[var(--color-on-surface-variant)]">{header}</th>
                     ))}
                 </tr>
             </thead>
             <tbody>
                 {plan.procedureTable.map((row, index) => (
-                    <tr key={index} className="border-t border-[var(--color-border)]">
-                        <td className="p-2 border border-[var(--color-border)] align-top text-sm w-1/12">{row.time}</td>
-                        <td className="p-2 border border-[var(--color-border)] align-top font-medium text-sm w-2/12">{row.stage}</td>
-                        <td className="p-2 border border-[var(--color-border)] align-top w-7/12"><ProcedureCellContent text={row.procedure} /></td>
-                        <td className="p-2 border border-[var(--color-border)] align-top text-sm w-2/12">{row.interaction}</td>
+                    <tr key={index} className="border-t border-[var(--color-outline)]">
+                        <td className="p-1 sm:p-2 border border-[var(--color-outline)] align-top text-sm w-1/12">{row.time}</td>
+                        <td className="p-1 sm:p-2 border border-[var(--color-outline)] align-top font-medium text-sm w-2/12">{row.stage}</td>
+                        <td className="p-1 sm:p-2 border border-[var(--color-outline)] align-top w-7/12 break-words"><ProcedureCellContent text={row.procedure} /></td>
+                        <td className="p-1 sm:p-2 border border-[var(--color-outline)] align-top text-sm w-2/12">{row.interaction}</td>
                     </tr>
                 ))}
             </tbody>
         </table>
       </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden pt-4 space-y-4">
+        <h3 className="text-lg font-semibold text-[var(--color-on-surface)]">Lesson Procedure</h3>
+        {plan.procedureTable.map((row, index) => (
+            <div key={index} className="material-card p-4 space-y-3 rounded-lg border-l-4" style={{ borderColor: 'var(--color-primary)' }}>
+                <div className="flex justify-between items-start">
+                    <p className="font-bold text-lg text-[var(--color-on-surface)]">{row.stage}</p>
+                    <div className="text-right flex-shrink-0 ml-4">
+                        <p className="text-sm font-medium">{row.time}</p>
+                        <p className="text-xs text-[var(--color-on-surface-variant)]">{row.interaction}</p>
+                    </div>
+                </div>
+                <div className="pt-2 border-t border-[var(--color-outline)]">
+                    <p className="text-xs font-semibold text-[var(--color-on-surface-variant)] mb-1">Procedure</p>
+                    <div className="text-sm text-[var(--color-on-surface)]"><ProcedureCellContent text={row.procedure} /></div>
+                </div>
+            </div>
+        ))}
+      </div>
+
+
+      {plan && (
+        <div className="pt-4 mt-4 border-t border-[var(--color-outline)]">
+            <ActionButtons
+                plan={plan}
+                isViewingSavedPlan={isViewingSavedPlan}
+                onSavePlan={onSavePlan}
+                isExportMenuOpen={isBottomExportMenuOpen}
+                setIsExportMenuOpen={setIsBottomExportMenuOpen}
+                menuRef={bottomExportMenuRef}
+                onExportWord={handleExportWord}
+                onExportPdf={handleExportPdf}
+                dropdownDirection="up"
+            />
+        </div>
+      )}
     </div>
   );
 };

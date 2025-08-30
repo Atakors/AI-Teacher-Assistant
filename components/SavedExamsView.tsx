@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SavedExam, User } from '../types';
 import { getSavedExams, deleteSavedExam } from '../services/dbService';
@@ -45,11 +46,11 @@ const SavedExamsView: React.FC<SavedExamsViewProps> = ({ currentUser, onLoadExam
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+        <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-on-bg)]">
           My Saved Exams
-          <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+          <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-primary)' }} />
         </h2>
-        <p className="text-[var(--color-text-secondary)] mt-2">Access and manage your previously saved exams.</p>
+        <p className="text-[var(--color-on-surface-variant)] mt-2">Access and manage your previously saved exams.</p>
       </div>
 
       {isLoading && <LoadingSpinner text="Loading saved exams..." />}
@@ -57,26 +58,26 @@ const SavedExamsView: React.FC<SavedExamsViewProps> = ({ currentUser, onLoadExam
       
       {!isLoading && !error && (
         savedExams.length === 0 ? (
-          <div className="aurora-card text-center py-16">
-            <BookOpenIcon className="w-16 h-16 mx-auto text-[var(--color-text-secondary)] opacity-50" />
-            <p className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">No Saved Exams Yet</p>
-            <p className="text-sm max-w-md mx-auto text-[var(--color-text-secondary)]">
+          <div className="material-card text-center py-16">
+            <BookOpenIcon className="w-16 h-16 mx-auto text-[var(--color-on-surface-variant)] opacity-50" />
+            <p className="mt-4 text-lg font-medium text-[var(--color-on-surface)]">No Saved Exams Yet</p>
+            <p className="text-sm max-w-md mx-auto text-[var(--color-on-surface-variant)]">
               When you generate an exam, you'll see an option to save it here for later use.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {savedExams.map(exam => (
-              <div key={exam.id} className="aurora-card p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div key={exam.id} className="material-card p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex-grow">
-                  <h3 className="font-semibold text-lg text-[var(--color-text-primary)]">{exam.name}</h3>
-                   <p className="text-xs text-[var(--color-text-secondary)] mt-1 italic">
+                  <h3 className="font-semibold text-lg text-[var(--color-on-surface)]">{exam.name}</h3>
+                   <p className="text-xs text-[var(--color-on-surface-variant)] mt-1 italic">
                     Title: "{exam.examData.title}"
                   </p>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">Saved on: {new Date(exam.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-[var(--color-on-surface-variant)] mt-1">Saved on: {new Date(exam.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2 mt-4 sm:mt-0">
-                  <button onClick={() => onLoadExam(exam)} className="blueprint-button py-2 px-4 rounded-lg text-sm">Load</button>
+                  <button onClick={() => onLoadExam(exam)} className="material-button material-button-primary text-sm py-2 px-4">Load</button>
                   <button onClick={() => handleDelete(exam.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
                     <TrashIcon className="w-5 h-5" />
                   </button>

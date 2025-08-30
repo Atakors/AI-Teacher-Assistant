@@ -227,24 +227,24 @@ const GuideTour: React.FC<GuideTourProps> = ({ onComplete, setActiveView }) => {
     <>
       <div style={styles.highlight}></div>
       <div style={styles.popover}>
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-6 text-slate-800 dark:text-slate-200">
+        <div className="material-card p-6 text-[var(--color-on-surface)]">
             <div className="flex items-start mb-3">
-                <div className="p-2 bg-[var(--color-accent)]/10 rounded-full mr-3">
-                    <SparklesIcon className="w-6 h-6 text-[var(--color-accent)]" />
+                <div className="p-2 rounded-full mr-3" style={{backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)'}}>
+                    <SparklesIcon className="w-6 h-6 text-[var(--color-primary)]" />
                 </div>
                 <div>
                     <h3 className="text-lg font-bold">{step.title}</h3>
                 </div>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{step.content}</p>
+            <p className="text-sm text-[var(--color-on-surface-variant)] mb-4">{step.content}</p>
 
             <div className="flex justify-between items-center">
-                <button onClick={onComplete} className="text-sm text-slate-500 hover:underline">Skip Tour</button>
+                <button onClick={onComplete} className="text-sm text-[var(--color-on-surface-variant)] hover:underline">Skip Tour</button>
                 <div className="flex items-center gap-2">
                     {currentStep > 0 && (
-                        <button onClick={handlePrev} className="zenith-button-secondary text-sm py-2 px-4 rounded-lg">Back</button>
+                        <button onClick={handlePrev} className="material-button material-button-secondary text-sm py-2 px-4">Back</button>
                     )}
-                    <button onClick={handleNext} className="zenith-button text-white text-sm py-2 px-4 rounded-lg">
+                    <button onClick={handleNext} className="material-button material-button-primary text-sm py-2 px-4">
                         {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'}
                     </button>
                 </div>
@@ -253,7 +253,7 @@ const GuideTour: React.FC<GuideTourProps> = ({ onComplete, setActiveView }) => {
                 {TOUR_STEPS.map((_, index) => (
                     <div
                         key={index}
-                        className={`w-2 h-2 rounded-full mx-1 transition-colors ${index === currentStep ? 'bg-[var(--color-accent)]' : 'bg-slate-300 dark:bg-slate-600'}`}
+                        className={`w-2 h-2 rounded-full mx-1 transition-colors ${index === currentStep ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-outline)]'}`}
                     />
                 ))}
             </div>

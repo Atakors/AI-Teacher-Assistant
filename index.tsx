@@ -5,10 +5,9 @@ import MainApplication from './components/MainApplication';
 import ProfileModal from './components/ProfileModal';
 import PremiumModal from './components/PremiumModal';
 import ReviewModal from './components/ReviewModal';
-import GuideTour from './components/GuideTour';
 import LoadingSpinner from './components/LoadingSpinner';
 import { AppState, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, CurriculumLevel, AppView } from './types'; 
-import { getUserById, updateUser, addUser } from './services/dbService';
+import { getUserById, updateUser } from './services/dbService';
 import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
@@ -24,7 +23,6 @@ const App: React.FC = () => {
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [premiumModalFeature, setPremiumModalFeature] = useState<string | undefined>(undefined);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [isTourActive, setIsTourActive] = useState(false);
   
   // Lesson Planner AI Settings State
   const [lessonDetailLevel, setLessonDetailLevel] = useState<LessonDetailLevel>('standard');
@@ -32,9 +30,14 @@ const App: React.FC = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [promptMode, setPromptMode] = useState<PromptMode>('structured');
   const [customPrompt, setCustomPrompt] = useState<string>('');
+  const [includeTextbookActivities, setIncludeTextbookActivities] = useState<boolean>(true);
 
-  // Lifted state for tour control
-  const [activeView, setActiveView] = useState<AppView>('lessonPlanner');
+  // Lifted state for view control
+  const [activeView, setActiveView] = useState<AppView>('dashboard');
+
+  // Lifted state for notifications and plan changes
+  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [isProcessingPlanChange, setIsProcessingPlanChange] = useState(false);
 
   useEffect(() => {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -57,10 +60,20 @@ const App: React.FC = () => {
             }
 
             if (userProfile) {
-                setCurrentUser(userProfile);
-                setAppState('app');
-                if (!userProfile.hasCompletedTour) {
-                    setIsTourActive(true);
+                // --- AUTOMATIC DOWNGRADE LOGIC ---
+                if (userProfile.plan === 'pro' && userProfile.subscriptionEndDate && new Date(userProfile.subscriptionEndDate) < new Date()) {
+                    console.log(`User ${userProfile.uid} subscription expired. Downgrading.`);
+                    await updateUser(userProfile.uid, { plan: 'free', subscriptionStatus: 'expired' });
+                    // Re-fetch the user profile to get the updated plan
+                    userProfile = await getUserById(session.user.id);
+                    if (userProfile) {
+                        setCurrentUser(userProfile);
+                        setAppState('app');
+                        setNotification({ message: "Your Pro subscription has expired. You've been switched to the Explorer plan.", type: 'success' });
+                    }
+                } else {
+                    setCurrentUser(userProfile);
+                    setAppState('app');
                 }
             } else {
                 console.error("Critical error: User exists in auth but not in public profiles after retry. Logging out.");
@@ -111,6 +124,38 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Presence tracking effect
+  useEffect(() => {
+    let channel: any = null;
+
+    if (appState === 'app' && currentUser) {
+        channel = supabase.channel('online_users', {
+            config: {
+                presence: {
+                    key: currentUser.uid,
+                },
+            },
+        });
+
+        channel.subscribe(async (status: string) => {
+            if (status === 'SUBSCRIBED') {
+                try {
+                    await channel.track({ user_id: currentUser.uid, online_at: new Date().toISOString() });
+                } catch (error) {
+                    console.error('Failed to track presence:', error);
+                }
+            }
+        });
+    }
+
+    return () => {
+        if (channel) {
+            channel.untrack();
+            supabase.removeChannel(channel);
+        }
+    };
+  }, [appState, currentUser]);
+
 
   // Theme initialization and persistence effect
   useEffect(() => {
@@ -150,6 +195,14 @@ const App: React.FC = () => {
       document.body.classList.remove('landing-page-active');
     };
   }, [appState]);
+
+  // Notification effect
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const toggleThemeMode = () => {
     setThemeSettings(prev => ({
@@ -210,15 +263,31 @@ const App: React.FC = () => {
     }
   };
 
-  const handleTourComplete = async () => {
-    if (!currentUser) return;
+  const handleDowngradeToFree = async () => {
+    if (!currentUser || isProcessingPlanChange) return;
+    if (!window.confirm("Are you sure you want to downgrade to the free Explorer plan? Your Pro features will be removed, but you will keep your purchased credits.")) {
+        return;
+    }
+    
+    setIsProcessingPlanChange(true);
     try {
-      await updateUser(currentUser.uid, { hasCompletedTour: true });
-      setCurrentUser({ ...currentUser, hasCompletedTour: true });
-      setIsTourActive(false);
+        await updateUser(currentUser.uid, {
+            plan: 'free',
+            subscriptionStatus: 'cancelled',
+            subscriptionStartDate: null,
+            subscriptionEndDate: null,
+        });
+        const updatedUser = await getUserById(currentUser.uid);
+        if (updatedUser) setCurrentUser(updatedUser);
+        setIsProfileModalOpen(false);
+        setNotification({ message: "Successfully downgraded to Explorer Plan.", type: 'success' });
     } catch (e) {
-      console.error("Failed to update tour status", e);
-      setIsTourActive(false);
+        console.error("Failed to downgrade plan:", e);
+        const message = e instanceof Error ? e.message : 'An unknown error occurred.';
+        setNotification({ message: `Downgrade failed: ${message}`, type: 'error' });
+        throw e;
+    } finally {
+        setIsProcessingPlanChange(false);
     }
   };
   
@@ -253,8 +322,11 @@ const App: React.FC = () => {
             setPromptMode={setPromptMode}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}
+            includeTextbookActivities={includeTextbookActivities}
+            setIncludeTextbookActivities={setIncludeTextbookActivities}
             activeView={activeView}
             setActiveView={setActiveView}
+            setNotification={setNotification}
         />
       ) : (
         <LandingPage />
@@ -268,6 +340,9 @@ const App: React.FC = () => {
           onSave={handleSaveProfile}
           onPasswordChange={handlePasswordChange}
           onDeleteAccount={handleDeleteAccount}
+          onOpenPremiumModal={handleOpenPremiumModal}
+          onDowngrade={handleDowngradeToFree}
+          isProcessing={isProcessingPlanChange}
         />
       )}
       <PremiumModal 
@@ -282,8 +357,17 @@ const App: React.FC = () => {
             currentUser={currentUser}
         />
       )}
-       {isTourActive && currentUser && (
-        <GuideTour onComplete={handleTourComplete} setActiveView={setActiveView} />
+
+      {notification && (
+        <div 
+          className={`fixed bottom-8 right-8 z-[200] p-4 rounded-lg shadow-2xl text-white text-sm font-medium transition-all duration-300
+            ${notification.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}
+            ${notification ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`
+          }
+          role="alert"
+        >
+          {notification.message}
+        </div>
       )}
     </>
   );

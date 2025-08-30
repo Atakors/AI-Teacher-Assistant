@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ThemeSettings, AccentColor } from '../types';
 import { SunIcon, MoonIcon, ACCENT_COLORS } from './constants';
@@ -10,10 +11,10 @@ interface ThemeSettingsProps {
 
 const ThemeSettingsComponent: React.FC<ThemeSettingsProps> = ({ settings, onModeToggle, onAccentChange }) => {
   return (
-    <div className="blueprint-card p-4 space-y-4">
+    <div className="material-card p-4 space-y-4 bg-[var(--color-surface)]">
       <div>
-        <h4 className="text-xs uppercase font-semibold text-[var(--color-text-secondary)] mb-2">Mode</h4>
-        <div className="flex items-center p-1 rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>
+        <h4 className="text-xs uppercase font-semibold text-[var(--color-on-surface-variant)] mb-2">Mode</h4>
+        <div className="flex items-center p-1 rounded-lg" style={{backgroundColor: 'var(--color-surface-variant)'}}>
           <button 
             onClick={onModeToggle} 
             disabled={settings.mode === 'light'} 
@@ -33,13 +34,13 @@ const ThemeSettingsComponent: React.FC<ThemeSettingsProps> = ({ settings, onMode
         </div>
       </div>
        <div>
-        <h4 className="text-xs uppercase font-semibold text-[var(--color-text-secondary)] mb-2">Accent</h4>
+        <h4 className="text-xs uppercase font-semibold text-[var(--color-on-surface-variant)] mb-2">Accent</h4>
          <div className="grid grid-cols-4 gap-2">
             {ACCENT_COLORS.map(color => (
                 <button
                     key={color.name}
                     onClick={() => onAccentChange(color.name)}
-                    className={`w-full h-8 rounded-md transition-all border-2 ${settings.accentColor === color.name ? 'border-[var(--color-accent)] shadow-[0_0_8px_var(--color-accent)]' : 'border-transparent hover:border-[var(--color-border)]'}`}
+                    className={`w-full h-8 rounded-md transition-all border-2 ${settings.accentColor === color.name ? 'border-[var(--color-primary)] shadow-[0_0_8px_var(--color-primary)]' : 'border-transparent hover:border-[var(--color-outline)]'}`}
                     style={{ backgroundColor: color.colorValue }}
                     aria-label={`Set accent color to ${color.name}`}
                 >

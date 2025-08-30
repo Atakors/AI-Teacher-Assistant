@@ -45,11 +45,11 @@ const SavedPlansView: React.FC<SavedPlansViewProps> = ({ currentUser, onLoadPlan
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+        <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-on-bg)]">
           My Saved Plans
-          <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+          <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-primary)' }} />
         </h2>
-        <p className="text-[var(--color-text-secondary)] mt-2">Access and manage your previously saved lesson plans.</p>
+        <p className="text-[var(--color-on-surface-variant)] mt-2">Access and manage your previously saved lesson plans.</p>
       </div>
 
       {isLoading && <LoadingSpinner text="Loading saved plans..." />}
@@ -57,29 +57,29 @@ const SavedPlansView: React.FC<SavedPlansViewProps> = ({ currentUser, onLoadPlan
       
       {!isLoading && !error && (
         savedPlans.length === 0 ? (
-          <div className="aurora-card text-center py-16">
-            <BookOpenIcon className="w-16 h-16 mx-auto text-[var(--color-text-secondary)] opacity-50" />
-            <p className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">No Saved Plans Yet</p>
-            <p className="text-sm max-w-md mx-auto text-[var(--color-text-secondary)]">
+          <div className="material-card text-center py-16">
+            <BookOpenIcon className="w-16 h-16 mx-auto text-[var(--color-on-surface-variant)] opacity-50" />
+            <p className="mt-4 text-lg font-medium text-[var(--color-on-surface)]">No Saved Plans Yet</p>
+            <p className="text-sm max-w-md mx-auto text-[var(--color-on-surface-variant)]">
               When you generate a lesson plan, you'll see an option to save it here for later use.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {savedPlans.map(plan => (
-              <div key={plan.id} className="aurora-card p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div key={plan.id} className="material-card p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex-grow">
-                  <h3 className="font-semibold text-lg text-[var(--color-text-primary)]">{plan.name}</h3>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                  <h3 className="font-semibold text-lg text-[var(--color-on-surface)]">{plan.name}</h3>
+                  <p className="text-xs text-[var(--color-on-surface-variant)] mt-1">
                     {plan.curriculumContext.curriculumLevel} &gt; {plan.curriculumContext.sequenceName} &gt; {plan.curriculumContext.sectionName}
                   </p>
-                   <p className="text-xs text-[var(--color-text-secondary)] mt-1 italic">
+                   <p className="text-xs text-[var(--color-on-surface-variant)] mt-1 italic">
                     Lesson: "{plan.curriculumContext.lessonName}"
                   </p>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">Saved on: {new Date(plan.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-[var(--color-on-surface-variant)] mt-1">Saved on: {new Date(plan.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2 mt-4 sm:mt-0">
-                  <button onClick={() => onLoadPlan(plan)} className="zenith-button py-2 px-4 rounded-lg text-sm">Load</button>
+                  <button onClick={() => onLoadPlan(plan)} className="material-button material-button-primary text-sm">Load</button>
                   <button onClick={() => handleDelete(plan.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
                     <TrashIcon className="w-5 h-5" />
                   </button>

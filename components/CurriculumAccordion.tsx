@@ -44,16 +44,24 @@ const CurriculumAccordion: React.FC<CurriculumAccordionProps> = ({
   };
 
   if (!sequences.length) {
-    return <p className="text-sm text-[var(--color-text-secondary)]">No curriculum data.</p>;
+    return <p className="text-sm text-[var(--color-on-surface-variant)]">No curriculum data.</p>;
   }
   
   const getButtonStyle = (isSelected: boolean) => ({
-    backgroundColor: isSelected ? 'var(--color-accent)' : 'transparent',
-    color: isSelected ? 'white' : 'var(--color-text-primary)',
+    backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
+    color: isSelected ? 'var(--color-on-primary)' : 'var(--color-on-surface)',
   });
+  
+  const darkSelectedStyle = (isSelected: boolean) => {
+    if (document.documentElement.classList.contains('dark') && isSelected) {
+        return { color: '#111' };
+    }
+    return {};
+  }
+
 
   return (
-    <div className="space-y-1 p-2 rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>
+    <div className="space-y-1 p-2 rounded-lg bg-[var(--color-surface-variant)]">
       {sequences.map(seq => {
         const isSeqSelected = selectedSequenceId === seq.id;
         const isSeqExpanded = expandedSequenceId === seq.id;
@@ -61,7 +69,7 @@ const CurriculumAccordion: React.FC<CurriculumAccordionProps> = ({
           <div key={seq.id}>
             <button onClick={() => handleSequenceClick(seq.id)} disabled={disabled}
               className={`w-full flex justify-between items-center p-2 text-left text-sm rounded-md transition-colors hover:bg-[var(--color-surface)]`}
-               style={getButtonStyle(isSeqSelected)}
+               style={{...getButtonStyle(isSeqSelected), ...darkSelectedStyle(isSeqSelected)}}
                >
               <span className="font-medium flex-1 pr-2">{seq.title}</span>
               <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSeqExpanded ? 'rotate-180' : ''}`} />
@@ -75,19 +83,19 @@ const CurriculumAccordion: React.FC<CurriculumAccordionProps> = ({
                     <div key={sec.id}>
                       <button onClick={() => handleSectionClick(sec.id)} disabled={disabled}
                         className={`w-full flex justify-between items-center p-2 text-left text-sm rounded-md transition-colors hover:bg-[var(--color-surface)]`}
-                        style={getButtonStyle(isSecSelected)}>
+                        style={{...getButtonStyle(isSecSelected), ...darkSelectedStyle(isSecSelected)}}>
                         <span className="font-normal flex-1 pr-2">{sec.name}</span>
                         <ChevronDownIcon className={`w-4 h-4 transition-transform ${isSecExpanded ? 'rotate-180' : ''}`} />
                       </button>
                       {isSecExpanded && (
                         <div className="pl-2 pt-1 space-y-1">
-                          {sec.lessons.filter(lesson => !lesson.name.includes("Initial Situation")).map((lesson, index) => {
+                          {sec.lessons.map((lesson, index) => {
                              const isLessonSelected = selectedLesson?.name === lesson.name && selectedLesson?.timing === lesson.timing;
                              return (
                                 <button key={`${lesson.name}-${index}`} onClick={() => handleLessonClick(lesson)} disabled={disabled}
                                   className={`w-full flex items-start text-left p-2 text-xs rounded-md transition-colors hover:bg-[var(--color-surface)]`}
-                                  style={getButtonStyle(isLessonSelected)}>
-                                  <BookOpenIcon className="w-3 h-3 mr-2 mt-0.5 flex-shrink-0" style={isLessonSelected ? { color: 'white' } : { color: 'var(--color-accent)' }}/>
+                                  style={{...getButtonStyle(isLessonSelected), ...darkSelectedStyle(isLessonSelected)}}>
+                                  <BookOpenIcon className="w-3 h-3 mr-2 mt-0.5 flex-shrink-0" style={isLessonSelected ? { color: 'var(--color-on-primary)' } : { color: 'var(--color-primary)' }}/>
                                   <span className="flex-1">{lesson.name}
                                     {lesson.timing && <span className="opacity-70 ml-1">({lesson.timing})</span>}
                                   </span>

@@ -53,11 +53,11 @@ const MultiSelectCurriculumAccordion: React.FC<MultiSelectCurriculumAccordionPro
   };
 
   if (!sequences.length) {
-    return <p className="text-sm text-[var(--color-text-secondary)]">No curriculum data. Select a year.</p>;
+    return <p className="text-sm text-[var(--color-on-surface-variant)]">No curriculum data. Select a year.</p>;
   }
 
   return (
-    <div className="space-y-1 p-2 rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>
+    <div className="space-y-1 p-2 rounded-lg bg-[var(--color-surface-variant)]">
       {sequences.map(seq => {
         const checkboxState = getSequenceCheckboxState(seq);
         const isSeqExpanded = expandedSequenceIds.includes(seq.id);
@@ -71,7 +71,6 @@ const MultiSelectCurriculumAccordion: React.FC<MultiSelectCurriculumAccordionPro
                 ref={el => { if (el) el.indeterminate = checkboxState === 'indeterminate'; }}
                 onChange={() => handleSequenceCheckboxChange(seq)}
                 disabled={disabled}
-                className="h-4 w-4 shrink-0 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                 aria-label={`Select all sections in ${seq.title}`}
               />
               <button onClick={() => handleSequenceToggle(seq.id)} disabled={disabled}
@@ -91,7 +90,6 @@ const MultiSelectCurriculumAccordion: React.FC<MultiSelectCurriculumAccordionPro
                       checked={selectedSectionIds.includes(sec.id)}
                       onChange={() => handleSectionCheckboxChange(sec.id)}
                       disabled={disabled}
-                      className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                     />
                     <span className="ml-3 text-sm font-normal">{sec.name}</span>
                   </label>

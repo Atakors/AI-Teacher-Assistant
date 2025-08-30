@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { XIcon } from './constants';
 
@@ -9,70 +9,138 @@ interface AdminUserEditModalProps {
   onSave: (userId: string, updates: Partial<User>) => void;
 }
 
-const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({ isOpen, onClose, user, onSave }) => {
-  const [plan, setPlan] = useState<'free' | 'premium'>(user.plan);
-  const [lessonCredits, setLessonCredits] = useState(user.lessonCreditsRemaining);
-  const [imageCredits, setImageCredits] = useState(user.imageCreditsRemaining);
-  const [role, setRole] = useState<'user' | 'admin'>(user.role);
+// Helper to format Date object or ISO string to 'YYYY-MM-DD' for date input
+const formatDateForInput = (dateString: string | null | undefined): string => {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    } catch {
+        return '';
+    }
+};
 
-  if (!isOpen) return null;
+
+const AdminUserEditModal: React.FC<AdminUserEditModalProps> = ({ isOpen, onClose, user, onSave }) => {
+  const [plan, setPlan] = useState<'free' | 'pro'>(user.plan);
+  const [role, setRole] = useState<'user' | 'admin'>(user.role);
+  const [startDate, setStartDate] = useState(formatDateForInput(user.subscriptionStartDate));
+  const [endDate, setEndDate] = useState(formatDateForInput(user.subscriptionEndDate));
+
+  // State for all five new credit types
+  const [lessonPlannerCredits, setLessonPlannerCredits] = useState(user.lessonPlannerCredits);
+  const [flashcardGeneratorCredits, setFlashcardGeneratorCredits] = useState(user.flashcardGeneratorCredits);
+  const [examGeneratorCredits, setExamGeneratorCredits] = useState(user.examGeneratorCredits);
+  const [wordGameGeneratorCredits, setWordGameGeneratorCredits] = useState(user.wordGameGeneratorCredits);
+
+  // Auto-calculate end date when start date changes
+  useEffect(() => {
+    if (startDate) {
+        const newStartDate = new Date(startDate);
+        if (!isNaN(newStartDate.getTime())) {
+            const newEndDate = new Date(newStartDate);
+            newEndDate.setMonth(newStartDate.getMonth() + 1);
+            setEndDate(formatDateForInput(newEndDate.toISOString()));
+        }
+    } else {
+        setEndDate('');
+    }
+  }, [startDate]);
+  
+  // Auto-populate Pro credits when plan is changed to 'pro'
+  useEffect(() => {
+    if (plan === 'pro') {
+      setLessonPlannerCredits(50);
+      setFlashcardGeneratorCredits(50);
+      setExamGeneratorCredits(10);
+      setWordGameGeneratorCredits(20);
+    }
+  }, [plan]);
+
 
   const handleSave = () => {
-    onSave(user.uid, { plan, lessonCreditsRemaining: lessonCredits, imageCreditsRemaining: imageCredits, role });
+    const updates: Partial<User> = {
+      plan,
+      role,
+      subscriptionStartDate: startDate ? new Date(startDate).toISOString() : null,
+      subscriptionEndDate: endDate ? new Date(endDate).toISOString() : null,
+      lessonPlannerCredits: Number(lessonPlannerCredits),
+      flashcardGeneratorCredits: Number(flashcardGeneratorCredits),
+      examGeneratorCredits: Number(examGeneratorCredits),
+      wordGameGeneratorCredits: Number(wordGameGeneratorCredits),
+    };
+    onSave(user.uid, updates);
   };
+  
+  if (!isOpen) return null;
+  const inputClasses = "w-full p-3";
+  const labelClasses = "text-sm font-medium text-[var(--color-on-surface-variant)] mb-1 block";
 
-  const inputClasses = "w-full p-3 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-[var(--color-border)] bg-[var(--color-input-bg)]";
+  const CreditInput: React.FC<{ label: string; value: number; onChange: (val: number) => void }> = ({ label, value, onChange }) => (
+    <div>
+        <label className={labelClasses}>{label}</label>
+        <input type="number" value={value} onChange={e => onChange(Number(e.target.value))} className={inputClasses} />
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4" onClick={onClose}>
-      <div className="relative w-full max-w-md bg-[var(--color-surface)] rounded-xl shadow-2xl text-[var(--color-text-primary)] overflow-hidden" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors z-20">
-          <XIcon className="w-6 h-6" />
-        </button>
-        <div className="p-8">
-          <h3 className="text-xl font-semibold mb-2 text-center">Edit User</h3>
-          <p className="text-sm text-[var(--color-text-secondary)] text-center mb-6">{user.name} ({user.email})</p>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Subscription Plan</label>
-              <select value={plan} onChange={e => setPlan(e.target.value as 'free' | 'premium')} className={inputClasses}>
-                <option value="free">Free</option>
-                <option value="premium">Premium</option>
-              </select>
-            </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={onClose}>
+      <div className="relative w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="relative material-card text-[var(--color-on-surface)] overflow-hidden">
+          <button onClick={onClose} className="absolute top-3 right-3 p-2 text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] transition-colors z-20">
+            <XIcon className="w-6 h-6" />
+          </button>
+          <div className="p-8">
+            <h3 className="text-xl font-semibold mb-1">Edit User</h3>
+            <p className="text-sm text-[var(--color-on-surface-variant)] mb-6">{user.name} ({user.email})</p>
 
-            <div>
-              <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Role</label>
-              <select value={role} onChange={e => setRole(e.target.value as 'user' | 'admin')} className={inputClasses}>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClasses}>Plan</label>
+                  <select value={plan} onChange={e => setPlan(e.target.value as 'free' | 'pro')} className={inputClasses}>
+                    <option value="free">Free</option>
+                    <option value="pro">Pro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClasses}>Role</label>
+                  <select value={role} onChange={e => setRole(e.target.value as any)} className={inputClasses}>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[var(--color-outline)]">
+                <h4 className="text-md font-semibold mb-2 text-[var(--color-on-surface-variant)]">Feature Credits</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                    <CreditInput label="Lesson" value={lessonPlannerCredits} onChange={setLessonPlannerCredits} />
+                    <CreditInput label="Flashcard" value={flashcardGeneratorCredits} onChange={setFlashcardGeneratorCredits} />
+                    <CreditInput label="Exam" value={examGeneratorCredits} onChange={setExamGeneratorCredits} />
+                    <CreditInput label="Word Game" value={wordGameGeneratorCredits} onChange={setWordGameGeneratorCredits} />
+                </div>
+              </div>
+              
+               <div className="pt-4 border-t border-[var(--color-outline)]">
+                 <h4 className="text-md font-semibold mb-2 text-[var(--color-on-surface-variant)]">Subscription Dates</h4>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClasses}>Subscription Start</label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputClasses} />
+                  </div>
+                  <div>
+                    <label className={labelClasses}>Subscription End</label>
+                    <input type="date" value={endDate} readOnly className={`${inputClasses} bg-slate-100 dark:bg-slate-800 cursor-not-allowed`} />
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Lesson Credits</label>
-                <input 
-                  type="number" 
-                  value={lessonCredits} 
-                  onChange={e => setLessonCredits(parseInt(e.target.value, 10) || 0)} 
-                  className={inputClasses}
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Image Credits</label>
-                <input 
-                  type="number" 
-                  value={imageCredits} 
-                  onChange={e => setImageCredits(parseInt(e.target.value, 10) || 0)} 
-                  className={inputClasses}
-                />
-              </div>
+            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-[var(--color-outline)]">
+              <button type="button" onClick={onClose} className="material-button material-button-secondary text-sm">Cancel</button>
+              <button type="button" onClick={handleSave} className="material-button material-button-primary text-sm">Save Changes</button>
             </div>
-            <button onClick={handleSave} className="w-full mt-6 py-3 font-semibold rounded-lg zenith-button">
-                Save Changes
-            </button>
           </div>
         </div>
       </div>

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonDetailLevel, CreativityLevel, PromptMode, User } from '../types';
 import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW, SparklesIcon, SaveIcon, CheckIcon, COMMON_MATERIALS, ChevronDownIcon } from './constants';
@@ -38,13 +40,13 @@ const SegmentedButton: React.FC<{
   onChange: (value: any) => void;
   disabled?: boolean;
 }> = ({ options, selectedValue, onChange, disabled }) => (
-  <div className="flex items-center p-1 rounded-lg w-full" style={{backgroundColor: 'var(--color-inset-bg)'}}>
+  <div className="flex items-center p-1 rounded-lg w-full bg-[var(--color-surface-variant)]">
     {options.map(option => (
       <button
         key={option.value}
         onClick={() => onChange(option.value)}
         disabled={disabled}
-        className={`w-full p-1 rounded-md text-sm font-medium transition-all text-center ${selectedValue === option.value ? 'bg-[var(--color-surface)] shadow-sm text-[var(--color-accent)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]/50'}`}
+        className={`w-full p-1.5 rounded-md text-sm font-medium transition-all text-center ${selectedValue === option.value ? 'bg-[var(--color-surface)] shadow-sm text-[var(--color-primary)]' : 'text-[var(--color-on-surface-variant)] hover:bg-[var(--color-surface)]/50'}`}
       >
         {option.label}
       </button>
@@ -113,23 +115,22 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
   ];
 
   return (
-    <div className={`aurora-card p-6 sm:p-8 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`material-card p-6 sm:p-8 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="space-y-4">
         <div>
-          <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-accent)' }}>Prompt Mode</h3>
+          <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-primary)' }}>Prompt Mode</h3>
           <SegmentedButton options={promptModeOptions} selectedValue={promptMode} onChange={setPromptMode} disabled={isLoading || disabled} />
         </div>
         
         {promptMode === 'custom' && (
           <div>
-            <label htmlFor="custom-prompt-textarea" className="block text-lg font-semibold mb-2 text-[var(--color-text-primary)]">Custom Prompt</label>
+            <label htmlFor="custom-prompt-textarea" className="block text-lg font-semibold mb-2 text-[var(--color-on-surface)]">Custom Prompt</label>
             <textarea
               id="custom-prompt-textarea"
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               rows={6}
-              className="mt-1 block w-full p-3 text-base rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none sm:text-sm resize-y border border-[var(--color-border)]"
-              style={{ backgroundColor: 'var(--color-input-bg)'}}
+              className="mt-1 block w-full p-3 text-base sm:text-sm resize-y"
               placeholder="Enter your detailed lesson plan prompt here. The AI will still be instructed to return the output in the required JSON format."
               disabled={isLoading || disabled}
             />
@@ -137,11 +138,11 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
         )}
 
         <div className={promptMode === 'custom' ? 'opacity-50 pointer-events-none' : ''}>
-          <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-accent)' }}>Curriculum Selection</h3>
-          <div id="curriculum-year-selector" className="space-y-1 p-2 rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>
+          <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-primary)' }}>Curriculum Selection</h3>
+          <div id="curriculum-year-selector" className="space-y-1 p-2 rounded-lg bg-[var(--color-surface-variant)]">
             {CURRICULUM_LEVEL_OPTIONS_FOR_VIEW.map(option => (
               <button key={option.value} onClick={() => onCurriculumChange(option.value)} disabled={isLoading || disabled || promptMode === 'custom'}
-                className={`w-full text-left p-2 text-sm rounded-md transition-colors ${selectedCurriculum === option.value ? 'bg-[var(--color-accent)] text-white' : 'hover:bg-[var(--color-surface)]'}`}>
+                className={`w-full text-left p-2 text-sm rounded-md transition-colors ${selectedCurriculum === option.value ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'hover:bg-[var(--color-surface)]'}`}>
                 {option.label}
               </button>
             ))}
@@ -149,7 +150,7 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
         
           {selectedCurriculum && (
             <div id="lesson-accordion">
-              <h3 className="text-lg font-semibold mb-2 mt-4 text-[var(--color-text-primary)]">Lesson Details</h3>
+              <h3 className="text-lg font-semibold mb-2 mt-4 text-[var(--color-on-surface)]">Lesson Details</h3>
               <CurriculumAccordion sequences={sequences} selectedSequenceId={selectedSequenceId}
                 selectedSectionId={selectedSectionId} selectedLesson={selectedLesson} onSequenceChange={onSequenceChange}
                 onSectionChange={onSectionChange} onLessonChange={onLessonChange} disabled={isLoading || disabled || promptMode === 'custom'}
@@ -158,13 +159,12 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
           )}
         </div>
         
-        <div className="pt-4 border-t border-[var(--color-border)]">
-          <h3 className="text-lg font-semibold mb-2 text-[var(--color-text-primary)]">Options</h3>
+        <div className="pt-4 border-t border-[var(--color-outline)]">
+          <h3 className="text-lg font-semibold mb-2 text-[var(--color-on-surface)]">Options</h3>
           <div className="space-y-2">
             {showTextbookOption && (
-                <label className="flex items-center p-2 cursor-pointer rounded-lg hover:bg-[var(--color-inset-bg)]">
+                <label className="flex items-center p-2 cursor-pointer rounded-lg hover:bg-[var(--color-surface-variant)]">
                     <input type="checkbox" checked={includeTextbookActivities} onChange={(e) => onIncludeTextbookActivitiesChange(e.target.checked)} disabled={isLoading || disabled}
-                      className="h-4 w-4 shrink-0 appearance-none rounded-sm border-2 border-[var(--color-border)] checked:bg-[var(--color-accent)] focus-visible:outline-none"
                     />
                     <span className="ml-2 text-sm">Include Textbook Activities</span>
                 </label>
@@ -174,7 +174,7 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
             <div>
               <button
                 onClick={() => setIsMaterialsExpanded(!isMaterialsExpanded)}
-                className="w-full flex justify-between items-center p-2 text-left text-sm font-medium rounded-lg hover:bg-[var(--color-inset-bg)]"
+                className="w-full flex justify-between items-center p-2 text-left text-sm font-medium rounded-lg hover:bg-[var(--color-surface-variant)]"
                 aria-expanded={isMaterialsExpanded}
                 disabled={disabled}
               >
@@ -184,13 +184,12 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
               {isMaterialsExpanded && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2 mt-1">
                   {COMMON_MATERIALS.map(material => (
-                    <label key={material} className="flex items-center p-2 cursor-pointer rounded-lg hover:bg-[var(--color-inset-bg)]">
+                    <label key={material} className="flex items-center p-2 cursor-pointer rounded-lg hover:bg-[var(--color-surface-variant)]">
                       <input
                         type="checkbox"
                         checked={selectedMaterials.includes(material)}
                         onChange={() => handleMaterialChange(material)}
                         disabled={isLoading || disabled}
-                        className="h-4 w-4 shrink-0 appearance-none rounded-sm border-2 border-[var(--color-border)] checked:bg-[var(--color-accent)] focus-visible:outline-none"
                       />
                       <span className="ml-2 text-sm">{material}</span>
                     </label>
@@ -201,22 +200,22 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
           </div>
         </div>
 
-        <div id="ai-settings-panel" className="pt-4 border-t border-[var(--color-border)]">
-          <h3 className="text-lg font-semibold mb-2 text-[var(--color-text-primary)]">AI Settings</h3>
+        <div id="ai-settings-panel" className="pt-4 border-t border-[var(--color-outline)]">
+          <h3 className="text-lg font-semibold mb-2 text-[var(--color-on-surface)]">AI Settings</h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Lesson Detail Level</label>
+              <label className="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-1">Lesson Detail Level</label>
               <SegmentedButton options={detailOptions} selectedValue={localDetailLevel} onChange={setLocalDetailLevel} disabled={isLoading || disabled} />
             </div>
              <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Creativity Level</label>
+              <label className="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-1">Creativity Level</label>
               <SegmentedButton options={creativityOptions} selectedValue={localCreativityLevel} onChange={setLocalCreativityLevel} disabled={isLoading || disabled} />
             </div>
             <div className="flex items-center gap-4 pt-2">
                 <button
                     onClick={handleSaveSettings}
                     disabled={!haveSettingsChanged || isLoading || disabled}
-                    className="flex-grow zenith-button-secondary text-sm py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                    className="flex-grow material-button material-button-secondary text-sm py-2 px-4 flex items-center justify-center gap-2"
                 >
                     <SaveIcon className="w-4 h-4" />
                     Save AI Settings
@@ -231,10 +230,10 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
           </div>
         </div>
 
-         <div className="pt-4 border-t border-[var(--color-border)]">
+         <div className="pt-4 border-t border-[var(--color-outline)]">
             {currentUser.plan === 'free' && (
-                <p className="text-xs text-center text-[var(--color-text-secondary)] mb-2">
-                   You have <span className="font-bold text-[var(--color-text-primary)]">{currentUser.lessonCreditsRemaining}</span> lesson credits remaining.
+                <p className="text-xs text-center text-[var(--color-on-surface-variant)] mb-2">
+                   You have <span className="font-bold text-[var(--color-on-surface)]">{currentUser.lessonPlannerCredits}</span> lesson credits remaining.
                 </p>
             )}
             <button
@@ -242,7 +241,7 @@ const LessonPlannerControls: React.FC<LessonPlannerControlsProps> = ({
               type="button"
               onClick={onGeneratePlan}
               disabled={isLoading || !isGenerationAllowed || disabled}
-              className="zenith-button w-full flex justify-center items-center py-3 px-4 font-medium rounded-lg"
+              className="material-button material-button-primary w-full flex justify-center items-center py-3 px-4"
             >
               {isLoading ? 'Generating...' : <><SparklesIcon className="w-5 h-5 mr-2" />Generate Lesson Plan</>}
             </button>

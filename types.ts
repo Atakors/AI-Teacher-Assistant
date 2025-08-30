@@ -1,6 +1,6 @@
-
-
-import { SupabaseClient as Client } from '@supabase/supabase-js';
+// This is the standard, recursive type for JSON data. Using `any` to avoid
+// a TypeScript issue with deep type instantiation in Supabase's auto-generated types.
+export type Json = any;
 
 export enum CurriculumLevel {
   SELECT_YEAR = "Select Year", // Added for UI consistency if a default "unselected" state is needed
@@ -79,26 +79,32 @@ export interface CanvasSequence {
 }
 
 // For App Navigation
-export type AppView = 'lessonPlanner' | 'timetableEditor' | 'curriculumOverview' | 'schoolCalendar' | 'adminDashboard' | 'savedPlans' | 'examGenerator' | 'savedExams' | 'flashcardGenerator' | 'savedFlashcards' | 'pricing' | 'flashcardWizard' | 'creatorStudio' | 'savedCanvas';
+export type AppView = 'dashboard' | 'lessonPlanner' | 'timetableEditor' | 'curriculumOverview' | 'schoolCalendar' | 'adminDashboard' | 'savedPlans' | 'examGenerator' | 'savedExams' | 'flashcardGenerator' | 'savedFlashcards' | 'pricing' | 'creatorStudio' | 'savedCanvas' | 'bulkGenerator' | 'wordGameGenerator' | 'reviews' | 'digitalSpinner' | 'certificateGenerator';
 
 // Timetable Editor Types
 export interface User {
   uid: string;
   name: string;
   email: string | null;
-  avatar?: string;
+  avatar: string | null;
   // Professional fields
-  title?: string;
-  primarySchool?: string;
-  specialization?: string;
-  bio?: string;
+  title: string | null;
+  primarySchool: string | null;
+  specialization: string | null;
+  bio: string | null;
   // Preference fields
-  defaultCurriculum?: CurriculumLevel;
+  defaultCurriculum: CurriculumLevel | null;
   // --- NEW Subscription & Credit Fields ---
-  plan: 'free' | 'premium';
+  plan: 'free' | 'pro';
   subscriptionStatus: 'active' | 'expired' | 'cancelled' | 'trialing';
-  lessonCreditsRemaining: number;
-  imageCreditsRemaining: number;
+  // Feature-specific credits
+  lessonPlannerCredits: number;
+  flashcardGeneratorCredits: number;
+  examGeneratorCredits: number;
+  wordGameGeneratorCredits: number;
+  
+  subscriptionStartDate: string | null;
+  subscriptionEndDate: string | null;
   // App-specific fields
   hasCompletedTour: boolean;
   role: 'user' | 'admin';
@@ -257,33 +263,65 @@ export interface DbSavedLessonPlan {
     id: string;
     user_id: string;
     name: string;
-    plan_data: Json;
+    plan_data: any;
     created_at: string;
-    curriculum_context: Json;
+    curriculum_context: any;
 }
 
 // Exam Generator Types
 export type ExamSource = 'curriculum' | 'topic' | 'custom';
 export type ExamDifficulty = 'Easy' | 'Medium' | 'Hard';
-export type QuestionType = 'Multiple Choice' | 'Short Answer' | 'Essay';
+export type QuestionType =
+  | 'Multiple Choice'
+  | 'Short Answer'
+  | 'Essay'
+  | 'True/False'
+  | 'Fill in the Blanks'
+  | 'Matching'
+  | 'Complete the Table'
+  | 'Reorder the Words'
+  | 'Guided Writing'
+  | 'Handwriting Practice';
+
+export interface MatchingPair {
+  prompt: string;
+  match: string;
+}
+
+export interface GuidedWritingNote {
+  key: string;
+  value: string;
+}
 
 export interface ExamQuestion {
   questionText: string;
-  options?: string[]; // For multiple choice
+  options?: string[]; // For 'Multiple Choice'
+  matchingPairs?: MatchingPair[]; // For 'Matching'
+  wordBank?: string[]; // For 'Fill in the Blanks'
+  jumbledWords?: string[]; // For 'Reorder the Words'
+  guidedWritingNotes?: GuidedWritingNote[]; // For 'Guided Writing'
+  tableToComplete?: { // For 'Complete the Table'
+    headers: string[];
+    rows: (string | null)[][]; // null represents a cell for the student to fill
+  };
 }
 
 export interface ExamSection {
   title: string;
+  points?: number;
+  instructions?: string;
   questions: ExamQuestion[];
-  questionType: QuestionType; // To help rendering
+  questionType: QuestionType;
 }
 
 export interface Exam {
   title: string;
   instructions: string;
+  readingPassage?: string;
   sections: ExamSection[];
   answerKey: string[][]; // Array of arrays of strings
 }
+
 
 export interface SavedExam {
   id: string;
@@ -297,7 +335,7 @@ export interface DbSavedExam {
   id: string;
   user_id: string;
   name: string;
-  exam_data: Json;
+  exam_data: any;
   created_at: string;
 }
 
@@ -336,6 +374,7 @@ interface BaseElement {
   width: number;
   height: number;
   rotation: number;
+  zIndex: number;
 }
 
 export interface TextElement extends BaseElement {
@@ -344,16 +383,30 @@ export interface TextElement extends BaseElement {
   fontSize: number;
   fontFamily: string;
   color: string;
+  textAlign: 'left' | 'center' | 'right';
+  fontWeight: 'normal' | 'bold';
+  fontStyle: 'normal' | 'italic';
+  textDecoration: 'none' | 'underline';
+  letterSpacing: number;
+  lineHeight: number;
+  stroke?: string;
+  strokeWidth?: number;
 }
 
 export interface ImageElement extends BaseElement {
   type: 'image';
   src: string;
+  crop?: {
+    x: number; // percentage
+    y: number; // percentage
+    width: number; // percentage
+    height: number; // percentage
+  };
 }
 
 export interface ShapeElement extends BaseElement {
   type: 'shape';
-  shapeType: 'rectangle' | 'circle';
+  shapeType: 'rectangle' | 'circle' | 'triangle' | 'line';
   fill: string;
   stroke: string;
   strokeWidth: number;
@@ -376,34 +429,96 @@ export interface SavedCanvas {
   createdAt: string;
 }
 
+// Chatbot types
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
+// Word Game Generator Types
+export type WordGameType = 'Riddle' | 'Word Scramble' | 'Sentence Builder' | 'Odd One Out' | 'Hidden Word' | 'Crossword';
+
+export interface Riddle {
+  clues: string[];
+  answer: string;
+}
+
+export interface WordScramble {
+  scrambled: string;
+  answer: string;
+}
+
+export interface SentenceBuilder {
+  jumbled: string[];
+  answer: string;
+}
+
+export interface OddOneOut {
+  words: string[];
+  answer: string;
+  category: string;
+}
+
+export interface HiddenWord {
+  grid: string[][];
+  words: string[];
+}
+
+export interface CrosswordClue {
+  number: number;
+  direction: 'Across' | 'Down';
+  clue: string;
+  answer: string;
+  row: number;
+  col: number;
+}
+
+export interface CrosswordData {
+  grid: (string | null)[][];
+  clues: CrosswordClue[];
+}
+
+export type WordGameData = Riddle[] | WordScramble[] | SentenceBuilder[] | OddOneOut[] | HiddenWord | CrosswordData;
+
+export interface SavedWordGame {
+  id: string;
+  userId: string;
+  name: string;
+  gameType: WordGameType;
+  level: CurriculumLevel;
+  topic: string;
+  gameData: WordGameData;
+  createdAt: string;
+}
+
+export interface DbSavedWordGame {
+  id: string;
+  user_id: string;
+  name: string;
+  game_type: string;
+  level: string;
+  topic: string;
+  game_data: any;
+  created_at: string;
+}
+
 
 // Supabase Types
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json }
-  | Json[]
-
 export interface Database {
   public: {
     Tables: {
       calendars: {
         Row: {
-          data: Json | null
+          data: any | null
           id: number
           user_id: string
         }
         Insert: {
-          data?: Json | null
-          id?: number
+          data?: any | null
           user_id: string
         }
         Update: {
-          data?: Json | null
-          id?: number
-          user_id?: string
+          data?: any | null
         }
       }
       classes: {
@@ -415,18 +530,15 @@ export interface Database {
           user_id: string
         }
         Insert: {
-          id?: string
           name: string
           school_id: string
           subject: string
           user_id: string
         }
         Update: {
-          id?: string
           name?: string
           school_id?: string
           subject?: string
-          user_id?: string
         }
       }
       reviews: {
@@ -441,8 +553,6 @@ export interface Database {
         }
         Insert: {
           comment: string
-          created_at?: string
-          id?: string
           rating: number
           user_avatar?: string | null
           user_id: string
@@ -450,12 +560,7 @@ export interface Database {
         }
         Update: {
           comment?: string
-          created_at?: string
-          id?: string
           rating?: number
-          user_avatar?: string | null
-          user_id?: string
-          user_name?: string
         }
       }
       saved_canvases: {
@@ -463,20 +568,17 @@ export interface Database {
           id: string;
           user_id: string;
           name: string;
-          canvas_data: Json;
+          canvas_data: any;
           created_at: string;
         }
         Insert: {
-          id?: string;
           user_id: string;
           name: string;
-          canvas_data: Json;
-          created_at?: string;
+          canvas_data: any;
         }
         Update: {
-          id?: string;
           name?: string;
-          canvas_data?: Json;
+          canvas_data?: any;
         }
       }
       saved_flashcards: {
@@ -491,17 +593,14 @@ export interface Database {
           created_at: string;
         }
         Insert: {
-          id?: string;
           user_id: string;
           name: string;
           prompt: string;
           style: string;
           aspect_ratio: string;
           image_data: string;
-          created_at?: string;
         }
         Update: {
-          id?: string;
           name?: string;
           prompt?: string;
           style?: string;
@@ -512,49 +611,71 @@ export interface Database {
       saved_exams: {
         Row: {
           created_at: string
-          exam_data: Json | null
+          exam_data: any | null
           id: string
           name: string
           user_id: string
         }
         Insert: {
-          created_at?: string
-          exam_data?: Json | null
-          id?: string
+          exam_data?: any | null
           name: string
           user_id: string
         }
         Update: {
-          created_at?: string
-          exam_data?: Json | null
-          id?: string
+          exam_data?: any | null
           name?: string
-          user_id?: string
         }
       }
       saved_lesson_plans: {
         Row: {
           created_at: string
-          curriculum_context: Json | null
+          curriculum_context: any | null
           id: string
           name: string
-          plan_data: Json | null
+          plan_data: any | null
+          user_id: string
+        }
+        Insert: {
+          curriculum_context?: any | null
+          name: string
+          plan_data?: any | null
+          user_id: string
+        }
+        Update: {
+          curriculum_context?: any | null
+          name?: string
+          plan_data?: any | null
+        }
+      }
+      saved_word_games: {
+        Row: {
+          created_at: string
+          game_data: Json | null
+          game_type: string
+          id: string
+          level: string
+          name: string
+          topic: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          curriculum_context?: Json | null
+          game_data?: Json | null
+          game_type: string
           id?: string
+          level: string
           name: string
-          plan_data?: Json | null
+          topic: string
           user_id: string
         }
         Update: {
           created_at?: string
-          curriculum_context?: Json | null
+          game_data?: Json | null
+          game_type?: string
           id?: string
+          level?: string
           name?: string
-          plan_data?: Json | null
+          topic?: string
           user_id?: string
         }
       }
@@ -565,84 +686,96 @@ export interface Database {
           user_id: string
         }
         Insert: {
-          id?: string
           name: string
           user_id: string
         }
         Update: {
-          id?: string
           name?: string
-          user_id?: string
         }
       }
       timetables: {
         Row: {
-          data: Json | null
+          data: any | null
           id: number
           user_id: string
         }
         Insert: {
-          data?: Json | null
-          id?: number
+          data?: any | null
           user_id: string
         }
         Update: {
-          data?: Json | null
-          id?: number
-          user_id?: string
+          data?: any | null
         }
       }
       users: {
         Row: {
+          name: string
           avatar: string | null
           bio: string | null
+          created_at: string
           default_curriculum: string | null
           email: string | null
           has_completed_tour: boolean
-          image_credits_remaining: number
-          lesson_credits_remaining: number
-          name: string
-          plan: "free" | "premium"
-          primary_school: string | null
+          plan: "free" | "pro"
           role: "user" | "admin"
           specialization: string | null
+          subscription_end_date: string | null
+          subscription_start_date: string | null
           subscription_status: "active" | "expired" | "cancelled" | "trialing"
           title: string | null
+          primary_school: string | null
           uid: string
+          // New Credits
+          lesson_planner_credits: number
+          flashcard_generator_credits: number
+          exam_generator_credits: number
+          word_game_generator_credits: number
         }
         Insert: {
+          name: string
           avatar?: string | null
           bio?: string | null
+          created_at?: string
           default_curriculum?: string | null
           email?: string | null
           has_completed_tour?: boolean
-          image_credits_remaining?: number
-          lesson_credits_remaining?: number
-          name: string
-          plan?: "free" | "premium"
-          primary_school?: string | null
+          plan?: "free" | "pro"
           role?: "user" | "admin"
           specialization?: string | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
           subscription_status?: "active" | "expired" | "cancelled" | "trialing"
           title?: string | null
+          primary_school?: string | null
           uid: string
+          // New Credits
+          lesson_planner_credits?: number
+          flashcard_generator_credits?: number
+          exam_generator_credits?: number
+          word_game_generator_credits?: number
         }
         Update: {
+          name?: string
           avatar?: string | null
           bio?: string | null
+          created_at?: string
           default_curriculum?: string | null
           email?: string | null
           has_completed_tour?: boolean
-          image_credits_remaining?: number
-          lesson_credits_remaining?: number
-          name?: string
-          plan?: "free" | "premium"
-          primary_school?: string | null
+          plan?: "free" | "pro"
           role?: "user" | "admin"
           specialization?: string | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
           subscription_status?: "active" | "expired" | "cancelled" | "trialing"
           title?: string | null
+          primary_school?: string | null
           uid?: string
+          // New Credits
+          lesson_planner_credits?: number
+          flashcard_generator_credits?: number
+          exam_generator_credits?: number
+          word_game_generator_credits?: number
         }
       }
     }
@@ -650,34 +783,45 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      admin_update_user_details: {
-        Args: {
-          p_target_uid: string
-          p_updates: Json
-        }
-        Returns: undefined
-      }
-      atomic_decrement_image_credits: {
-        Args: {
-          p_user_id: string
-        }
-        Returns: undefined
-      }
-      atomic_decrement_lesson_credits: {
-        Args: {
-          p_user_id: string
-        }
-        Returns: undefined
+      is_admin: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       delete_user_admin: {
-        Args: {
-          target_uid: string
-        }
+        Args: { target_uid: string }
         Returns: undefined
       }
       get_all_user_details_admin: {
         Args: Record<PropertyKey, never>
-        Returns: Json[]
+        Returns: Json
+      }
+      admin_update_user_details: {
+        Args: { p_target_uid: string, p_updates: Json }
+        Returns: undefined
+      }
+      admin_bulk_upgrade_users: {
+        Args: { p_user_ids: string[] }
+        Returns: undefined
+      }
+      admin_bulk_add_credits: {
+        Args: { p_user_ids: string[], p_credits_to_add: Json }
+        Returns: undefined
+      }
+      atomic_decrement_lesson_planner_credits: {
+        Args: { p_user_id: string, p_amount: number }
+        Returns: undefined
+      }
+      atomic_decrement_flashcard_generator_credits: {
+        Args: { p_user_id: string, p_amount: number }
+        Returns: undefined
+      }
+       atomic_decrement_exam_generator_credits: {
+        Args: { p_user_id: string, p_amount: number }
+        Returns: undefined
+      }
+       atomic_decrement_word_game_generator_credits: {
+        Args: { p_user_id: string, p_amount: number }
+        Returns: undefined
       }
     }
     Enums: {
@@ -688,5 +832,3 @@ export interface Database {
     }
   }
 }
-
-export type SupabaseClient = Client<Database>;

@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { User, SavedFlashcard } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ImagePreviewModal from './ImagePreviewModal';
-import { SparklesIcon, PhotoIcon as ImageIcon, DownloadIcon, BookmarkSquareIcon } from './constants';
+import { SparklesIcon, PhotoIcon as ImageIcon, DownloadIcon, BookmarkSquareIcon, XIcon, PrinterIcon } from './constants';
 
 interface FlashcardGeneratorProps {
   onGenerate: (prompt: string, aspectRatio: string) => Promise<string>;
@@ -39,6 +41,24 @@ const IMAGE_STYLES = [
   { name: '3D Render', value: ', cute 3D render, claymation style' },
 ];
 
+const PrintableFlashcardSheet: React.FC<{ items: { prompt: string, imageData: string }[], size: 'a4' | 'letter', orientation: 'portrait' | 'landscape' }> = ({ items, size, orientation }) => {
+    if (items.length === 0) return null;
+    
+    return (
+        <div className={`printable-flashcard-sheet ${size} ${orientation}`}>
+            {items.map((item, index) => (
+                <div key={index} className="flashcard-print-item">
+                    <div className="flashcard-print-image-container">
+                        <img src={item.imageData} alt={item.prompt} />
+                    </div>
+                    <p className="flashcard-print-prompt">{item.prompt}</p>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+
 const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onSave, currentUser, viewingSavedFlashcard, setViewingSavedFlashcard }) => {
   const [prompt, setPrompt] = useState<string>('');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -48,6 +68,19 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
   const [selectedStyle, setSelectedStyle] = useState<string>('');
   const [selectedStyleName, setSelectedStyleName] = useState<string>('Default');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // New state for print sheet
+  const [printSheetItems, setPrintSheetItems] = useState<{ id: number, prompt: string, imageData: string }[]>([]);
+  const [paperSize, setPaperSize] = useState<'a4' | 'letter'>('a4');
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [printableAreaReady, setPrintableAreaReady] = useState(false);
+  
+  useEffect(() => {
+    // Ensure the printable-area div exists before trying to render into it
+    if (document.getElementById('printable-area')) {
+      setPrintableAreaReady(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (viewingSavedFlashcard) {
@@ -76,8 +109,12 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
       const imageUrl = await onGenerate(fullPrompt, selectedAspectRatio);
       setGeneratedImage(imageUrl);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message || "An unknown error occurred while generating the image.");
+       if (err instanceof Error) {
+        if (err.message === 'QUOTA_EXCEEDED') {
+            setError('QUOTA_EXCEEDED_FLASHCARD_GENERATOR');
+        } else {
+            setError(err.message || "An unknown error occurred while generating the image.");
+        }
       } else {
         setError("An unknown error occurred.");
       }
@@ -101,6 +138,25 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
     if (!generatedImage) return;
     onSave(prompt, selectedStyle, selectedAspectRatio, generatedImage);
   };
+  
+  const handleAddToSheet = () => {
+    if (generatedImage && !printSheetItems.some(item => item.imageData === generatedImage)) {
+        setPrintSheetItems(prev => [...prev, { id: Date.now(), prompt, imageData: generatedImage }]);
+    }
+  };
+
+  const handleRemoveFromSheet = (id: number) => {
+      setPrintSheetItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleClearSheet = () => {
+      setPrintSheetItems([]);
+  };
+
+  const handlePrintSheet = () => {
+      window.print();
+  };
+
 
   const currentAspectRatioClass = {
     '1:1': 'aspect-square',
@@ -114,36 +170,35 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
     <>
       <div className="w-full max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+          <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-on-bg)]">
             Flashcard Image Generator
-            <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+            <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-primary)' }} />
           </h2>
-          <p className="text-[var(--color-text-secondary)] mt-2 px-4">
+          <p className="text-[var(--color-on-surface-variant)] mt-2 px-4">
             Enter a prompt, choose a style and aspect ratio, and generate a simple image for your flashcards.
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          <div className="lg:w-2/5 w-full">
-            <div className="aurora-card p-6 sm:p-8 space-y-6 sticky top-8">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
+          <div className="md:w-2/5 w-full">
+            <div className="material-card p-6 sm:p-8 space-y-6 md:sticky top-8">
               <div>
-                <label htmlFor="image-prompt" className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">
+                <label htmlFor="image-prompt" className="block text-sm font-medium text-[var(--color-on-surface)] mb-1">
                   Image Prompt
                 </label>
                 <textarea
                   id="image-prompt"
                   rows={3}
-                  className="mt-1 block w-full p-3 text-base rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] sm:text-sm resize-none border border-[var(--color-border)]"
-                  style={{ backgroundColor: 'var(--color-input-bg)'}}
+                  className="mt-1 block w-full text-base sm:text-sm resize-none"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="e.g., a happy cartoon sun wearing sunglasses"
                 />
-                <p className="mt-1 text-xs text-[var(--color-text-secondary)]">Describe the image you want to create. Be descriptive!</p>
+                <p className="mt-1 text-xs text-[var(--color-on-surface-variant)]">Describe the image you want to create. Be descriptive!</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                <label className="block text-sm font-medium text-[var(--color-on-surface)] mb-2">
                   Image Style
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -152,10 +207,10 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
                       key={style.name}
                       type="button"
                       onClick={() => { setSelectedStyle(style.value); setSelectedStyleName(style.name); }}
-                      className={`p-2 text-xs font-medium rounded-lg transition-all border ${
+                      className={`p-2 text-xs font-medium rounded-full transition-all ${
                         selectedStyle === style.value
-                          ? 'zenith-button text-white border-transparent'
-                          : 'zenith-button-secondary'
+                          ? 'material-button material-button-primary'
+                          : 'material-button material-button-secondary'
                       }`}
                     >
                       {style.name}
@@ -165,19 +220,18 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">
+                <label className="block text-sm font-medium text-[var(--color-on-surface)] mb-1">
                   Aspect Ratio
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
                   {ASPECT_RATIO_OPTIONS.map((option) => (
-                    <label key={option.value} className="flex items-center space-x-2 cursor-pointer text-sm text-[var(--color-text-primary)] p-2 rounded-lg hover:bg-[var(--color-inset-bg)]">
+                    <label key={option.value} className="flex items-center space-x-2 cursor-pointer text-sm text-[var(--color-on-surface)] p-2 rounded-lg hover:bg-[var(--color-surface-variant)]">
                       <input
                         type="radio"
                         name="aspectRatio"
                         value={option.value}
                         checked={selectedAspectRatio === option.value}
                         onChange={() => setSelectedAspectRatio(option.value as AspectRatio)}
-                        className="h-4 w-4 shrink-0 appearance-none rounded-full border-2 border-[var(--color-border)] checked:bg-[var(--color-accent)] checked:border-[var(--color-accent)] focus-visible:outline-none"
                       />
                       <span>{option.label}</span>
                     </label>
@@ -186,8 +240,8 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
               </div>
               
               {currentUser.plan === 'free' && (
-                <p className="text-xs text-center text-[var(--color-text-secondary)] pt-2 border-t border-[var(--color-border)]">
-                  You have <span className="font-bold text-[var(--color-text-primary)]">{currentUser.imageCreditsRemaining}</span> image credits remaining.
+                <p className="text-xs text-center text-[var(--color-on-surface-variant)] pt-2 border-t border-[var(--color-outline)]">
+                  You have <span className="font-bold text-[var(--color-on-surface)]">{currentUser.flashcardGeneratorCredits}</span> image credits remaining.
                 </p>
               )}
 
@@ -196,22 +250,30 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
                   type="button"
                   onClick={handleGenerateImage}
                   disabled={isLoading || !prompt.trim()}
-                  className="zenith-button w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg"
+                  className="material-button material-button-primary w-full flex justify-center items-center py-3 px-4 text-sm"
                 >
                   {isLoading ? 'Generating your image...' : <><SparklesIcon className="w-5 h-5 mr-2" />Generate Image</>}
                 </button>
 
                  {generatedImage && !isLoading && (
-                   <div className="flex gap-3">
+                   <div className="flex flex-col sm:flex-row gap-3">
                       <button 
                         type="button" 
                         onClick={handleSaveImage} 
-                        className="zenith-button w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg"
+                        className="material-button material-button-primary w-full flex justify-center items-center py-3 px-4 text-sm"
                       >
-                        <BookmarkSquareIcon className="w-5 h-5 mr-2" /> Save to Collection
+                        <BookmarkSquareIcon className="w-5 h-5 mr-2" /> Save
                       </button>
-                      <button type="button" onClick={handleDownloadImage} className="zenith-button-secondary w-full flex justify-center items-center py-3 px-4 text-sm font-medium rounded-lg">
+                      <button type="button" onClick={handleDownloadImage} className="material-button material-button-secondary w-full flex justify-center items-center py-3 px-4 text-sm">
                         <DownloadIcon className="w-5 h-5 mr-2" /> Download
+                      </button>
+                      <button 
+                          type="button" 
+                          onClick={handleAddToSheet} 
+                          disabled={!generatedImage || printSheetItems.some(item => item.imageData === generatedImage)}
+                          className="material-button material-button-secondary w-full flex justify-center items-center py-3 px-4 text-sm"
+                      >
+                        Add to Sheet
                       </button>
                    </div>
                 )}
@@ -219,29 +281,89 @@ const FlashcardGenerator: React.FC<FlashcardGeneratorProps> = ({ onGenerate, onS
             </div>
           </div>
 
-          <div className="lg:w-3/5 w-full">
-            <div className={`p-2 sm:p-4 flex items-center justify-center w-full ${currentAspectRatioClass} overflow-hidden transition-all duration-300 ease-in-out rounded-lg`} style={{backgroundColor: 'var(--color-inset-bg)'}}>
-              {isLoading && <LoadingSpinner text="Generating your image..." />}
-              {error && !isLoading && <div className="w-full p-4"><ErrorMessage message={error} /></div>}
-              {!isLoading && !error && generatedImage && (
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="w-full h-full flex items-center justify-center focus:outline-none group"
-                  aria-label="Preview generated image"
-                >
-                    <img src={generatedImage} alt={prompt || 'Generated image'} className="max-w-full max-h-full object-contain rounded-md shadow-lg group-hover:scale-105 transition-transform" />
-                </button>
-              )}
-              {!isLoading && !error && !generatedImage && (
-                <div className="text-center p-4 text-[var(--color-text-secondary)]">
-                  <ImageIcon className="w-24 h-24 mx-auto opacity-50" />
-                  <p className="mt-4 text-lg font-medium">Your generated image will appear here.</p>
-                  <p className="text-sm">Select an aspect ratio on the left to see a preview of the shape.</p>
-                </div>
-              )}
+          <div className="md:w-3/5 w-full">
+            <div className={`p-2 sm:p-4 flex items-center justify-center w-full ${currentAspectRatioClass} overflow-hidden transition-all duration-300 ease-in-out rounded-lg bg-[var(--color-surface-variant)]`}>
+               {(() => {
+                  if (isLoading) {
+                      return <LoadingSpinner text="Generating your image..." />;
+                  }
+                  if (error) {
+                      if (error === 'QUOTA_EXCEEDED_FLASHCARD_GENERATOR') {
+                          return (
+                              <div className="text-center p-4">
+                                  <p className="mt-4 text-lg font-medium text-[var(--color-on-surface)]">
+                                    Flashcard Generator under maintenance, be back soon.
+                                  </p>
+                              </div>
+                          );
+                      }
+                      return <div className="w-full p-4"><ErrorMessage message={error} /></div>;
+                  }
+                  if (generatedImage) {
+                      return (
+                          <button 
+                              onClick={() => setIsModalOpen(true)}
+                              className="w-full h-full flex items-center justify-center focus:outline-none group"
+                              aria-label="Preview generated image"
+                          >
+                              <img src={generatedImage} alt={prompt || 'Generated image'} className="max-w-full max-h-full object-contain rounded-md shadow-lg group-hover:scale-105 transition-transform" />
+                          </button>
+                      );
+                  }
+                  return (
+                      <div className="text-center p-4 text-[var(--color-on-surface-variant)]">
+                          <ImageIcon className="w-24 h-24 mx-auto opacity-50" />
+                          <p className="mt-4 text-lg font-medium">Your generated image will appear here.</p>
+                          <p className="text-sm">Select an aspect ratio on the left to see a preview of the shape.</p>
+                      </div>
+                  );
+              })()}
             </div>
           </div>
         </div>
+
+        {printSheetItems.length > 0 && (
+            <div className="mt-12 no-print">
+                <h3 className="text-2xl font-semibold mb-4 text-center">Print Sheet</h3>
+                <div className="material-card p-6 sm:p-8 space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Paper Size</label>
+                            <select value={paperSize} onChange={e => setPaperSize(e.target.value as any)} className="w-full p-2">
+                                <option value="a4">A4</option>
+                                <option value="letter">US Letter</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Orientation</label>
+                            <select value={orientation} onChange={e => setOrientation(e.target.value as any)} className="w-full p-2">
+                                <option value="portrait">Portrait</option>
+                                <option value="landscape">Landscape</option>
+                            </select>
+                        </div>
+                        <button onClick={handlePrintSheet} className="material-button material-button-primary h-10 mt-auto flex items-center justify-center gap-2"><PrinterIcon className="w-5 h-5"/> Print Sheet</button>
+                        <button onClick={handleClearSheet} className="material-button material-button-secondary h-10 mt-auto">Clear Sheet</button>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 bg-[var(--color-surface-variant)] p-2 rounded-lg">
+                        {printSheetItems.map(item => (
+                            <div key={item.id} className="relative group aspect-square">
+                                <img src={item.imageData} alt={item.prompt} className="w-full h-full object-cover rounded-md" />
+                                <button onClick={() => handleRemoveFromSheet(item.id)} className="absolute top-1 right-1 bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Remove">
+                                    <XIcon className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
+        
+        {printableAreaReady && createPortal(
+            <PrintableFlashcardSheet items={printSheetItems} size={paperSize} orientation={orientation} />,
+            document.getElementById('printable-area')!
+        )}
+
       </div>
       {isModalOpen && generatedImage && (
         <ImagePreviewModal imageUrl={generatedImage} onClose={() => setIsModalOpen(false)} />

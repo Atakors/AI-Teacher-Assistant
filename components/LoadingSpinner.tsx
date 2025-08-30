@@ -13,15 +13,16 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ text = "Loading..." }) 
           cx="50" 
           cy="50" 
           r="45" 
-          stroke="var(--color-border)" 
+          stroke="var(--color-outline)" 
           strokeWidth="10" 
           fill="none" 
+          opacity="0.5"
         />
         <circle 
           cx="50" 
           cy="50" 
           r="45" 
-          stroke="var(--color-accent)" 
+          stroke="var(--color-primary)" 
           strokeWidth="10" 
           fill="none" 
           strokeDasharray="282.74" 
@@ -38,7 +39,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ text = "Loading..." }) 
           />
         </circle>
       </svg>
-      <p className="font-medium text-[var(--color-text-primary)] animate-pulse">{text}</p>
+      <p className="font-medium text-[var(--color-on-bg)] animate-pulse">{text}</p>
     </div>
   );
 };

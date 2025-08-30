@@ -3,7 +3,7 @@ import { User, FlashcardIdea } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ImagePreviewModal from './ImagePreviewModal';
-import { SparklesIcon, DownloadIcon, LightBulbIcon, ChevronRightIcon } from './constants';
+import { SparklesIcon, DownloadIcon, ChevronRightIcon } from './constants';
 
 interface FlashcardGeneratorV2Props {
   onGenerateIdeas: (topic: string) => Promise<FlashcardIdea[]>;
@@ -98,7 +98,7 @@ const FlashcardGeneratorV2: React.FC<FlashcardGeneratorV2Props> = ({ onGenerateI
                     disabled={isLoadingIdeas || !topic.trim()}
                     className="interactive-glow bg-[var(--color-accent)] text-white font-medium py-3 px-6 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                    <LightBulbIcon className="w-5 h-5"/>
+                    <SparklesIcon className="w-5 h-5"/>
                     {isLoadingIdeas ? 'Generating...' : 'Generate Ideas'}
                 </button>
             </div>

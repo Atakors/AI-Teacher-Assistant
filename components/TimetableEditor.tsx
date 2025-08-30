@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { School, ClassEntry, TimetableData, Day, User } from '../types';
-import { TIMETABLE_DAYS, TIME_PERIODS, SparklesIcon, DownloadIcon, ChevronDownIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, SaveIcon } from './constants';
+import { TIMETABLE_DAYS, TIME_PERIODS, SparklesIcon, DownloadIcon, ChevronDownIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, SaveIcon, FileWordIcon, FilePdfIcon } from './constants';
 import { getSchools, addSchool as dbAddSchool, updateSchool, deleteSchoolAndRelatedData, getClasses, addClass as dbAddClass, updateClass, deleteClassAndCleanTimetable, getTimetable, saveTimetable } from '../services/dbService';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, VerticalAlign, Footer, Header, BorderStyle, PageOrientation } from 'docx';
 import jsPDF from 'jspdf';
@@ -45,36 +46,38 @@ const EditClassModal: React.FC<{
         onSave({ ...classEntry, name, subject, schoolId });
     };
 
-    const inputClasses = "w-full p-3 rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] border border-[var(--color-border)] bg-[var(--color-input-bg)]";
+    const inputClasses = "w-full p-3";
     
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={onClose}>
-            <div className="relative w-full max-w-md bg-[var(--color-surface)] rounded-xl shadow-2xl text-[var(--color-text-primary)] overflow-hidden" onClick={e => e.stopPropagation()}>
-                <button onClick={onClose} className="absolute top-3 right-3 p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors z-20">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={onClose}>
+            <div className="relative w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="relative material-card text-[var(--color-on-surface)] overflow-hidden">
+                <button onClick={onClose} className="absolute top-3 right-3 p-2 text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] transition-colors z-20">
                     <XIcon className="w-6 h-6" />
                 </button>
                 <div className="p-8">
                     <h3 className="text-xl font-semibold mb-6 text-center">Edit Class</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Class Name</label>
+                            <label className="text-sm font-medium text-[var(--color-on-surface-variant)] mb-1 block">Class Name</label>
                             <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClasses} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">Subject</label>
+                            <label className="text-sm font-medium text-[var(--color-on-surface-variant)] mb-1 block">Subject</label>
                             <input type="text" value={subject} onChange={e => setSubject(e.target.value)} className={inputClasses} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-[var(--color-text-secondary)] mb-1 block">School</label>
+                            <label className="text-sm font-medium text-[var(--color-on-surface-variant)] mb-1 block">School</label>
                             <select value={schoolId} onChange={e => setSchoolId(e.target.value)} className={inputClasses}>
                                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
-                        <button onClick={handleSave} className="w-full mt-6 py-3 font-semibold rounded-lg blueprint-button">
+                        <button onClick={handleSave} className="w-full mt-6 material-button material-button-primary">
                             Save Changes
                         </button>
                     </div>
                 </div>
+              </div>
             </div>
         </div>
     );
@@ -104,6 +107,11 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
   const [editingSchoolName, setEditingSchoolName] = useState('');
   const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
   const [classToEdit, setClassToEdit] = useState<ClassEntry | null>(null);
+  
+  // Save State
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
 
   const loadData = async () => {
@@ -124,6 +132,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
         } else {
             setTimetableData(initialTimetableData());
         }
+        setIsDirty(false); // Reset dirty state on load
     } catch (dbError) {
         console.error("Failed to load data from database", dbError);
         setError("Could not load timetable data. Please check your internet connection.");
@@ -235,7 +244,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
     }
   };
   
-  const handleTimetableSlotClick = async (day: Day, timePeriodIndex: number) => {
+  const handleTimetableSlotClick = (day: Day, timePeriodIndex: number) => {
     const newTimetableData = { ...timetableData };
     const newDaySchedule = [...newTimetableData[day]];
 
@@ -246,13 +255,23 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
     }
     
     newTimetableData[day] = newDaySchedule;
-    
+    setTimetableData(newTimetableData);
+    setIsDirty(true);
+  };
+  
+  const handleSaveTimetable = async () => {
+    setIsSaving(true);
+    setError(null);
     try {
-        await saveTimetable(userId, newTimetableData);
-        setTimetableData(newTimetableData);
+      await saveTimetable(userId, timetableData);
+      setIsDirty(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000); // Show success message for 2s
     } catch (dbError) {
-        console.error("Failed to save timetable", dbError);
-        setError("Failed to save your changes to the timetable.");
+      console.error("Failed to save timetable", dbError);
+      setError("Failed to save your changes to the timetable.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -310,7 +329,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
             startY: 20,
             theme: 'grid',
             styles: { fontSize: 8, cellPadding: 1, halign: 'center', valign: 'middle' },
-            headStyles: { fillColor: '#4f46e5' }, // Accent color
+            headStyles: { fillColor: 'var(--color-primary)' },
             didParseCell: function (data) {
                 const isLunch = data.cell.raw === "Lunch Break";
                 const isPause = data.cell.raw === "Pause";
@@ -368,7 +387,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                     children: [new TextRun({ text, bold: true, color: "FFFFFF" })],
                     alignment: AlignmentType.CENTER,
                 })],
-                shading: { fill: "6366f1", type: ShadingType.SOLID },
+                shading: { fill: "4f46e5", type: ShadingType.SOLID },
                 verticalAlign: VerticalAlign.CENTER,
             })),
         });
@@ -452,30 +471,30 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
     return (
         <div className="w-full max-w-7xl mx-auto space-y-8">
             <div className="text-center">
-                <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+                <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-on-bg)]">
                     Timetable Editor
-                    <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+                    <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-primary)' }} />
                 </h2>
-                <p className="text-[var(--color-text-secondary)] mt-2">Manage schools, classes, and build your weekly schedule.</p>
+                <p className="text-[var(--color-on-surface-variant)] mt-2">Manage schools, classes, and build your weekly schedule.</p>
             </div>
             
             {error && <ErrorMessage message={error} />}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                 {/* Left Column: Controls */}
-                <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8 self-start">
+                <div className="md:col-span-1 space-y-6 md:sticky md:top-8 self-start">
                     {/* Schools Management */}
-                    <div className="blueprint-card p-4 sm:p-6">
+                    <div className="material-card p-4 sm:p-6">
                         <h3 className="font-semibold text-lg mb-3">Manage Schools</h3>
                         <div className="flex gap-2 mb-4">
-                            <input type="text" value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} placeholder="New school name" className="flex-grow p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
-                            <button onClick={handleAddSchool} disabled={!newSchoolName.trim()} className="blueprint-button py-2 px-3 rounded-lg text-sm">Add</button>
+                            <input type="text" value={newSchoolName} onChange={e => setNewSchoolName(e.target.value)} placeholder="New school name" className="flex-grow p-2 text-sm" />
+                            <button onClick={handleAddSchool} disabled={!newSchoolName.trim()} className="material-button material-button-primary text-sm py-2 px-3">Add</button>
                         </div>
                         <ul className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar-container pr-2">
                             {schools.map(school => (
-                                <li key={school.id} className="flex items-center justify-between p-2 rounded-lg bg-[var(--color-inset-bg)] text-sm">
+                                <li key={school.id} className="flex items-center justify-between p-2 rounded-lg bg-[var(--color-surface-variant)] text-sm">
                                     {editingSchoolId === school.id ? (
-                                        <input type="text" value={editingSchoolName} onChange={e => setEditingSchoolName(e.target.value)} className="flex-grow p-1 rounded bg-transparent border-b border-[var(--color-accent)]"/>
+                                        <input type="text" value={editingSchoolName} onChange={e => setEditingSchoolName(e.target.value)} className="flex-grow p-1 rounded bg-transparent border-b border-[var(--color-primary)] outline-none"/>
                                     ) : (
                                         <span className="font-medium">{school.name}</span>
                                     )}
@@ -497,27 +516,27 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                         </ul>
                     </div>
                     {/* Classes Management */}
-                    <div className="blueprint-card p-4 sm:p-6">
+                    <div className="material-card p-4 sm:p-6">
                          <h3 className="font-semibold text-lg mb-3">Manage Classes</h3>
                          <div className="space-y-2 mb-4">
-                            <input type="text" value={newClassName} onChange={e => setNewClassName(e.target.value)} placeholder="Class name (e.g., 4P1)" className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
-                            <input type="text" value={newClassSubject} onChange={e => setNewClassSubject(e.target.value)} placeholder="Subject (e.g., English)" className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm" />
-                             <select value={selectedSchoolForNewClass} onChange={e => setSelectedSchoolForNewClass(e.target.value)} className="w-full p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm">
+                            <input type="text" value={newClassName} onChange={e => setNewClassName(e.target.value)} placeholder="Class name (e.g., 4P1)" className="w-full p-2 text-sm" />
+                            <input type="text" value={newClassSubject} onChange={e => setNewClassSubject(e.target.value)} placeholder="Subject (e.g., English)" className="w-full p-2 text-sm" />
+                             <select value={selectedSchoolForNewClass} onChange={e => setSelectedSchoolForNewClass(e.target.value)} className="w-full p-2 text-sm">
                                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                          </div>
-                         <button onClick={handleAddClass} disabled={schools.length === 0 || !newClassName.trim() || !newClassSubject.trim()} className="w-full blueprint-button py-2 px-3 rounded-lg text-sm">Add Class</button>
+                         <button onClick={handleAddClass} disabled={schools.length === 0 || !newClassName.trim() || !newClassSubject.trim()} className="w-full material-button material-button-primary text-sm py-2 px-3">Add Class</button>
                     </div>
                 </div>
                 {/* Right Column: Timetable */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="blueprint-card p-4 sm:p-6">
+                <div className="md:col-span-2 space-y-6">
+                    <div className="material-card p-4 sm:p-6">
                         <h3 className="font-semibold text-lg mb-3">Assign Class</h3>
-                        <p className="text-sm text-[var(--color-text-secondary)] mb-3">Select a class below, then click on a slot in the timetable to assign or unassign it. To clear a slot, ensure no class is selected and click the slot.</p>
+                        <p className="text-sm text-[var(--color-on-surface-variant)] mb-3">Select a class below, then click on a slot in the timetable to assign or unassign it. To clear a slot, ensure no class is selected and click the slot.</p>
                         <div className="flex flex-wrap gap-2">
                             {classes.map(c => (
                                 <button key={c.id} onClick={() => setSelectedClassForAssignment(prev => prev === c.id ? null : c.id)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${selectedClassForAssignment === c.id ? 'border-transparent shadow-lg' : 'border-[var(--color-border)]'}`}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all ${selectedClassForAssignment === c.id ? 'border-transparent shadow-lg' : 'border-[var(--color-outline)] text-[var(--color-on-surface)]'}`}
                                     style={{backgroundColor: selectedClassForAssignment === c.id ? getEventColorFromString(c.schoolId) : 'transparent', color: selectedClassForAssignment === c.id ? 'white' : 'inherit'}}
                                 >
                                     {c.name} - {c.subject} <span className="opacity-70">({getSchoolDetails(c.schoolId)?.name})</span>
@@ -525,57 +544,138 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ userId, currentUser }
                             ))}
                         </div>
                     </div>
-                    <div className="blueprint-card p-4 sm:p-6 overflow-x-auto">
-                        <div className="flex justify-between items-center mb-4">
+                    <div className="material-card p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                             <h3 className="font-semibold text-lg">Weekly Timetable</h3>
-                            {/* Export button */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleSaveTimetable}
+                                    disabled={!isDirty || isSaving}
+                                    className="material-button material-button-primary text-sm flex items-center justify-center gap-2"
+                                >
+                                    {isSaving ? (
+                                        'Saving...'
+                                    ) : saveSuccess ? (
+                                        <><CheckIcon className="w-5 h-5"/> Saved!</>
+                                    ) : (
+                                        <><SaveIcon className="w-5 h-5"/> Save Changes</>
+                                    )}
+                                </button>
+                                <div className="relative" ref={exportMenuRef}>
+                                    <button
+                                        onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                                        className="material-button material-button-secondary text-sm flex items-center justify-center gap-2"
+                                        aria-haspopup="true" aria-expanded={isExportMenuOpen}
+                                    >
+                                        <DownloadIcon className="w-5 h-5" />
+                                        Export
+                                        <ChevronDownIcon className={`w-5 h-5 ml-1 transition-transform ${isExportMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isExportMenuOpen && (
+                                        <div className="absolute right-0 top-full mt-2 w-48 origin-top-right bg-[var(--color-surface)] border border-[var(--color-outline)] rounded-md shadow-lg z-10">
+                                            <div className="py-1">
+                                                <button onClick={handleExportWord} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]"><FileWordIcon className="w-4 h-4" /> As Word (.docx)</button>
+                                                <button onClick={handleExportPdf} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]"><FilePdfIcon className="w-4 h-4" /> As PDF</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <table className="w-full border-collapse min-w-[800px]">
-                            <thead>
-                                <tr>
-                                    <th className="p-2 border border-[var(--color-border)] bg-[var(--color-inset-bg)] w-28">Time</th>
-                                    {TIMETABLE_DAYS.map(day => <th key={day} className="p-2 border border-[var(--color-border)] bg-[var(--color-inset-bg)]">{day}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {TIME_PERIODS.map((period, periodIndex) => {
-                                    const isLunch = period === "11:15 - 13:00";
-                                    const isPause = period === "09:30 - 09:45";
 
-                                    if (isLunch || isPause) {
+                        {/* Desktop Table View */}
+                        <div className="overflow-x-auto hidden md:block">
+                            <table className="w-full border-collapse min-w-[800px]">
+                                <thead>
+                                    <tr>
+                                        <th className="p-2 border border-[var(--color-outline)] bg-[var(--color-surface-variant)] w-28">Time</th>
+                                        {TIMETABLE_DAYS.map(day => <th key={day} className="p-2 border border-[var(--color-outline)] bg-[var(--color-surface-variant)]">{day}</th>)}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {TIME_PERIODS.map((period, periodIndex) => {
+                                        const isLunch = period === "11:15 - 13:00";
+                                        const isPause = period === "09:30 - 09:45";
+
+                                        if (isLunch || isPause) {
+                                            return (
+                                                <tr key={period}>
+                                                    <td className="p-2 border border-[var(--color-outline)] text-center text-xs font-semibold bg-[var(--color-surface-variant)]">{period}</td>
+                                                    <td colSpan={5} className="p-2 border border-[var(--color-outline)] text-center font-bold bg-[var(--color-surface-variant)]">{isLunch ? "Lunch Break" : "Pause"}</td>
+                                                </tr>
+                                            )
+                                        }
+
                                         return (
                                             <tr key={period}>
-                                                <td className="p-2 border border-[var(--color-border)] text-center text-xs font-semibold bg-[var(--color-inset-bg)]">{period}</td>
-                                                <td colSpan={5} className="p-2 border border-[var(--color-border)] text-center font-bold bg-[var(--color-inset-bg)]">{isLunch ? "Lunch Break" : "Pause"}</td>
+                                                <td className="p-2 border border-[var(--color-outline)] text-center text-xs font-semibold bg-[var(--color-surface-variant)]">{period}</td>
+                                                {TIMETABLE_DAYS.map(day => {
+                                                    const classId = timetableData[day]?.[periodIndex];
+                                                    const classEntry = getClassDetails(classId);
+                                                    return (
+                                                        <td key={`${day}-${period}`} className="p-0 border border-[var(--color-outline)] h-20">
+                                                            <button onClick={() => handleTimetableSlotClick(day, periodIndex)} className="w-full h-full p-1 text-center text-xs transition-colors hover:bg-[var(--color-primary)]/10">
+                                                                {classEntry && (
+                                                                    <div className="h-full flex flex-col justify-center items-center rounded-md p-1" style={{backgroundColor: getEventColorFromString(classEntry.schoolId), color: 'white'}}>
+                                                                        <p className="font-bold">{classEntry.name}</p>
+                                                                        <p>{classEntry.subject}</p>
+                                                                        <p className="text-[10px] opacity-80">{getSchoolDetails(classEntry.schoolId)?.name}</p>
+                                                                    </div>
+                                                                )}
+                                                            </button>
+                                                        </td>
+                                                    )
+                                                })}
                                             </tr>
                                         )
-                                    }
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
 
-                                    return (
-                                        <tr key={period}>
-                                            <td className="p-2 border border-[var(--color-border)] text-center text-xs font-semibold bg-[var(--color-inset-bg)]">{period}</td>
-                                            {TIMETABLE_DAYS.map(day => {
-                                                const classId = timetableData[day]?.[periodIndex];
-                                                const classEntry = getClassDetails(classId);
+                        {/* Mobile Card View */}
+                        <div className="block md:hidden space-y-4">
+                            {TIMETABLE_DAYS.map(day => (
+                                <div key={day} className="p-4 rounded-lg bg-[var(--color-surface)] border border-[var(--color-outline)]">
+                                    <h4 className="font-semibold text-lg mb-3 text-center" style={{color: 'var(--color-primary)'}}>{day}</h4>
+                                    <div className="space-y-2">
+                                        {TIME_PERIODS.map((period, periodIndex) => {
+                                            const isLunch = period === "11:15 - 13:00";
+                                            const isPause = period === "09:30 - 09:45";
+                                            
+                                            if (isLunch || isPause) {
                                                 return (
-                                                    <td key={`${day}-${period}`} className="p-0 border border-[var(--color-border)] h-20">
-                                                        <button onClick={() => handleTimetableSlotClick(day, periodIndex)} className="w-full h-full p-1 text-center text-xs transition-colors hover:bg-[var(--color-accent)]/10">
-                                                            {classEntry && (
-                                                                <div className="h-full flex flex-col justify-center items-center rounded-md p-1" style={{backgroundColor: getEventColorFromString(classEntry.schoolId), color: 'white'}}>
-                                                                    <p className="font-bold">{classEntry.name}</p>
-                                                                    <p>{classEntry.subject}</p>
-                                                                    <p className="text-[10px] opacity-80">{getSchoolDetails(classEntry.schoolId)?.name}</p>
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    </td>
-                                                )
-                                            })}
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
+                                                    <div key={period} className="flex items-center gap-3 p-2 rounded-lg bg-[var(--color-surface-variant)]">
+                                                        <span className="text-xs font-semibold w-20 shrink-0 text-center">{period}</span>
+                                                        <span className="flex-grow text-center font-bold text-sm">{isLunch ? "Lunch Break" : "Pause"}</span>
+                                                    </div>
+                                                );
+                                            }
+
+                                            const classId = timetableData[day]?.[periodIndex];
+                                            const classEntry = getClassDetails(classId);
+
+                                            return (
+                                                <div key={period} className="flex items-center gap-3">
+                                                    <span className="text-xs font-semibold w-20 shrink-0 text-center text-[var(--color-on-surface-variant)]">{period}</span>
+                                                    <button onClick={() => handleTimetableSlotClick(day, periodIndex)} className="flex-grow h-16 p-1 text-xs transition-colors hover:bg-[var(--color-primary)]/10 rounded-lg border border-dashed border-[var(--color-outline)] flex items-center justify-center">
+                                                        {classEntry ? (
+                                                            <div className="h-full w-full flex flex-col justify-center items-center rounded-md p-1" style={{backgroundColor: getEventColorFromString(classEntry.schoolId), color: 'white'}}>
+                                                                <p className="font-bold">{classEntry.name}</p>
+                                                                <p>{classEntry.subject}</p>
+                                                                <p className="text-[10px] opacity-80">{getSchoolDetails(classEntry.schoolId)?.name}</p>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-[var(--color-on-surface-variant)]">Empty</span>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

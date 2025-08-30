@@ -1,48 +1,62 @@
-🔵 Pro Co-Pilot Plan (1,700 DZD/month)
+🔵 Pro Co-Pilot Plan (1,700 DZD / month)
 
-The complete professional toolkit for serious educators. Covers your full curriculum workload with peace of mind.
+The complete toolkit for modern educators. Get a balanced monthly credit bundle and access every premium feature.
 
-Features:
+Monthly Credit Bundle (resets every month):
 
-25 Lesson Plans / month (covers a teacher’s full curriculum needs)
+50 Lesson Planner Credits
 
-50 Flashcard Images / month
+50 Flashcard Generator Credits
 
-Unlimited Saved Lesson Plans, Exams, Flashcards, Canvases
+10 Exam Generator Credits
 
-Full, editable access to Curriculum Overview
+20 Word Game Generator Credits
 
-Customizable School Calendar
+Features Include:
 
-Watermark-Free Professional PDF & Word Exports
+Unlock All Premium Tools: Exam Generator, Bulk Lesson Planner, Word Game Generator, and more.
 
-Priority Support
+Full Resource Access: Editable Curriculum Overview & School Calendar.
 
-Access to all future premium features
+Professional Exports: Watermark-free Word (.docx) and PDF downloads.
 
-💵 Price: 1,700 DZD / month
-(Cancel anytime)
+Priority Support: Faster assistance from our team.
+
+💡 Best Value: A balanced bundle designed to match a teacher’s real monthly classroom needs.
 
 🟣 Extra Credits (Top-Ups)
 
-Run out of credits? No problem — buy extra anytime.
+Need more creative power? Add credits anytime. Credits never expire.
 
-1 Flashcard = 1 Credit
+Lesson, Bulk & Word Game Credits
 
-1 Lesson Plan = 2 Credits
+20 Credits → 300 DZD
 
-1 Exam = 3 Credits
+50 Credits → 650 DZD (Best Value)
 
-Top-Up Packs:
+100 Credits → 1,200 DZD
 
-50 Credits → 500 DZD
+Flashcard Generator Credits
 
-120 Credits → 1,000 DZD
+50 Credits → 400 DZD
 
-250 Credits → 2,000 DZD
+150 Credits → 1,000 DZD (Best Value)
 
-(Cheaper per credit in larger packs)
+300 Credits → 1,800 DZD
 
-📧 How to Upgrade
-To upgrade to Pro or purchase extra credits, email us at:
-dz.ai.teacher.assistant@gmail.com
+Exam Generator Credits
+
+15 Credits → 300 DZD
+
+45 Credits → 800 DZD (Best Value)
+
+90 Credits → 1,500 DZD
+
+📧 How to Upgrade or Purchase Credits
+
+Email us at contact@aitadz.pro
+ with your request.
+
+We’ll send payment instructions (CCP / Bank Transfer available).
+
+Your account will be updated within 24 hours after confirmation.

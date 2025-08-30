@@ -1,6 +1,4 @@
 
-
-
 import React from 'react';
 import { CurriculumLevel, CanvasSequence, Exam, ExamDifficulty, ExamSource, QuestionType, User } from '../types';
 import ExamGeneratorControls from './ExamGeneratorControls';
@@ -23,8 +21,8 @@ interface ExamGeneratorViewProps {
   setExamTopic: (topic: string) => void;
   examCustomPrompt: string;
   setExamCustomPrompt: (prompt: string) => void;
-  examSections: { id: number; title: string; questionType: QuestionType; numberOfQuestions: number }[];
-  setExamSections: (sections: { id: number; title: string; questionType: QuestionType; numberOfQuestions: number }[]) => void;
+  examSections: { id: number; title: string; questionType: QuestionType; numberOfQuestions: number; points: number }[];
+  setExamSections: (sections: { id: number; title: string; questionType: QuestionType; numberOfQuestions: number; points: number }[]) => void;
   examDifficulty: ExamDifficulty;
   setExamDifficulty: (difficulty: ExamDifficulty) => void;
   examTitle: string;
@@ -38,24 +36,39 @@ interface ExamGeneratorViewProps {
   sequences: CanvasSequence[];
   selectedExamSectionIds: string[];
   onSelectedExamSectionIdsChange: (ids: string[]) => void;
+
+  // New Passage Props
+  examIncludeReadingPassage: boolean;
+  setExamIncludeReadingPassage: (include: boolean) => void;
+  examReadingPassageTopic: string;
+  setExamReadingPassageTopic: (topic: string) => void;
 }
 
 const ExamGeneratorView: React.FC<ExamGeneratorViewProps> = (props) => {
   const { isLoading, error, generatedExam } = props;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      <div className="lg:w-2/5">
-        <div className="lg:sticky lg:top-8 self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto custom-scrollbar-container lg:pr-2">
+    <div className="flex flex-col md:flex-row gap-8">
+      <div className="md:w-2/5">
+        <div className="md:sticky md:top-8 self-start md:max-h-[calc(100vh-4rem)] md:overflow-y-auto custom-scrollbar-container md:pr-2">
           <ExamGeneratorControls {...props} />
         </div>
       </div>
-      <div className="lg:w-3/5">
-        {error && !isLoading && <div className="mb-6"><ErrorMessage message={error} /></div>}
+      <div className="md:w-3/5">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <LoadingSpinner text="Generating your exam..." />
           </div>
+        ) : error ? (
+            error === 'QUOTA_EXCEEDED_EXAM_GENERATOR' ? (
+                <div className="material-card text-center p-8 h-full flex flex-col justify-center items-center">
+                    <p className="mt-4 text-lg font-medium text-[var(--color-on-surface)]">
+                        Exam Generator under maintenance, be back soon.
+                    </p>
+                </div>
+            ) : (
+                <div className="mb-6"><ErrorMessage message={error} /></div>
+            )
         ) : (
           <ExamDisplay exam={generatedExam} onSave={props.onSaveExam} />
         )}

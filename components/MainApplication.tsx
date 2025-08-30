@@ -1,27 +1,34 @@
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import Sidebar from './Sidebar';
+
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Sidebar } from './Sidebar';
 import TimetableEditor from './TimetableEditor';
 import CurriculumOverview from './CurriculumOverview';
 import { SchoolCalendarView } from './SchoolCalendarView';
 import LessonPlannerView from './LessonPlannerView';
 import AdminDashboard from './AdminDashboard';
+import DashboardView from './DashboardView';
 import SavedPlansView from './SavedPlansView';
 import SavedExamsView from './SavedExamsView';
 import ExamGeneratorView from './ExamGeneratorView';
 import CreatorStudioView from './CreatorStudioView';
 import SavedCanvasView from './SavedCanvasView';
+import FlashcardGenerator from './FlashcardGenerator';
 import SavedFlashcardsView from './SavedFlashcardsView';
 import PricingView from './PricingView';
-import FlashcardGenerator from './FlashcardGenerator';
-import FlashcardGeneratorV2 from './FlashcardGeneratorV2';
-import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini, generateFlashcardIdeasWithGemini } from '../services/geminiService';
-import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, SavedFlashcard, FlashcardIdea, CanvasElement, SavedCanvas } from '../types'; 
-import { getUserById, decrementLessonCredits, decrementImageCredits, saveLessonPlan, saveExam, saveFlashcard, saveCanvas } from '../services/dbService';
+import BulkGeneratorView from './BulkGeneratorView';
+import { WordGameGeneratorView } from './WordGameGeneratorView';
+import ReviewsView from './ReviewsView';
+import Chatbot from './Chatbot';
+import DigitalSpinnerView from './DigitalSpinnerView';
+import { CertificateGeneratorView } from './CertificateGeneratorView';
+import { generateLessonPlanWithGemini, generateFlashcardImageWithGemini, generateExamWithGemini } from '../services/geminiService';
+import { LessonPlan, CurriculumLevel, CanvasLesson, CanvasSection, CanvasSequence, AppView, ThemeSettings, AccentColor, User, LessonDetailLevel, CreativityLevel, PromptMode, SavedLessonPlan, SavedLessonPlanContext, Exam, SavedExam, ExamSource, QuestionType, ExamDifficulty, CanvasElement, SavedCanvas, SavedFlashcard, WordGameType, WordGameData } from '../types'; 
+import { getUserById, decrementLessonPlannerCredits, decrementFlashcardGeneratorCredits, decrementExamGeneratorCredits, saveLessonPlan, saveExam, saveCanvas, updateCanvas, saveFlashcard, saveWordGame, decrementWordGameGeneratorCredits } from '../services/dbService';
 import { YEAR_3_PRIMARY_CURRICULUM_CONTENT, YEAR_3_CANVAS_STRUCTURE_DATA } from './constants_year3';
 import { YEAR_4_PRIMARY_CURRICULUM_CONTENT, YEAR_4_CANVAS_STRUCTURE_DATA } from './constants_year4';
 import { YEAR_5_PRIMARY_CURRICULUM_CONTENT, YEAR_5_CANVAS_STRUCTURE_DATA } from './constants_year5';
-import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW } from './constants';
+import { CURRICULUM_LEVEL_OPTIONS_FOR_VIEW, MenuIcon, EnvelopeIcon, FacebookIcon, ChevronUpIcon } from './constants';
 
 
 interface MainApplicationProps {
@@ -47,6 +54,10 @@ interface MainApplicationProps {
   setPromptMode: (mode: PromptMode) => void;
   customPrompt: string;
   setCustomPrompt: (string) => void;
+  includeTextbookActivities: boolean;
+  setIncludeTextbookActivities: (value: boolean) => void;
+  // Lifted props
+  setNotification: (notification: { message: string, type: 'success' | 'error' } | null) => void;
 }
 
 const MainApplication: React.FC<MainApplicationProps> = (props) => {
@@ -56,13 +67,18 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
     lessonDetailLevel, setLessonDetailLevel, creativityLevel, setCreativityLevel,
     selectedMaterials, setSelectedMaterials,
     promptMode, setPromptMode, customPrompt, setCustomPrompt,
-    activeView, setActiveView
+    includeTextbookActivities, setIncludeTextbookActivities,
+    activeView, setActiveView,
+    setNotification
   } = props;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  
+  // State and ref for Go Up button
+  const [showGoUpButton, setShowGoUpButton] = useState(false);
+  const mainContentRef = useRef<HTMLDivElement>(null);
   
   // Curriculum Selection State
   const [selectedCurriculum, setSelectedCurriculum] = useState<CurriculumLevel | null>(null);
@@ -73,7 +89,6 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   // Lesson Planner Output State
   const [generatedPlan, setGeneratedPlan] = useState<LessonPlan | null>(null);
   const [selectedLessonDetails, setSelectedLessonDetails] = useState<CanvasLesson | null>(null);
-  const [includeTextbookActivities, setIncludeTextbookActivities] = useState<boolean>(true);
   const [viewingSavedPlan, setViewingSavedPlan] = useState<SavedLessonPlan | null>(null);
 
   // Exam Generator State
@@ -82,23 +97,56 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   const [examSource, setExamSource] = useState<ExamSource>('curriculum');
   const [examTopic, setExamTopic] = useState('');
   const [examCustomPrompt, setExamCustomPrompt] = useState('');
-  const [examSections, setExamSections] = useState<{ id: number; title: string; questionType: QuestionType; numberOfQuestions: number }[]>([
-    { id: 1, title: 'Part One: Reading Comprehension', questionType: 'Multiple Choice', numberOfQuestions: 5 },
-    { id: 2, title: 'Part Two: Vocabulary', questionType: 'Short Answer', numberOfQuestions: 5 },
+  const [examSections, setExamSections] = useState<{ id: number; title: string; questionType: QuestionType; numberOfQuestions: number; points: number }[]>([
+    { id: 1, title: 'Reading Comprehension', questionType: 'True/False', numberOfQuestions: 3, points: 3 },
+    { id: 2, title: 'Vocabulary', questionType: 'Matching', numberOfQuestions: 4, points: 2 },
+    { id: 3, title: 'Grammar', questionType: 'Fill in the Blanks', numberOfQuestions: 1, points: 2 },
+    { id: 4, title: 'Writing', questionType: 'Handwriting Practice', numberOfQuestions: 1, points: 1 },
   ]);
   const [examDifficulty, setExamDifficulty] = useState<ExamDifficulty>('Medium');
   const [examTitle, setExamTitle] = useState('');
   const [examInstructions, setExamInstructions] = useState('');
+  const [examIncludeReadingPassage, setExamIncludeReadingPassage] = useState(true);
+  const [examReadingPassageTopic, setExamReadingPassageTopic] = useState('');
+
   
   // Exam Generator specific curriculum selection
   const [examSelectedCurriculum, setExamSelectedCurriculum] = useState<CurriculumLevel | null>(null);
   const [selectedExamSectionIds, setSelectedExamSectionIds] = useState<string[]>([]);
 
-  // Flashcard State
-  const [viewingSavedFlashcard, setViewingSavedFlashcard] = useState<SavedFlashcard | null>(null);
-  
   // Creator Studio State
   const [canvasElements, setCanvasElements] = useState<CanvasElement[]>([]);
+  const [loadedCanvasId, setLoadedCanvasId] = useState<string | null>(null);
+  
+  // Flashcard State
+  const [viewingSavedFlashcard, setViewingSavedFlashcard] = useState<SavedFlashcard | null>(null);
+
+
+  // Effect for the "Go Up" button visibility
+  useEffect(() => {
+    const mainEl = mainContentRef.current;
+    if (!mainEl) return;
+
+    const handleScroll = () => {
+        if (mainEl.scrollTop > 300) {
+            setShowGoUpButton(true);
+        } else {
+            setShowGoUpButton(false);
+        }
+    };
+
+    mainEl.addEventListener('scroll', handleScroll);
+    return () => {
+        mainEl.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const handleGoUpClick = () => {
+      mainContentRef.current?.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+      });
+  };
 
   // Effect to initialize and reset state on user load/refresh
   useEffect(() => {
@@ -116,13 +164,6 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
     setViewingSavedPlan(null);
   }, [currentUser.uid]);
 
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
-
   const handleCurriculumChange = useCallback((value: CurriculumLevel) => {
     setSelectedCurriculum(value);
     setSelectedSequenceId(null);
@@ -139,17 +180,6 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
     setSelectedExamSectionIds([]); // Reset multi-selection when year changes
   }, []);
 
-  useEffect(() => {
-    const handleTourAction = (e: Event) => {
-        const customEvent = e as CustomEvent;
-        if (customEvent.detail?.action === 'ensureAccordionVisible') {
-            if (!selectedCurriculum) handleCurriculumChange(CURRICULUM_LEVEL_OPTIONS_FOR_VIEW[0].value);
-        }
-    };
-    document.addEventListener('guideTourAction', handleTourAction);
-    return () => document.removeEventListener('guideTourAction', handleTourAction);
-  }, [selectedCurriculum, handleCurriculumChange]);
-
   const getCurrentCanvasStructureData = useCallback((): CanvasSequence[] => {
     if (selectedCurriculum === CurriculumLevel.PRIMARY_3) return YEAR_3_CANVAS_STRUCTURE_DATA;
     if (selectedCurriculum === CurriculumLevel.PRIMARY_4) return YEAR_4_CANVAS_STRUCTURE_DATA;
@@ -164,11 +194,10 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
     return [];
   }, [examSelectedCurriculum]);
 
-  const curriculumDataMap = useMemo((): Record<CurriculumLevel, CanvasSequence[]> => ({
+  const curriculumDataMap = useMemo((): Record<string, CanvasSequence[]> => ({
     [CurriculumLevel.PRIMARY_3]: YEAR_3_CANVAS_STRUCTURE_DATA,
     [CurriculumLevel.PRIMARY_4]: YEAR_4_CANVAS_STRUCTURE_DATA,
     [CurriculumLevel.PRIMARY_5]: YEAR_5_CANVAS_STRUCTURE_DATA,
-    [CurriculumLevel.SELECT_YEAR]: [],
   }), []);
 
   const availableSequences = useMemo(() => getCurrentCanvasStructureData().filter(seq => !seq.isPause), [getCurrentCanvasStructureData]);
@@ -194,27 +223,23 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
     }
   };
 
-  const handleLessonChange = (lesson: CanvasLesson | null) => setSelectedLessonDetails(lesson);
+  const handleLessonChange = (lesson: CanvasLesson | null) => {
+    setSelectedLessonDetails(lesson);
+  };
   
   const handleViewChange = (view: AppView) => {
-    if (view === 'creatorStudio' && currentUser.role !== 'admin') {
-      onOpenPremiumModal('Creator Studio (Admin Only)');
+    if (view === 'bulkGenerator' && currentUser.role !== 'admin') {
+      onOpenPremiumModal('Bulk Generator (Admin Only)');
       return;
     }
-    
-    if (currentUser.plan === 'free' && (view === 'curriculumOverview' || view === 'schoolCalendar' || view === 'savedPlans' || view === 'examGenerator' || view === 'savedExams' || view === 'savedFlashcards' || view === 'savedCanvas')) {
-      const featureMap: Record<string, string> = {
-        curriculumOverview: 'Curriculum Overview',
-        schoolCalendar: 'School Calendar',
-        savedPlans: 'Saved Plans',
-        examGenerator: 'Exam Generator',
-        savedExams: 'Saved Exams',
-        savedFlashcards: 'Saved Flashcards',
-        savedCanvas: 'Saved Canvases',
-      };
-      onOpenPremiumModal(featureMap[view]);
-    } else {
-      setActiveView(view);
+
+    if (view === 'creatorStudio') {
+      setCanvasElements([]);
+      setLoadedCanvasId(null);
+    }
+    setActiveView(view);
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
     }
   };
 
@@ -230,13 +255,18 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
         setError("Could not verify your account status. Please try logging in again.");
         return;
     }
-    if (freshUser.plan === 'free' && freshUser.lessonCreditsRemaining <= 0) {
+    if (freshUser.lessonPlannerCredits <= 0) {
         onOpenPremiumModal('Lesson Plan Generations');
         return;
     }
     if (!isGenerationAllowed) {
         setError("Please complete all required selections before generating.");
         return;
+    }
+    
+    const displayArea = document.getElementById('lesson-plan-display-area');
+    if (displayArea) {
+      displayArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     setIsLoading(true);
@@ -246,27 +276,33 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
 
     let curriculumContentToPass: string | null = null;
     let topicForAI: string = '';
+    const sequence = availableSequences.find(s => s.id === selectedSequenceId);
 
     if (promptMode === 'structured' && selectedCurriculum && selectedLessonDetails) {
         curriculumContentToPass = selectedSectionFullDetails?.detailedContent || null;
-        const sequence = availableSequences.find(s => s.id === selectedSequenceId);
+        
         const section = sequence?.sections.find(sec => sec.id === selectedSectionId);
         topicForAI = `Generate a lesson plan for the ${selectedCurriculum} session: "${selectedLessonDetails.name}" from Sequence: "${sequence?.title}" within Section: "${section?.name}".`;
         if (includeTextbookActivities && selectedLessonDetails.bookActivities?.length) {
-            topicForAI += `\nConsider these textbook activities: ${selectedLessonDetails.bookActivities.map(a => `P${a.page} (Act. ${a.activityNumber}): ${a.description}`).join('; ')}`;
+            topicForAI += `\n**Important**: You MUST base some of the lesson's procedure on the following textbook activities: ${selectedLessonDetails.bookActivities.map(a => `P${a.page}${a.activityNumber ? ` (Act. ${a.activityNumber})` : ''}: ${a.description}`).join('; ')}`;
+        } else {
+            topicForAI += `\n**Important**: Do NOT mention or include any textbook activities. Create original activities based only on the provided curriculum content.`;
         }
     }
 
     try {
-      const plan = await generateLessonPlanWithGemini(selectedCurriculum!, topicForAI, curriculumContentToPass, lessonDetailLevel, creativityLevel, selectedMaterials, promptMode, customPrompt);
+      const plan = await generateLessonPlanWithGemini(currentUser.name, selectedCurriculum!, topicForAI, curriculumContentToPass, lessonDetailLevel, creativityLevel, selectedMaterials, promptMode, customPrompt, sequence?.title || null);
       setGeneratedPlan(plan);
-      if (freshUser.plan === 'free') {
-        await decrementLessonCredits(currentUser.uid);
-        const updatedUser = await getUserById(currentUser.uid);
-        if (updatedUser) setCurrentUser(updatedUser);
-      }
+      await decrementLessonPlannerCredits(currentUser.uid, 2);
+      const updatedUser = await getUserById(currentUser.uid);
+      if (updatedUser) setCurrentUser(updatedUser);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred.");
+      if (err instanceof Error && err.message === 'QUOTA_EXCEEDED') {
+        setGeneratedPlan(null); // Clear any old plan
+        setError("QUOTA_EXCEEDED_LESSON_PLANNER");
+      } else {
+        setError(err instanceof Error ? err.message : "An unknown error occurred.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -275,44 +311,26 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   const handleFlashcardGeneration = async (prompt: string, aspectRatio: string): Promise<string> => {
     const freshUser = await getUserById(currentUser.uid);
     if (!freshUser) throw new Error("Could not verify your account status.");
-    if (freshUser.plan === 'free' && freshUser.imageCreditsRemaining <= 0) {
+    if (freshUser.flashcardGeneratorCredits <= 0) {
         onOpenPremiumModal('Flashcard Generations');
         throw new Error("Image generation limit reached. Upgrade to Premium.");
     }
     try {
       const imageUrl = await generateFlashcardImageWithGemini(prompt, aspectRatio);
-      if (freshUser.plan === 'free') {
-        await decrementImageCredits(currentUser.uid);
-        const updatedUser = await getUserById(currentUser.uid);
-        if (updatedUser) setCurrentUser(updatedUser);
-      }
+      await decrementFlashcardGeneratorCredits(currentUser.uid, 1);
+      const updatedUser = await getUserById(currentUser.uid);
+      if (updatedUser) setCurrentUser(updatedUser);
       return imageUrl;
     } catch (err) {
       throw err;
     }
   };
 
-  const handleGenerateFlashcardIdeas = async (topic: string): Promise<FlashcardIdea[]> => {
-    const freshUser = await getUserById(currentUser.uid);
-    if (!freshUser) throw new Error("Could not verify your account status.");
-    if (freshUser.plan === 'free' && freshUser.lessonCreditsRemaining <= 0) {
-        onOpenPremiumModal('Flashcard Idea Generations');
-        throw new Error("Credit limit reached. Upgrade to Premium.");
-    }
-    try {
-      const ideas = await generateFlashcardIdeasWithGemini(topic);
-      if (freshUser.plan === 'free') {
-        await decrementLessonCredits(currentUser.uid); // It uses 1 lesson credit
-        const updatedUser = await getUserById(currentUser.uid);
-        if (updatedUser) setCurrentUser(updatedUser);
-      }
-      return ideas;
-    } catch (err) {
-      throw err;
-    }
-  };
-
   const handleSaveFlashcard = async (prompt: string, style: string, aspectRatio: string, imageData: string) => {
+    if (currentUser.plan === 'free') {
+        onOpenPremiumModal('Saving Flashcards');
+        return;
+    }
     const name = window.prompt("Enter a name for this flashcard:", prompt);
     if (!name?.trim()) return;
 
@@ -330,6 +348,10 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   };
 
   const handleSavePlan = async () => {
+    if (currentUser.plan === 'free') {
+        onOpenPremiumModal('Saving Lesson Plans');
+        return;
+    }
     if (!generatedPlan || !selectedCurriculum || !selectedLessonDetails) {
       setNotification({ message: "Cannot save: Complete context is required.", type: 'error' });
       return;
@@ -366,12 +388,16 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   
   // --- EXAM GENERATOR LOGIC ---
   const handleGenerateExam = useCallback(async () => {
+      if (currentUser.plan === 'free') {
+          onOpenPremiumModal('Exam Generator');
+          return;
+      }
       const freshUser = await getUserById(currentUser.uid);
       if (!freshUser) {
           setError("Could not verify your account status.");
           return;
       }
-      if (freshUser.plan === 'free' && freshUser.lessonCreditsRemaining <= 0) {
+      if (freshUser.examGeneratorCredits <= 0) {
           onOpenPremiumModal('Exam Generations');
           return;
       }
@@ -380,13 +406,15 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
       setError(null);
       setGeneratedExam(null);
 
-      let curriculumContent = null;
+      let curriculumContent: string | null = null;
       let topicForAI = examTopic;
+      let sequenceIds: string[] = [];
 
       if (examSource === 'curriculum') {
           const allSequences = getExamCanvasStructureData();
           const contentParts: string[] = [];
           const sectionNames: string[] = [];
+          const sequenceIdSet = new Set<string>();
 
           selectedExamSectionIds.forEach(sectionId => {
               for (const seq of allSequences) {
@@ -396,6 +424,7 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
                           contentParts.push(section.detailedContent);
                       }
                       sectionNames.push(`${seq.title} > ${section.name}`);
+                      sequenceIdSet.add(seq.id);
                       break;
                   }
               }
@@ -404,31 +433,49 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
           if (sectionNames.length > 0 && !examTopic.trim()) {
               topicForAI = `Exam based on: ${sectionNames.join('; ')}`;
           }
+          sequenceIds = Array.from(sequenceIdSet);
       }
 
       const context = {
           curriculum: examSelectedCurriculum,
           sectionContent: curriculumContent,
           topic: topicForAI,
-          customPrompt: examCustomPrompt
+          customPrompt: examCustomPrompt,
+          sequenceIds: sequenceIds
+      };
+      
+      const examConfig = {
+          sections: examSections.map(({ id, ...rest }) => rest), // Remove client-side ID before sending to AI
+          difficulty: examDifficulty,
+          title: examTitle,
+          instructions: examInstructions,
+          includeReadingPassage: examIncludeReadingPassage,
+          readingPassageTopic: examReadingPassageTopic
       };
 
       try {
-          const exam = await generateExamWithGemini(examSource, context, examSections, examDifficulty, examTitle, examInstructions);
+          const exam = await generateExamWithGemini(examSource, context, examConfig);
           setGeneratedExam(exam);
-           if (freshUser.plan === 'free') {
-              await decrementLessonCredits(currentUser.uid); // Using lesson credits for now
-              const updatedUser = await getUserById(currentUser.uid);
-              if (updatedUser) setCurrentUser(updatedUser);
-          }
+          await decrementExamGeneratorCredits(currentUser.uid, 3);
+          const updatedUser = await getUserById(currentUser.uid);
+          if (updatedUser) setCurrentUser(updatedUser);
       } catch (err) {
-          setError(err instanceof Error ? err.message : "An unknown error occurred while generating the exam.");
+          if (err instanceof Error && err.message === 'QUOTA_EXCEEDED') {
+              setGeneratedExam(null);
+              setError("QUOTA_EXCEEDED_EXAM_GENERATOR");
+          } else {
+              setError(err instanceof Error ? err.message : "An unknown error occurred while generating the exam.");
+          }
       } finally {
           setIsLoading(false);
       }
-  }, [currentUser.uid, examSelectedCurriculum, selectedExamSectionIds, examTopic, examCustomPrompt, examSource, examSections, examDifficulty, examTitle, examInstructions, onOpenPremiumModal, setCurrentUser, getExamCanvasStructureData]);
+  }, [currentUser.uid, currentUser.plan, onOpenPremiumModal, examSelectedCurriculum, selectedExamSectionIds, examTopic, examCustomPrompt, examSource, examSections, examDifficulty, examTitle, examInstructions, examIncludeReadingPassage, examReadingPassageTopic, setCurrentUser, getExamCanvasStructureData]);
 
   const handleSaveExam = async () => {
+      if (currentUser.plan === 'free') {
+          onOpenPremiumModal('Saving Exams');
+          return;
+      }
       if (!generatedExam) {
           setNotification({ message: "No exam to save.", type: 'error' });
           return;
@@ -451,20 +498,53 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   };
   
   // --- CREATOR STUDIO LOGIC ---
-  const handleSaveCanvas = async (elements: CanvasElement[]) => {
-      const name = window.prompt("Enter a name for your canvas:", "Untitled Design");
+  const handleSaveCanvas = async () => {
+      if (currentUser.plan === 'free') {
+          onOpenPremiumModal('Saving Canvases');
+          return;
+      }
+      const canvasData = {
+          elements: canvasElements,
+          width: 794,
+          height: 1123,
+          backgroundColor: '#FFFFFF',
+      };
+      
+      try {
+          if (loadedCanvasId) {
+              await updateCanvas(loadedCanvasId, canvasData);
+              setNotification({ message: "Canvas updated successfully!", type: 'success' });
+          } else {
+              const name = window.prompt("Enter a name for your new canvas:", "Untitled Design");
+              if (!name?.trim()) return;
+              const newId = await saveCanvas(currentUser.uid, name.trim(), canvasData);
+              setLoadedCanvasId(newId);
+              setNotification({ message: "Canvas saved successfully!", type: 'success' });
+          }
+      } catch (e) {
+          setNotification({ message: `Save failed: ${e instanceof Error ? e.message : "Unknown error"}`, type: 'error' });
+      }
+  };
+
+  const handleSaveCanvasAs = async () => {
+      if (currentUser.plan === 'free') {
+          onOpenPremiumModal('Saving Canvases');
+          return;
+      }
+      const name = window.prompt("Enter a name for the new copy:", "Copy of Design");
       if (!name?.trim()) return;
 
       const canvasData = {
-          elements,
-          width: 794, // A4 width in pixels at 96 DPI
-          height: 1123, // A4 height
+          elements: canvasElements,
+          width: 794,
+          height: 1123,
           backgroundColor: '#FFFFFF',
       };
-
+      
       try {
-          await saveCanvas(currentUser.uid, name.trim(), canvasData);
-          setNotification({ message: "Canvas saved successfully!", type: 'success' });
+          const newId = await saveCanvas(currentUser.uid, name.trim(), canvasData);
+          setLoadedCanvasId(newId);
+          setNotification({ message: "Canvas saved as new copy!", type: 'success' });
       } catch (e) {
           setNotification({ message: `Save failed: ${e instanceof Error ? e.message : "Unknown error"}`, type: 'error' });
       }
@@ -472,11 +552,37 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
 
   const handleLoadCanvas = (savedCanvas: SavedCanvas) => {
       setCanvasElements(savedCanvas.canvasData.elements);
+      setLoadedCanvasId(savedCanvas.id);
       setActiveView('creatorStudio');
   };
 
+  const handleSaveGame = async (name: string, gameType: WordGameType, level: CurriculumLevel, topic: string, gameData: WordGameData) => {
+    if (currentUser.plan === 'free') {
+        onOpenPremiumModal('Saving Word Games');
+        return;
+    }
+    try {
+        await saveWordGame(currentUser.uid, name.trim(), gameType, level, topic, gameData);
+        setNotification({ message: "Word game saved successfully!", type: 'success' });
+    } catch (e) {
+        setNotification({ message: `Save failed: ${e instanceof Error ? e.message : "Unknown error"}`, type: 'error' });
+    }
+  };
+
+
   const renderCurrentView = () => {
     switch(activeView) {
+      case 'dashboard':
+        return <DashboardView 
+            currentUser={currentUser} 
+            onOpenPremiumModal={onOpenPremiumModal} 
+            setActiveView={handleViewChange}
+            onEditProfile={onEditProfile}
+            onOpenReviewModal={onOpenReviewModal}
+            themeSettings={themeSettings}
+            toggleThemeMode={toggleThemeMode}
+            setAccentColor={setAccentColor}
+        />;
       case 'lessonPlanner':
         return <LessonPlannerView
             selectedCurriculum={selectedCurriculum} onCurriculumChange={handleCurriculumChange} sequences={availableSequences}
@@ -491,6 +597,14 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
             currentUser={currentUser} isViewingSavedPlan={!!viewingSavedPlan} onCloseSavedPlan={handleCloseSavedPlan}
             viewingSavedPlanName={viewingSavedPlan?.name || null} onSavePlan={handleSavePlan}
           />;
+      case 'bulkGenerator':
+        return <BulkGeneratorView
+            currentUser={currentUser}
+            lessonDetailLevel={lessonDetailLevel}
+            creativityLevel={creativityLevel}
+            selectedMaterials={selectedMaterials}
+            onOpenPremiumModal={onOpenPremiumModal}
+        />;
       case 'examGenerator':
         return <ExamGeneratorView 
             currentUser={currentUser} isLoading={isLoading} error={error} generatedExam={generatedExam} onGenerateExam={handleGenerateExam} onSaveExam={handleSaveExam}
@@ -500,7 +614,24 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
             examInstructions={examInstructions} setExamInstructions={setExamInstructions}
             selectedCurriculum={examSelectedCurriculum} onCurriculumChange={handleExamCurriculumChange} sequences={examAvailableSequences}
             selectedExamSectionIds={selectedExamSectionIds} onSelectedExamSectionIdsChange={setSelectedExamSectionIds}
+            examIncludeReadingPassage={examIncludeReadingPassage} setExamIncludeReadingPassage={setExamIncludeReadingPassage}
+            examReadingPassageTopic={examReadingPassageTopic} setExamReadingPassageTopic={setExamReadingPassageTopic}
           />;
+      case 'wordGameGenerator':
+        return <WordGameGeneratorView 
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            onOpenPremiumModal={onOpenPremiumModal}
+            onSaveGame={handleSaveGame}
+        />;
+       case 'creatorStudio':
+        return <CreatorStudioView
+            elements={canvasElements}
+            setElements={setCanvasElements}
+            onSave={handleSaveCanvas}
+            onSaveAs={handleSaveCanvasAs}
+            onToggleSidebar={() => setIsSidebarOpen(p => !p)}
+        />;
       case 'flashcardGenerator':
         return <FlashcardGenerator
                     onGenerate={handleFlashcardGeneration}
@@ -509,32 +640,40 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
                     viewingSavedFlashcard={viewingSavedFlashcard}
                     setViewingSavedFlashcard={setViewingSavedFlashcard}
                 />;
-      case 'flashcardWizard':
-        return <FlashcardGeneratorV2
-            onGenerateIdeas={handleGenerateFlashcardIdeas}
-            onGenerateImage={handleFlashcardGeneration}
+      case 'digitalSpinner':
+          return <DigitalSpinnerView
             currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            onOpenPremiumModal={onOpenPremiumModal}
+            setNotification={setNotification}
+           />;
+      case 'certificateGenerator':
+        return <CertificateGeneratorView
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            onOpenPremiumModal={onOpenPremiumModal}
+            setNotification={setNotification}
         />;
       case 'timetableEditor':
         return <TimetableEditor userId={currentUser.uid} currentUser={currentUser} />;
       case 'curriculumOverview':
         return <CurriculumOverview curriculumDataMap={curriculumDataMap} />;
       case 'schoolCalendar':
-        return <SchoolCalendarView userId={currentUser.uid} />;
+        return <SchoolCalendarView userId={currentUser.uid} currentUser={currentUser} onOpenPremiumModal={onOpenPremiumModal} />;
       case 'pricing':
-        return <PricingView />;
+        return <PricingView currentUser={currentUser} />;
+      case 'reviews':
+        return <ReviewsView />;
       case 'savedPlans':
         return <SavedPlansView currentUser={currentUser} onLoadPlan={handleLoadPlan} />;
       case 'savedExams':
         return <SavedExamsView currentUser={currentUser} onLoadExam={handleLoadExam} />;
+      case 'savedCanvas':
+          return <SavedCanvasView currentUser={currentUser} onLoadCanvas={handleLoadCanvas} />;
       case 'savedFlashcards':
           return <SavedFlashcardsView currentUser={currentUser} onLoadFlashcard={handleLoadFlashcard} />;
       case 'adminDashboard':
-        return currentUser.role === 'admin' ? <AdminDashboard currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <p>Access Denied.</p>;
-      case 'creatorStudio':
-        return <CreatorStudioView elements={canvasElements} setElements={setCanvasElements} onSave={handleSaveCanvas} />;
-      case 'savedCanvas':
-        return <SavedCanvasView currentUser={currentUser} onLoadCanvas={handleLoadCanvas} />;
+        return currentUser.role === 'admin' ? <AdminDashboard currentUser={currentUser} setCurrentUser={setCurrentUser} setNotification={setNotification} /> : <p>Access Denied.</p>;
       default:
         return <p>View not found.</p>;
     }
@@ -543,40 +682,53 @@ const MainApplication: React.FC<MainApplicationProps> = (props) => {
   const mainContentPaddingClass = activeView === 'creatorStudio' ? '' : 'p-4 sm:p-6 lg:p-8';
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
-          user={currentUser} onLogout={onLogout} onEditProfile={onEditProfile} onOpenReviewModal={onOpenReviewModal}
-          activeView={activeView} setActiveView={handleViewChange} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen}
-          themeSettings={themeSettings} toggleThemeMode={toggleThemeMode} setAccentColor={setAccentColor}
+          user={currentUser}
+          onLogout={onLogout}
+          activeView={activeView}
+          setActiveView={handleViewChange}
+          isOpen={isSidebarOpen}
+          setIsOpen={setIsSidebarOpen}
         />
-        <div className={`flex-grow main-content ${isSidebarOpen ? 'ml-80' : 'ml-20'} flex flex-col h-screen`}>
-            <div className={`flex-grow text-[var(--color-text-primary)] overflow-y-auto ${mainContentPaddingClass}`}>
+        <main className="flex-grow main-content flex flex-col">
+            {activeView !== 'creatorStudio' && (
+                <header className="lg:hidden flex items-center h-16 px-4 bg-[var(--color-surface)] border-b border-[var(--color-outline)] flex-shrink-0 z-10 sticky top-0">
+                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-md hover:bg-[var(--color-surface-variant)]" title="Open Menu">
+                        <MenuIcon className="w-6 h-6" />
+                    </button>
+                </header>
+            )}
+            <div ref={mainContentRef} className={`flex-grow text-[var(--color-on-bg)] overflow-y-auto custom-scrollbar-container ${mainContentPaddingClass}`}>
                 {renderCurrentView()}
             </div>
-            
             {activeView !== 'creatorStudio' && (
-              <footer className="flex-shrink-0 text-[var(--color-text-secondary)] text-center p-4 text-sm border-t border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-surface)' }}>
-                  <p>&copy; {new Date().getFullYear()} Designed and made by MKS. Powered by Gemini.</p>
-                  <p className="mt-2">
-                      Contact: <a href="mailto:dz.ai.teacher.assistant@gmail.com" className="hover:text-[var(--color-text-primary)] underline">dz.ai.teacher.assistant@gmail.com</a>
-                  </p>
+              <footer className="flex-shrink-0 text-[var(--color-on-surface-variant)] p-4 text-sm border-t border-[var(--color-outline)] flex flex-col sm:flex-row items-center justify-between gap-4" style={{ backgroundColor: 'var(--color-surface)' }}>
+                  <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Designed and made by MKS. Powered by Gemini.</p>
+                  <div className="flex items-center justify-center gap-x-6">
+                      <a href="mailto:contact@aitadz.pro?subject=Support%20Request%20from%20AI%20Teacher%20Assistant" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 hover:text-[var(--color-on-surface)] underline">
+                          <EnvelopeIcon className="h-4 w-4" />
+                          <span>Contact Support</span>
+                      </a>
+                      <a href="https://www.facebook.com/profile.php?id=61579128010849" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 hover:text-[var(--color-on-surface)] underline">
+                          <FacebookIcon className="h-4 w-4" />
+                          <span>Join us on Facebook</span>
+                      </a>
+                  </div>
               </footer>
             )}
-            
-        </div>
+        </main>
       </div>
-      {notification && (
-        <div 
-          className={`fixed bottom-8 right-8 z-[200] p-4 rounded-lg shadow-2xl text-white text-sm font-medium transition-all duration-300
-            ${notification.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}
-            ${notification ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`
-          }
-          role="alert"
-        >
-          {notification.message}
-        </div>
-      )}
+      <button
+        onClick={handleGoUpClick}
+        className={`go-up-button material-button material-button-primary !p-4 !rounded-full ${showGoUpButton ? 'visible' : ''}`}
+        aria-label="Scroll to top"
+        title="Scroll to top"
+      >
+        <ChevronUpIcon className="w-6 h-6" />
+      </button>
+      <Chatbot />
     </div>
   );
 };

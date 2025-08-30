@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CalendarEvent, CalendarEventType, CalendarData } from '../types';
+import { User, CalendarEvent, CalendarEventType, CalendarData } from '../types';
 import { SparklesIcon, CalendarDaysIcon, FlagIcon, MoonIcon, AcademicCapIcon, PencilIcon, TrashIcon, PlusIcon } from './constants';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
@@ -8,6 +8,8 @@ import { CALENDAR_EVENTS } from './constants_calendar';
 
 interface SchoolCalendarViewProps {
     userId: string;
+    currentUser: User;
+    onOpenPremiumModal: (featureName?: string) => void;
 }
 
 const EventIcon: React.FC<{ type: CalendarEventType; className?: string; style?: React.CSSProperties }> = ({ type, className = "w-6 h-6", style }) => {
@@ -35,7 +37,7 @@ const getEventColor = (type: CalendarEventType): string => {
     }
 }
 
-export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }) => {
+export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId, currentUser, onOpenPremiumModal }) => {
     const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -72,6 +74,10 @@ export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }
     }, [userId]);
 
     const handleToggleEditMode = () => {
+        if (currentUser.plan === 'free') {
+            onOpenPremiumModal('Editing the School Calendar');
+            return;
+        }
         if (!isEditMode && calendarData) {
             setEditableEvents([...calendarData.events].sort((a, b) => new Date(a.date.split(' - ')[0]).getTime() - new Date(b.date.split(' - ')[0]).getTime()));
         }
@@ -117,23 +123,23 @@ export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }
     return (
         <div className="w-full max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-text-primary)]">
+            <h2 className="text-2xl sm:text-3xl font-semibold flex items-center justify-center text-[var(--color-on-bg)]">
               School Calendar
-              <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-accent)' }} />
+              <SparklesIcon className="w-7 h-7 ml-2" style={{ color: 'var(--color-primary)' }} />
             </h2>
-            <p className="text-[var(--color-text-secondary)] mt-2">View and manage important school and holiday dates.</p>
+            <p className="text-[var(--color-on-surface-variant)] mt-2">View and manage important school and holiday dates.</p>
           </div>
     
           {isLoading && <LoadingSpinner text="Loading calendar..." />}
           {error && <ErrorMessage message={error} />}
     
           {!isLoading && !error && calendarData && (
-            <div className="aurora-card p-6 sm:p-8">
+            <div className="material-card p-6 sm:p-8">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold">Events</h3>
                 <div className="flex gap-2">
-                  {isEditMode && <button onClick={handleSaveChanges} className="zenith-button py-2 px-4 rounded-lg text-sm">Save Changes</button>}
-                  <button onClick={handleToggleEditMode} className="zenith-button-secondary py-2 px-4 rounded-lg text-sm">
+                  {isEditMode && <button onClick={handleSaveChanges} className="material-button material-button-primary text-sm">Save Changes</button>}
+                  <button onClick={handleToggleEditMode} className="material-button material-button-secondary text-sm">
                     {isEditMode ? 'Cancel' : 'Edit Calendar'}
                   </button>
                 </div>
@@ -141,25 +147,25 @@ export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }
               
               <div className="space-y-4">
                 {(isEditMode ? editableEvents : calendarData.events).map((event) => (
-                  <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg bg-[var(--color-inset-bg)]">
+                  <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg bg-[var(--color-surface-variant)]">
                     <div className="p-2 rounded-full" style={{ backgroundColor: `${getEventColor(event.type)}20` }}>
                       <EventIcon type={event.type} className="w-6 h-6" style={{ color: getEventColor(event.type) }}/>
                     </div>
                     <div className="flex-grow">
                       {isEditMode ? (
-                        <input type="text" value={event.name} onChange={(e) => handleEventChange(event.id, 'name', e.target.value)} className="w-full bg-transparent font-semibold border-b border-transparent focus:border-[var(--color-accent)] outline-none" />
+                        <input type="text" value={event.name} onChange={(e) => handleEventChange(event.id, 'name', e.target.value)} className="w-full bg-transparent font-semibold border-b border-transparent focus:border-[var(--color-primary)] outline-none" />
                       ) : (
-                        <p className="font-semibold text-[var(--color-text-primary)]">{event.name}</p>
+                        <p className="font-semibold text-[var(--color-on-surface)]">{event.name}</p>
                       )}
                       {isEditMode ? (
-                         <input type="text" value={event.date} onChange={(e) => handleEventChange(event.id, 'date', e.target.value)} className="w-full bg-transparent text-sm mt-1 border-b border-transparent focus:border-[var(--color-accent)] outline-none" />
+                         <input type="text" value={event.date} onChange={(e) => handleEventChange(event.id, 'date', e.target.value)} className="w-full bg-transparent text-sm mt-1 border-b border-transparent focus:border-[var(--color-primary)] outline-none" />
                       ) : (
-                        <p className="text-sm text-[var(--color-text-secondary)]">{event.date}</p>
+                        <p className="text-sm text-[var(--color-on-surface-variant)]">{event.date}</p>
                       )}
                     </div>
                     {isEditMode && (
                       <>
-                        <select value={event.type} onChange={(e) => handleEventChange(event.id, 'type', e.target.value as CalendarEventType)} className="bg-transparent text-sm p-1 rounded border border-[var(--color-border)] outline-none focus:ring-1 focus:ring-[var(--color-accent)]" style={{backgroundColor: 'var(--color-input-bg)'}}>
+                        <select value={event.type} onChange={(e) => handleEventChange(event.id, 'type', e.target.value as CalendarEventType)} className="bg-transparent text-sm p-1 rounded">
                           {Object.values(CalendarEventType).map(type => <option key={type} value={type}>{type}</option>)}
                         </select>
                         <button onClick={() => handleDeleteEvent(event.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-full">
@@ -172,16 +178,16 @@ export const SchoolCalendarView: React.FC<SchoolCalendarViewProps> = ({ userId }
               </div>
               
               {isEditMode && (
-                <div className="mt-8 pt-6 border-t border-[var(--color-border)]">
+                <div className="mt-8 pt-6 border-t border-[var(--color-outline)]">
                   <h4 className="font-semibold mb-3">Add New Event</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                     <input type="text" placeholder="Event Name" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} className="md:col-span-1 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm"/>
-                     <input type="text" placeholder="Date (e.g., July 4, 2026)" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="md:col-span-1 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm"/>
-                     <select value={newEvent.type} onChange={e => setNewEvent({...newEvent, type: e.target.value as CalendarEventType})} className="md:col-span-1 p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] text-sm">
+                     <input type="text" placeholder="Event Name" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} className="md:col-span-1 text-sm"/>
+                     <input type="text" placeholder="Date (e.g., July 4, 2026)" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="md:col-span-1 text-sm"/>
+                     <select value={newEvent.type} onChange={e => setNewEvent({...newEvent, type: e.target.value as CalendarEventType})} className="md:col-span-1 text-sm">
                         {Object.values(CalendarEventType).map(type => <option key={type} value={type}>{type}</option>)}
                      </select>
                   </div>
-                  <button onClick={handleAddNewEvent} className="mt-3 zenith-button w-full md:w-auto py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                  <button onClick={handleAddNewEvent} className="mt-3 material-button material-button-primary w-full md:w-auto text-sm flex items-center justify-center gap-2">
                     <PlusIcon className="w-4 h-4" /> Add Event
                   </button>
                 </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CurriculumLevel, CanvasSequence, CanvasSection, CanvasLesson, LessonPlan, LessonDetailLevel, CreativityLevel, PromptMode, User } from '../types';
 import LessonPlannerControls from './LessonPlannerControls';
@@ -48,16 +49,17 @@ const LessonPlannerView: React.FC<LessonPlannerViewProps> = (props) => {
     isViewingSavedPlan, onCloseSavedPlan, viewingSavedPlanName, onSavePlan
   } = props;
 
-  const showSectionDetails = selectedCurriculum && 
+  const showSectionDetails = selectedCurriculum &&
                               selectedCurriculum !== CurriculumLevel.SELECT_YEAR &&
                               [CurriculumLevel.PRIMARY_3, CurriculumLevel.PRIMARY_4, CurriculumLevel.PRIMARY_5].includes(selectedCurriculum) &&
-                              selectedSectionFullDetails;
+                              selectedSectionFullDetails &&
+                              selectedLesson;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
+    <div className="flex flex-col md:flex-row gap-8">
       {/* Left Column - Controls and Details */}
-      <div className="lg:w-2/5 space-y-6">
-        <div className="lg:sticky lg:top-8 self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto custom-scrollbar-container lg:pr-2">
+      <div className="md:w-2/5 space-y-6">
+        <div className="md:sticky md:top-8 self-start md:max-h-[calc(100vh-4rem)] md:overflow-y-auto custom-scrollbar-container md:pr-2">
             <LessonPlannerControls {...props} disabled={isViewingSavedPlan} />
             {showSectionDetails && (
                 <SectionDetailDisplay 
@@ -70,24 +72,31 @@ const LessonPlannerView: React.FC<LessonPlannerViewProps> = (props) => {
       </div>
 
       {/* Right Column - Lesson Plan Display */}
-      <div className="lg:w-3/5">
+      <div id="lesson-plan-display-area" className="md:w-3/5">
         {isViewingSavedPlan && (
-            <div className="aurora-card p-4 mb-6 flex items-center justify-between">
-                <p className="font-semibold">Viewing: <span className="text-[var(--color-accent)]">{viewingSavedPlanName}</span></p>
-                <button onClick={onCloseSavedPlan} className="zenith-button-secondary text-sm py-1 px-3 rounded-lg">Close</button>
+            <div className="material-card p-4 mb-6 flex items-center justify-between">
+                <p className="font-semibold">Viewing: <span className="text-[var(--color-primary)]">{viewingSavedPlanName}</span></p>
+                <button onClick={onCloseSavedPlan} className="material-button material-button-secondary text-sm py-1 px-3">Close</button>
             </div>
         )}
-        {error && !isLoading && (
-          <div className="mb-6">
-            <ErrorMessage message={error} />
-          </div>
-        )}
-        {isLoading && (
-          <div className="flex justify-center items-center h-full">
-            <LoadingSpinner text="Generating your lesson plan..." />
-          </div>
-        )}
-        {!isLoading && (
+        
+        {isLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <LoadingSpinner text="Generating your lesson plan..." />
+            </div>
+        ) : error ? (
+            error === "QUOTA_EXCEEDED_LESSON_PLANNER" ? (
+                 <div className="material-card text-center p-8 h-full flex flex-col justify-center items-center">
+                     <p className="mt-4 text-lg font-medium text-[var(--color-on-surface)]">
+                         Lesson Planner under maintenance, be back soon.
+                     </p>
+                 </div>
+            ) : (
+                <div className="mb-6">
+                    <ErrorMessage message={error} />
+                </div>
+            )
+        ) : (
           <LessonPlanDisplay plan={generatedPlan} isViewingSavedPlan={isViewingSavedPlan} onSavePlan={onSavePlan} />
         )}
       </div>

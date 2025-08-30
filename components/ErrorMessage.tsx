@@ -6,17 +6,21 @@ interface ErrorMessageProps {
 
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
   if (!message) return null;
+
+  const errorStyle: React.CSSProperties = {
+    backgroundColor: 'var(--color-error-surface)',
+    border: '1px solid var(--color-error-border)',
+    color: 'var(--color-error-text)',
+    borderRadius: 'var(--border-radius-md)',
+  };
+
   return (
     <div 
-        className="aurora-card p-4" 
+        className="p-4" 
         role="alert"
-        style={{
-            '--color-surface': 'var(--color-error-surface)',
-            '--color-border': 'var(--color-error-border)',
-            color: 'var(--color-error-text)'
-        } as React.CSSProperties}
+        style={errorStyle}
     >
-      <p className="font-bold" style={{ color: 'var(--color-error-accent)' }}>Error</p>
+      <p className="font-bold">Error</p>
       <p>{message}</p>
     </div>
   );

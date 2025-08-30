@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DetailedMonthlyPlanViewProps, EnrichedLessonInfo, CanvasLesson, CanvasSequence, CanvasSection, CurriculumLevel } from '../types';
 
@@ -40,44 +41,51 @@ const getLessonDomain = (lessonInfo: EnrichedLessonInfo): { domain: string, colo
 
 const DetailedMonthlyPlanView: React.FC<DetailedMonthlyPlanViewProps> = ({ lessonsForMonth, selectedMonth, selectedYear, currentYearCanvasData }) => {
   const getLessonForCell = (weekIndex: number, sessionIndex: number) => lessonsForMonth[weekIndex * SESSIONS_IN_WEEK.length + sessionIndex] || null;
-  const formatSessionObjective = (lessonInfo: EnrichedLessonInfo) => "Session Objective: " + (lessonInfo.lesson.details || "Engage with lesson materials.");
+  const formatSessionObjective = (lessonInfo: EnrichedLessonInfo) => {
+    const objective = lessonInfo.lesson.details;
+    if (objective) {
+        // The data now starts with the full phrase.
+        return objective;
+    }
+    return "Session Objective: Engage with lesson materials.";
+  };
 
   return (
-    <div className="aurora-card p-4 sm:p-6 overflow-x-auto">
-      <h2 className="text-2xl font-bold text-center mb-6 text-[var(--color-text-primary)]">
+    <div className="material-card p-4 sm:p-6 overflow-x-auto">
+      <h2 className="text-2xl font-bold text-center mb-6 text-[var(--color-on-surface)]">
         Detailed Plan for {selectedMonth}, {selectedYear.replace("Primary ", "")}
       </h2>
       <div className="grid border-separate" style={{gridTemplateColumns: `minmax(100px, 1fr) repeat(4, minmax(150px, 1fr))`, borderSpacing: '4px'}}>
-        <div className="p-2 font-semibold text-center sticky left-0 z-10 text-[var(--color-text-primary)] bg-[var(--color-surface)]">Session</div>
-        {WEEKS.map(week => <div key={week} className="p-2 font-semibold text-center text-[var(--color-text-primary)]">{week}</div>)}
+        <div className="p-2 font-semibold text-center sticky left-0 z-10 text-[var(--color-on-surface)] bg-[var(--color-surface)]">Session</div>
+        {WEEKS.map(week => <div key={week} className="p-2 font-semibold text-center text-[var(--color-on-surface)]">{week}</div>)}
 
         {SESSIONS_IN_WEEK.map((sessionLabel, sessionIndex) => (
           <React.Fragment key={sessionLabel}>
-            <div className="p-2 font-semibold text-center sticky left-0 z-10 flex items-center justify-center text-[var(--color-text-secondary)] bg-[var(--color-surface)]">{sessionLabel}</div>
+            <div className="p-2 font-semibold text-center sticky left-0 z-10 flex items-center justify-center text-[var(--color-on-surface-variant)] bg-[var(--color-surface)]">{sessionLabel}</div>
             {WEEKS.map((week, weekIndex) => {
               const enrichedLessonInfo = getLessonForCell(weekIndex, sessionIndex);
               const cellKey = `${selectedMonth}-${week}-${sessionLabel}`;
 
-              if (!enrichedLessonInfo) return <div key={cellKey} className="p-3 text-xs italic text-[var(--color-text-secondary)] rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>Error</div>;
+              if (!enrichedLessonInfo) return <div key={cellKey} className="p-3 text-xs italic text-[var(--color-on-surface-variant)] rounded-lg bg-[var(--color-surface-variant)]">Error</div>;
 
               const lessonDomain = getLessonDomain(enrichedLessonInfo);
 
               if (enrichedLessonInfo.lesson.name === "To be planned") {
-                 return <div key={cellKey} className="p-3 text-xs italic text-[var(--color-text-secondary)] rounded-lg" style={{backgroundColor: 'var(--color-inset-bg)'}}>To be planned</div>;
+                 return <div key={cellKey} className="p-3 text-xs italic text-[var(--color-on-surface-variant)] rounded-lg bg-[var(--color-surface-variant)]">To be planned</div>;
               }
               
               const isSpecial = enrichedLessonInfo.isHoliday || enrichedLessonInfo.isExam || enrichedLessonInfo.lesson.isMajorPauseEvent;
 
               return (
-                <div key={cellKey} className={`aurora-card p-3 text-xs sm:text-sm text-[var(--color-text-primary)] ${isSpecial ? 'border-2' : ''}`} style={isSpecial ? {borderColor: 'var(--color-accent)'}: {}}>
-                  <p><strong className="text-[var(--color-text-primary)]">{enrichedLessonInfo.lesson.name}</strong></p>
+                <div key={cellKey} className={`material-card p-3 text-xs sm:text-sm text-[var(--color-on-surface)] ${isSpecial ? 'border-2' : ''}`} style={isSpecial ? {borderColor: 'var(--color-primary)'}: {}}>
+                  <p><strong className="text-[var(--color-on-surface)]">{enrichedLessonInfo.lesson.name}</strong></p>
                   {lessonDomain && (
                     <span className={`domain-tag ${lessonDomain.colorClass} mt-1`}>
                       {lessonDomain.domain}
                     </span>
                   )}
-                  {enrichedLessonInfo.lesson.timing && <p className="text-xs text-[var(--color-text-secondary)]">({enrichedLessonInfo.lesson.timing})</p>}
-                  <p className="mt-2 text-[var(--color-text-secondary)]">{formatSessionObjective(enrichedLessonInfo)}</p>
+                  {enrichedLessonInfo.lesson.timing && <p className="text-xs text-[var(--color-on-surface-variant)]">({enrichedLessonInfo.lesson.timing})</p>}
+                  <p className="mt-2 text-[var(--color-on-surface-variant)]">{formatSessionObjective(enrichedLessonInfo)}</p>
                 </div>
               );
             })}

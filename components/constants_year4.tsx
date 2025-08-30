@@ -1,4 +1,6 @@
-import { CanvasSequence, BookActivity } from '../types';
+
+
+import { CanvasSequence, BookActivity } from './types';
 
 export const YEAR_4_PRIMARY_CURRICULUM_CONTENT = `
 MINISTRY OF NATIONAL EDUCATION
@@ -351,7 +353,7 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing & Have Fun / I Listen & Repeat", 
             timing: "45mn", 
-            details: "Combined oral activities focusing on family vocabulary and interaction.", 
+            details: "By the end of the session my LWBT name and identify extended family members in addition to occupations.", 
             bookActivities: [
               { page: 9, activityNumber: "Song", description: "Sing 'Finger Family' song.", taskType: "Singing" },
               { page: 9, activityNumber: "Listen & Repeat", description: "Listen and repeat names of family members.", taskType: "Listening & Speaking" }
@@ -360,17 +362,26 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT differentiate between /i/ and /i:/.",
             bookActivities: [
               { page: 10, activityNumber: "1-4", description: "Listen to conversations about Nadjib's family and complete matching, circling, and writing tasks.", taskType: "Listening & Comprehension" },
               { page: 11, activityNumber: "Text", description: "Read the text about Nadjib's home and family.", taskType: "Reading Comprehension" },
               { page: 11, activityNumber: "Phonics", description: "Practice the 'th' sound with words like 'three', 'father', 'thirty', 'mother'.", taskType: "Phonics" }
             ] 
           },
-          { 
-            name: "I Read & Write", 
+           { 
+            name: "I read & Enjoy", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT read and enjoy a text about families, reinforcing comprehension skills.",
             bookActivities: [
-              { page: 12, activityNumber: "2-3", description: "Read the text from P11, match pairs, and complete Nadjib's family tree.", taskType: "Reading & Writing" },
+              { page: 12, activityNumber: "2-3", description: "Read the text from P11 again, match pairs of family members, and complete Nadjib's family tree.", taskType: "Reading & Comprehension" }
+            ]
+          },
+          { 
+            name: "I read and write", 
+            timing: "45mn", 
+            details: "By the end of the session my LWBT write sentences about families and practice cursive handwriting.",
+            bookActivities: [
               { page: 13, activityNumber: "Text & Tasks", description: "Read about Massil's family and complete fill-in-the-gaps, table, and word scramble tasks.", taskType: "Reading & Writing" },
               { page: 13, activityNumber: "Handwriting", description: "Write the sentence 'My uncle is thirty.' in your copybook.", taskType: "Handwriting" }
             ]
@@ -378,8 +389,10 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT ask and answer questions about family members and complete their pictionary project.",
             bookActivities: [
-               { page: 14, activityNumber: "Role-play", description: "Play the roles with your friends using the provided dialogues about family members.", taskType: "Role-play & Speaking" }
+               { page: 14, activityNumber: "Role-play", description: "Play the roles with your friends using the provided dialogues about family members.", taskType: "Role-play & Speaking" },
+               { page: 21, description: "My family and friends pictionary: Draw or stick pictures of your family and friends and label them.", taskType: "Project" }
             ] 
           },
         ],
@@ -395,6 +408,7 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing & Have Fun / I Listen & Repeat", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT name and identify countries and nationalities.",
             bookActivities: [
               { page: 15, activityNumber: "Song", description: "Sing 'Finger Family' song (brother, sister, baby versions).", taskType: "Singing" },
               { page: 15, activityNumber: "Listen & Repeat", description: "Listen and repeat the names of friends.", taskType: "Listening & Speaking" }
@@ -403,25 +417,36 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT differentiate between (/f/ and /tʃ/).",
             bookActivities: [
               { page: 16, activityNumber: "1-2", description: "Tick the right box (name or age) and circle pairs based on provided info.", taskType: "Reading & Comprehension" },
               { page: 17, activityNumber: "Text & Phonics", description: "Read conversations about different nationalities and practice 'th' sound.", taskType: "Reading & Phonics" }
             ] 
           },
-          { 
-            name: "I Read & Write", 
+           { 
+            name: "I read & Enjoy", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT read and enjoy texts about friends and nationalities, reinforcing comprehension.",
             bookActivities: [
-              { page: 18, activityNumber: "1-2", description: "Read conversation on P17, complete a table, and match characters to nationalities.", taskType: "Reading & Writing" },
-              { page: 19, activityNumber: "Text & Tasks", description: "Read about Hamza and complete table, find missing letters, and reorder letters.", taskType: "Reading & Writing" },
+              { page: 18, activityNumber: "1-2", description: "Read the conversation on P17, complete a table with information, and match characters to their nationalities.", taskType: "Reading & Comprehension" },
+            ]
+          },
+          { 
+            name: "I read and write", 
+            timing: "45mn", 
+            details: "By the end of the session my LWBT write sentences about friends and practice cursive handwriting.",
+            bookActivities: [
+              { page: 19, activityNumber: "Text & Tasks", description: "Read about Hamza and complete a table, find missing letters in words, and reorder letters to make words.", taskType: "Reading & Writing" },
                { page: 19, activityNumber: "Handwriting", description: "Write the sentence 'I am Algerian.' in your copybook.", taskType: "Handwriting" }
             ] 
           },
           { 
             name: "I Play Roles", 
             timing: "45mn", 
+            details: "By the end of the session my LWBT ask and answer questions about his friends and e-pals and complete their pictionary project.",
             bookActivities: [
-              { page: 20, activityNumber: "Role-play", description: "Play roles with your friends using the dialogues (Nadjib and Danny).", taskType: "Role-play & Speaking" }
+              { page: 20, activityNumber: "Role-play", description: "Play roles with your friends using the dialogues (Nadjib and Danny).", taskType: "Role-play & Speaking" },
+              { page: 21, description: "My family and friends pictionary: Draw or stick pictures of your family and friends and label them.", taskType: "Project" }
             ] 
           },
         ],
@@ -452,10 +477,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Facilities (Page 65) ---") + "--- END SECTION: Facilities (Page 65) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 35, description: "Sing 'I Love My School' and repeat names of facilities.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 36, activityNumber: "1-2", description: "Listen to conversations and match pairs about school facility locations.", taskType: "Listening & Matching" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 37, description: "Read about Nassima's school, complete table, and reorder words.", taskType: "Reading & Writing" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 38, description: "Act out the dialogue about Nassima's school with a friend.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT name and identify school facilities.", bookActivities: [ { page: 35, description: "Sing 'I Love My School' and repeat names of facilities.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT differentiate between (/ʊ/ and /u:/).", bookActivities: [ { page: 36, activityNumber: "1-2", description: "Listen to conversations and match pairs about school facility locations.", taskType: "Listening & Matching" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT read and understand a text about a school and its facilities.", bookActivities: [ { page: 37, activityNumber: "Text & Table", description: "Read about Nassima's school and complete the table with information about it.", taskType: "Reading & Comprehension" } ] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT reorder words to make sentences and practice cursive.", bookActivities: [ { page: 37, activityNumber: "Word Order", description: "Reorder the words to get correct sentences about Nassima's school.", taskType: "Writing" }, { page: 37, activityNumber: "Handwriting", description: "Write a sentence in your copybook: 'My school is beautiful.'", taskType: "Handwriting" } ] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT act out a dialogue about their school and complete their school map project.", bookActivities: [ { page: 38, description: "Act out the dialogue about Nassima's school with a friend.", taskType: "Role-play & Speaking" }, { page: 43, description: "My school map: Draw a map of your school and label the facilities.", taskType: "Project" } ] }
         ],
       },
       {
@@ -466,10 +492,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Mapping (Page 66) ---") + "--- END SECTION: Mapping (Page 66) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 39, description: "Sing 'The Wheels on the Bus' and repeat location words.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 40, activityNumber: "1-2", description: "Listen to directions and choose the right place on the map.", taskType: "Listening & Mapping" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 41, description: "Read about the school map, answer questions, and complete sentences.", taskType: "Reading & Writing" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 42, description: "Use the school map to ask for and give directions.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT locate school facilities using the prepositions: next to, opposite, on the left, on the right, behind/ in front of.", bookActivities: [ { page: 39, description: "Sing 'The Wheels on the Bus' and repeat location words.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT pronounce the letters 'th' correctly.", bookActivities: [ { page: 40, activityNumber: "1-2", description: "Listen to directions and choose the right place on the map.", taskType: "Listening & Mapping" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT read and understand a text about a school map and answer questions.", bookActivities: [ { page: 41, activityNumber: "Text & Questions", description: "Read about the school map and answer the comprehension questions.", taskType: "Reading & Comprehension" } ] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT write sentences using prepositions of place and practice cursive.", bookActivities: [ { page: 41, activityNumber: "Sentence Completion", description: "Complete the sentences using prepositions to describe locations on the map.", taskType: "Writing" }, { page: 41, activityNumber: "Handwriting", description: "Write a sentence in your copybook: 'The library is next to the classroom.'", taskType: "Handwriting" } ] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT ask for and give directions and complete their school map project.", bookActivities: [ { page: 42, description: "Use the school map to ask for and give directions.", taskType: "Role-play & Speaking" }, { page: 43, description: "My school map: Draw a map of your school and label the facilities.", taskType: "Project" } ] }
         ],
       }
     ]
@@ -496,10 +523,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Fun Time (Page 67) ---") + "--- END SECTION: Fun Time (Page 67) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 55, description: "Sing 'If You're Happy and You Know It' and repeat activity names.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 56, description: "Listen to conversations about weekend activities and match people to activities.", taskType: "Listening & Matching" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 57, description: "Read about fun time activities and complete sentences and a table.", taskType: "Reading & Writing" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 58, description: "Talk about your favourite weekend activities with a friend.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT Name and discuss various fun time activities (indoor/outdoor, individual/team).", bookActivities: [ { page: 55, description: "Sing 'If You're Happy and You Know It' and repeat activity names.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT Read a text about fun activities and identify the /ɔ:/ sound.", bookActivities: [ { page: 56, description: "Listen to conversations about weekend activities and match people to activities.", taskType: "Listening & Matching" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT will read a text about fun activities and complete comprehension tasks.", bookActivities: [{ page: 57, activityNumber: "Reading & Table", description: "Read about fun time activities and complete a table with details.", taskType: "Reading & Comprehension" }] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT Practice handwriting by copying sentences about favorite fun time activities.", bookActivities: [ { page: 57, activityNumber: "Sentence Completion", description: "Complete sentences based on the text about fun activities.", taskType: "Reading & Writing" } ] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT Act out conversations asking and answering about favorite fun time activities and complete their poster project.", bookActivities: [ { page: 58, description: "Talk about your favourite weekend activities with a friend.", taskType: "Role-play & Speaking" }, { page: 63, description: "My fun time poster: Create a poster about your favourite activities.", taskType: "Project" } ] }
         ]
       },
       {
@@ -510,10 +538,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Games (Page 68) ---") + "--- END SECTION: Games (Page 68) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 59, description: "Sing 'Ring a Ring o' Roses' and repeat names of games.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 60, description: "Listen to children talking about their favourite games and complete sentences.", taskType: "Listening & Comprehension" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 61, description: "Read about different games and match them to pictures.", taskType: "Reading & Matching" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 62, description: "Invite a friend to play your favourite game.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT Orally name and categorize different types of games (physical, mental, digital).", bookActivities: [ { page: 59, description: "Sing 'Ring a Ring o' Roses' and repeat names of games.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT Read a text describing different games and identify the /a:/ sound.", bookActivities: [ { page: 60, description: "Listen to children talking about their favourite games and complete sentences.", taskType: "Listening & Comprehension" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT will read a text about games and match them to pictures for comprehension.", bookActivities: [ { page: 61, description: "Read about different games and match them to pictures.", taskType: "Reading & Matching" } ] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT Write sentences about favorite games, focusing on cursive handwriting.", bookActivities: [{ page: 61, activityNumber: "Handwriting", description: "Write in your copybook: 'I like to play hide and seek.'", taskType: "Handwriting" }] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT Role-play asking and answering questions about favorite games and complete their poster project.", bookActivities: [ { page: 62, description: "Invite a friend to play your favourite game.", taskType: "Role-play & Speaking" }, { page: 63, description: "My fun time poster: Create a poster about your favourite activities.", taskType: "Project" } ] }
         ]
       }
     ]
@@ -540,10 +569,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Healthy Food (Page 69) ---") + "--- END SECTION: Healthy Food (Page 69) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 75, description: "Sing 'Apples and Bananas' and repeat names of healthy foods.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 76, description: "Listen to a dialogue about lunch and identify healthy food items.", taskType: "Listening & Comprehension" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 77, description: "Read about the food pyramid and classify foods.", taskType: "Reading & Writing" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 78, description: "Discuss with a friend what you like to eat for breakfast.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT Name and identify different types of healthy foods orally.", bookActivities: [ { page: 75, description: "Sing 'Apples and Bananas' and repeat names of healthy foods.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT Read a short text about healthy eating and differentiate between /ə/ and /ɜ:/ sounds.", bookActivities: [ { page: 76, description: "Listen to a dialogue about lunch and identify healthy food items.", taskType: "Listening & Comprehension" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT read about the food pyramid and understand food groups.", bookActivities: [{ page: 77, activityNumber: "Reading", description: "Read about the food pyramid to understand healthy eating.", taskType: "Reading & Comprehension" }] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT Practice writing sentences about healthy food choices in cursive.", bookActivities: [ { page: 77, activityNumber: "Writing", description: "Classify different foods into the correct food groups.", taskType: "Reading & Writing" } ] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT Act out scenarios discussing healthy food options and complete their food pyramid project.", bookActivities: [ { page: 78, description: "Discuss with a friend what you like to eat for breakfast.", taskType: "Role-play & Speaking" }, { page: 83, description: "My healthy food pyramid: Draw a food pyramid and label it.", taskType: "Project" } ] }
         ]
       },
       {
@@ -554,10 +584,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Health (Page 70) ---") + "--- END SECTION: Health (Page 70) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 79, description: "Sing 'Head, Shoulders, Knees and Toes' and repeat body parts.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 80, description: "Listen to a conversation about a toothache and identify health advice.", taskType: "Listening & Comprehension" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 81, description: "Read about healthy habits and match them to pictures.", taskType: "Reading & Matching" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 82, description: "Give advice to a friend who has a headache.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT Orally name body parts and discuss common health problems.", bookActivities: [ { page: 79, description: "Sing 'Head, Shoulders, Knees and Toes' and repeat body parts.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT Read a short text about health and practice identifying the /θ/ sound.", bookActivities: [ { page: 80, description: "Listen to a conversation about a toothache and identify health advice.", taskType: "Listening & Comprehension" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT read about healthy habits and match them to pictures.", bookActivities: [{ page: 81, description: "Read about healthy habits and match them to pictures.", taskType: "Reading & Matching" }] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT Copy sentences related to health and hygiene using connected handwriting.", bookActivities: [{ page: 81, activityNumber: "Handwriting", description: "Write in your copybook: 'I brush my teeth every day.'", taskType: "Handwriting" }] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT Role-play conversations about common health problems and giving simple advice and complete their food pyramid project.", bookActivities: [ { page: 82, description: "Give advice to a friend who has a headache.", taskType: "Role-play & Speaking" }, { page: 83, description: "My healthy food pyramid: Draw a food pyramid and label it.", taskType: "Project" } ] }
         ]
       }
     ]
@@ -584,10 +615,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Farm Animals (Page 71) ---") + "--- END SECTION: Farm Animals (Page 71) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 95, description: "Sing 'Old MacDonald Had a Farm' and repeat animal names.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 96, description: "Listen to descriptions of farm animals and guess the animal.", taskType: "Listening & Comprehension" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 97, description: "Read about farm animals and fill in a fact file.", taskType: "Reading & Writing" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 98, description: "Describe your favourite farm animal to a friend.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT Name and identify animals on a farm through songs and oral drills.", bookActivities: [ { page: 95, description: "Sing 'Old MacDonald Had a Farm' and repeat animal names.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT Read a short text about farm animals and review previously studied sounds.", bookActivities: [ { page: 96, description: "Listen to descriptions of farm animals and guess the animal.", taskType: "Listening & Comprehension" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT read and enjoy a text about farm animals and complete a fact file.", bookActivities: [{ page: 97, activityNumber: "Reading", description: "Read about farm animals to understand their characteristics.", taskType: "Reading & Comprehension" }] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT Write sentences describing farm animals, focusing on cursive handwriting.", bookActivities: [ { page: 97, activityNumber: "Writing", description: "Fill in a fact file for a farm animal based on the reading.", taskType: "Reading & Writing" } ] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT Act out conversations asking and answering questions about farm animals and complete their animal booklet project.", bookActivities: [ { page: 98, description: "Describe your favourite farm animal to a friend.", taskType: "Role-play & Speaking" }, { page: 103, description: "My animals booklet: Create a booklet with pictures and descriptions of animals.", taskType: "Project" } ] }
         ]
       },
       {
@@ -598,10 +630,11 @@ export const YEAR_4_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
             YEAR_4_PRIMARY_CURRICULUM_CONTENT.indexOf("--- END SECTION: Zoo Animals (Page 72) ---") + "--- END SECTION: Zoo Animals (Page 72) ---".length
         ),
         lessons: [
-          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", bookActivities: [ { page: 99, description: "Sing 'Let's Go to the Zoo' and repeat animal names.", taskType: "Singing & Listening" } ] },
-          { name: "I Read & Discover", timing: "45mn", bookActivities: [ { page: 100, description: "Listen to clues about zoo animals and identify them.", taskType: "Listening & Comprehension" } ] },
-          { name: "I Read & Write", timing: "45mn", bookActivities: [ { page: 101, description: "Read about a zoo animal and write a short description.", taskType: "Reading & Writing" } ] },
-          { name: "I Play Roles", timing: "45mn", bookActivities: [ { page: 102, description: "Imagine you are a zookeeper and tell a friend about an animal.", taskType: "Role-play & Speaking" } ] }
+          { name: "I Sing & Have Fun / I Listen & Repeat", timing: "45mn", details: "By the end of the session my LWBT Name and identify animals found in a zoo through oral activities.", bookActivities: [ { page: 99, description: "Sing 'Let's Go to the Zoo' and repeat animal names.", taskType: "Singing & Listening" } ] },
+          { name: "I Read & Discover", timing: "45mn", details: "By the end of the session my LWBT Read a short text about zoo animals and review previously studied sounds.", bookActivities: [ { page: 100, description: "Listen to clues about zoo animals and identify them.", taskType: "Listening & Comprehension" } ] },
+          { name: "I read & Enjoy", timing: "45mn", details: "By the end of the session my LWBT read and enjoy a text about a zoo animal.", bookActivities: [ { page: 101, activityNumber: "Reading", description: "Read about a specific zoo animal to understand its characteristics.", taskType: "Reading & Comprehension" } ] },
+          { name: "I read and write", timing: "45mn", details: "By the end of the session my LWBT write a short description of a zoo animal and practice handwriting.", bookActivities: [ { page: 101, activityNumber: "Writing", description: "Write a short description of the zoo animal you read about.", taskType: "Writing" }, { page: 101, activityNumber: "Handwriting", description: "Write a sentence in your copybook: 'The lion is a big cat.'", taskType: "Handwriting" } ] },
+          { name: "I Play Roles", timing: "45mn", details: "By the end of the session my LWBT act out a scenario about zoo animals and complete their animal booklet project.", bookActivities: [ { page: 102, description: "Imagine you are a zookeeper and tell a friend about an animal.", taskType: "Role-play & Speaking" }, { page: 103, description: "My animals booklet: Create a booklet with pictures and descriptions of animals.", taskType: "Project" } ] }
         ]
       }
     ]

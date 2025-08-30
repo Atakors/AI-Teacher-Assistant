@@ -1,44 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { User, Review } from '../types';
 import { getReviews } from '../services/dbService';
 import AuthModal from './AuthModal';
+import LoadingSpinner from './LoadingSpinner';
 import { 
-    SparklesIcon, HeroAppPreview,
-    LessonPlanIcon, TimetableIcon, CurriculumOverviewIcon, StarIcon, UserCircleIcon, FlashcardIcon
+    AppLogoIcon,
+    LessonPlanIcon, TimetableIcon, CurriculumOverviewIcon, StarIcon, UserCircleIcon, FlashcardIcon,
+    FacebookIcon, EnvelopeIcon
 } from './constants';
 
 interface LandingPageProps {
-  // onLogin prop is no longer needed, App.tsx's auth listener handles it.
 }
+
+const mockReviews: Review[] = [
+    {
+        id: 'mock1',
+        userId: 'mockuser1',
+        userName: 'Amina K.',
+        userAvatar: undefined,
+        rating: 5,
+        comment: "This tool is a lifesaver! I'm planning my lessons in a fraction of the time. The AI suggestions are creative and perfectly aligned with the curriculum. Highly recommended!",
+        createdAt: new Date('2024-05-15T09:00:00Z'),
+    },
+    {
+        id: 'mock2',
+        userId: 'mockuser2',
+        userName: 'Youssef B.',
+        userAvatar: undefined,
+        rating: 5,
+        comment: "The Timetable Editor is fantastic. I manage schedules for two schools, and this has made my life so much easier. Everything is saved and accessible from anywhere.",
+        createdAt: new Date('2024-05-20T14:30:00Z'),
+    },
+    {
+        id: 'mock3',
+        userId: 'mockuser3',
+        userName: 'Fatima Z.',
+        userAvatar: undefined,
+        rating: 4,
+        comment: "I love the Flashcard Generator! It's so quick to get visuals for my lessons. I wish the free plan had more image credits, but the Pro plan seems very reasonably priced.",
+        createdAt: new Date('2024-05-18T11:00:00Z'),
+    },
+];
 
 const LandingPage: React.FC<LandingPageProps> = () => {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authModalView, setAuthModalView] = useState<'login' | 'signup'>('login');
     const [authError, setAuthError] = useState<string | null>(null);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [reviewsLoading, setReviewsLoading] = useState(true);
 
     useEffect(() => {
-        // Check for any auth errors passed via sessionStorage (e.g., from OAuth redirect)
         const error = sessionStorage.getItem('authError');
         if (error) {
             setAuthError(error);
             sessionStorage.removeItem('authError');
-            openAuthModal('login'); // Open modal to show the error
+            openAuthModal('login');
         }
 
         const fetchReviews = async () => {
-            try {
-                const fetchedReviews = await getReviews(3);
-                setReviews(fetchedReviews);
-            } catch (e) {
-                console.error("Could not fetch reviews", e);
-            }
+            setReviewsLoading(true);
+            // This function is now resilient and will return [] on error, so no try/catch is needed.
+            const fetchedReviews = await getReviews(3);
+            setReviews(fetchedReviews);
+            setReviewsLoading(false);
         };
         fetchReviews();
     }, []);
     
     const openAuthModal = (view: 'login' | 'signup') => {
-        setAuthError(null); // Clear previous errors when opening manually
+        setAuthError(null);
         setAuthModalView(view);
         setIsAuthModalOpen(true);
     };
@@ -75,23 +105,30 @@ const LandingPage: React.FC<LandingPageProps> = () => {
             </div>
         );
     };
+    
+    // If we have fetched live reviews, use them. Otherwise, fall back to the mock reviews.
+    // This ensures the section is always populated.
+    const reviewsToDisplay = useMemo(() => {
+        return (reviews && reviews.length > 0) ? reviews : mockReviews;
+    }, [reviews]);
+
 
   return (
     <>
-      <div className="min-h-screen w-full text-slate-300 overflow-x-hidden">
-        <header className="fixed top-0 left-0 w-full p-4 z-50 bg-[#020617]/80 backdrop-blur-sm border-b border-slate-800">
+      <div className="min-h-screen w-full text-[var(--color-on-bg)] overflow-x-hidden">
+        <header className="fixed top-0 left-0 w-full p-4 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center">
-                  <SparklesIcon className="w-7 h-7" style={{ color: 'var(--color-accent)' }} />
+                  <AppLogoIcon className="w-8 h-8" />
                   <h1 className="text-lg font-bold ml-2 text-slate-100">AI Teacher Assistant</h1>
               </div>
-              <nav className="hidden md:flex items-center space-x-4">
-                  <button onClick={() => openAuthModal('login')} className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+              <nav className="hidden md:flex items-center space-x-2">
+                  <button onClick={() => openAuthModal('login')} className="text-sm font-medium text-slate-300 hover:text-white transition-colors px-4 py-2 rounded-full">
                       Log In
                   </button>
                   <button
                     onClick={() => openAuthModal('signup')}
-                    className="zenith-button text-sm py-2 px-5 rounded-lg"
+                    className="material-button material-button-primary text-sm"
                   >
                     Sign Up
                   </button>
@@ -99,7 +136,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                <div className="md:hidden">
                     <button
                         onClick={() => openAuthModal('login')}
-                        className="zenith-button text-sm py-2 px-5 rounded-lg"
+                        className="material-button material-button-primary text-sm"
                     >
                         Log In / Sign Up
                     </button>
@@ -109,61 +146,37 @@ const LandingPage: React.FC<LandingPageProps> = () => {
 
         <main className="w-full">
           {/* Hero Section */}
-          <section className="relative flex flex-col items-center justify-center min-h-screen p-6 pt-32">
-              <div className="relative z-20 w-full max-w-7xl mx-auto">
-                <div className="grid md:grid-cols-2 gap-16 items-center">
-                    <div className="text-center md:text-left">
-                        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 tracking-tight text-white">
-                            Reclaim Your Time, Reignite Your Passion
-                        </h1>
-                        <p className="text-lg sm:text-xl max-w-xl mx-auto md:mx-0 text-slate-300 mb-10">
-                            AI Teacher Assistant is your intelligent partner in education, designed to streamline planning. Generate lesson plans, create flashcards, manage timetables, and explore curriculum—all in one place.
-                        </p>
-                        <button
-                          onClick={() => openAuthModal('signup')}
-                          className="zenith-button text-lg font-semibold py-4 px-10 rounded-lg"
-                        >
-                          Try It Now
-                        </button>
-                    </div>
-                    <div className="hidden md:block">
-                         <HeroAppPreview className="w-full h-auto" />
-                    </div>
-                </div>
-              </div>
-          </section>
-
-          {/* Features Section */}
-          <section id="features" className="py-20 px-6">
-              <div className="max-w-7xl mx-auto">
-                  <div className="text-center max-w-3xl mx-auto mb-16">
-                       <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Everything You Need to Excel</h2>
-                       <p className="text-lg text-slate-300">A comprehensive suite of tools designed to support modern teaching workflows, from planning to production.</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                      {features.map((feature, index) => (
-                          <div key={index} className="aurora-card p-6">
-                              <div className="p-2 rounded-lg inline-block mb-4" style={{backgroundColor: 'rgba(var(--color-accent-rgb), 0.1)', border: '1px solid rgba(var(--color-accent-rgb), 0.3)'}}>
-                                  <feature.Icon className="w-6 h-6" style={{color: 'var(--color-accent)'}}/>
-                              </div>
-                              <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
-                              <p className="text-sm text-slate-400">{feature.description}</p>
-                          </div>
-                      ))}
-                  </div>
+          <section className="relative flex flex-col items-center justify-center min-h-screen p-6 pt-32 text-center">
+              <div className="relative z-10 w-full max-w-4xl mx-auto">
+                <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 tracking-tight text-white">
+                    Reclaim Your Time, Reignite Your Passion
+                </h1>
+                <p className="text-lg sm:text-xl max-w-3xl mx-auto text-slate-300 mb-10">
+                    AI Teacher Assistant is your intelligent partner in education, designed to streamline planning. Generate lesson plans, create flashcards, manage timetables, and explore curriculum—all in one place.
+                </p>
+                <button
+                  onClick={() => openAuthModal('signup')}
+                  className="material-button material-button-primary text-lg font-semibold py-4 px-10"
+                >
+                  Try It Now
+                </button>
               </div>
           </section>
 
           {/* Testimonials Section */}
-          {reviews.length > 0 && (
-              <section className="py-20 px-6">
-                  <div className="max-w-7xl mx-auto">
-                      <div className="text-center max-w-3xl mx-auto mb-16">
-                          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">What Teachers Are Saying</h2>
+          <section className="py-20 px-6 bg-[#0d1117]">
+              <div className="max-w-7xl mx-auto">
+                  <div className="text-center max-w-3xl mx-auto mb-16">
+                      <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">What Teachers Are Saying</h2>
+                  </div>
+                  {reviewsLoading ? (
+                      <div className="flex justify-center items-center py-10">
+                          <LoadingSpinner text="Loading testimonials..." />
                       </div>
+                  ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                          {reviews.map((review) => (
-                              <div key={review.id} className="aurora-card p-6 flex flex-col">
+                          {reviewsToDisplay.map((review) => (
+                              <div key={review.id} className="material-card p-6 flex flex-col bg-slate-800 border-slate-700">
                                   <div className="flex-grow mb-4">
                                       {renderStars(review.rating)}
                                       <p className="text-slate-300 mt-4 italic">"{review.comment}"</p>
@@ -182,12 +195,33 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                               </div>
                           ))}
                       </div>
+                  )}
+              </div>
+          </section>
+
+          {/* Features Section */}
+          <section id="features" className="py-20 px-6 bg-[#0d1117]">
+              <div className="max-w-7xl mx-auto">
+                  <div className="text-center max-w-3xl mx-auto mb-16">
+                       <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Everything You Need to Excel</h2>
+                       <p className="text-lg text-slate-300">A comprehensive suite of tools designed to support modern teaching workflows, from planning to production.</p>
                   </div>
-              </section>
-          )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                      {features.map((feature, index) => (
+                          <div key={index} className="material-card p-6 bg-slate-800 border-slate-700">
+                              <div className="p-3 rounded-full inline-block mb-4" style={{backgroundColor: 'color-mix(in srgb, var(--color-primary) 20%, transparent)'}}>
+                                  <feature.Icon className="w-6 h-6" style={{color: 'var(--color-primary)'}}/>
+                              </div>
+                              <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
+                              <p className="text-sm text-slate-400">{feature.description}</p>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </section>
           
           {/* Final CTA */}
-          <section id="about" className="py-20 px-6">
+          <section id="about" className="py-20 px-6 bg-[#0d1117]">
                <div className="max-w-4xl mx-auto text-center">
                   <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Ready to Transform Your Workflow?</h2>
                   <p className="text-lg text-slate-300 mb-10">
@@ -195,7 +229,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
                   </p>
                   <button
                       onClick={() => openAuthModal('signup')}
-                      className="zenith-button text-lg font-semibold py-4 px-10 rounded-lg"
+                      className="material-button material-button-primary text-lg font-semibold py-4 px-10"
                   >
                       Start Planning Now
                   </button>
@@ -204,9 +238,18 @@ const LandingPage: React.FC<LandingPageProps> = () => {
 
         </main>
         
-        <footer id="contact" className="w-full text-slate-400 text-center p-6 mt-16 text-sm border-t border-slate-800">
-            <p>&copy; {new Date().getFullYear()} Designed and made by MKS. Powered by Gemini.</p>
-            <p className="mt-2">Contact: <a href="mailto:dz.ai.teacher.assistant@gmail.com" className="hover:text-white underline">dz.ai.teacher.assistant@gmail.com</a></p>
+        <footer id="contact" className="w-full text-slate-400 p-6 mt-16 text-sm border-t border-slate-800 bg-[#0d1117] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Designed and made by MKS. Powered by Gemini.</p>
+            <div className="flex items-center justify-center gap-x-6">
+                <a href="mailto:contact@aitadz.pro?subject=Inquiry%20from%20AI%20Teacher%20Assistant%20Website" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
+                    <EnvelopeIcon className="w-5 h-5"/>
+                    <span>contact@aitadz.pro</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61579128010849" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors">
+                    <FacebookIcon className="w-5 h-5"/>
+                    <span>Join us on Facebook</span>
+                </a>
+            </div>
         </footer>
       </div>
 

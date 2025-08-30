@@ -1,4 +1,4 @@
-import { CanvasSequence, BookActivity } from '../types';
+import { CanvasSequence, BookActivity } from './types';
 
 export const YEAR_3_PRIMARY_CURRICULUM_CONTENT = `
 MINISTRY OF NATIONAL EDUCATION
@@ -609,47 +609,27 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
         ),
         lessons: [
           { 
-            name: "-Initial Situation ( Oral comprehension) Task 1\n-Initial Situation ( Oral production) Task 2", 
-            timing: "5mn",
-            bookActivities: [
-              { page: 28, description: "Didactic Guide Task: Oral comprehension - identify meaning of words/expressions in a familiar context (DG p.28).", taskType: "Assessment (DG)" },
-              { page: 28, description: "Didactic Guide Task: Oral production - interact using simple words and expressions (DG p.28).", taskType: "Assessment (DG)" }
-            ]
-          },
-          { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Combined: I Sing and Have Fun (10mn), I Listen and Repeat (35mn)",
+            details: "By the end of the session my LWBT name and identify family members and introduce them.",
             bookActivities: [
               { page: 17, activityNumber: "Song", description: "Sing the 'Family' song (as depicted with family image and Robotkid).", taskType: "Singing & Listening" },
               { page: 8, activityNumber: "2", description: "Listen and repeat the names of family members (e.g., Mr Sidou, Yassine, Lilia) shown in Activity 1.", taskType: "Listening & Speaking" }
             ]
           },
           { 
-            name: "-Initial Situation (Written comprehension)Task 3", 
-            timing: "5mn",
-            bookActivities: [
-              { page: 28, description: "Didactic Guide Task: Written comprehension - read a text of about 30 words (DG p.28).", taskType: "Assessment (DG)" }
-            ] 
-          },
-          { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT read and pronounce family members' names correctly.",
             bookActivities: [
                 { page: 9, activityNumber: "4", description: "Read and colour 'Hello' and 'Good bye' in your copybook.", taskType: "Reading & Comprehension"},
                 { page: 10, activityNumber: "5", description: "Listen, look and match in your copybook (family members to pictures, e.g., 4 = D grandmother).", taskType: "Listening & Matching"},
             ] 
           },
           { 
-            name: "-Initial Situation ( Written production) Task 4", 
-            timing: "5mn",
-            bookActivities: [
-              { page: 29, description: "Didactic Guide Task: Written production - write/reproduce letters and words (DG p.29).", taskType: "Assessment (DG)" }
-            ] 
-          },
-          { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write small (i, j, l, t, u) letters correctly.",
             bookActivities: [
                 { page: 11, activityNumber: "8", description: "Look, read and complete the words. Circle the right box (e.g. ..?..randmother).", taskType: "Reading & Writing Vocabulary"},
                 { page: 17, activityNumber: "My handwriting 3", description: "Copy the small letters in your copybook (i, j, l, t, u).", taskType: "Handwriting"},
@@ -658,8 +638,9 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about family members.",
             bookActivities: [
-                { page: 12, activityNumber: "10", description: "Ask and answer (What's your name? I'm Robotkid).", taskType: "Role-play & Speaking"},
+                { page: 12, activityNumber: "10", description: "Ask and answer (What's your name? I'm Robotkid).", taskType: "Speaking & Role-play"},
                 { page: 18, activityNumber: "MY PROJECT", description: "My pictionary: Draw or stick the pictures (family members) in your copybook and label them.", taskType: "Project & Vocabulary"},
             ]
           },
@@ -676,7 +657,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT greet others and introduce himself correctly.",
             bookActivities: [ 
               { page: 12, activityNumber: "11", description: "Listen, say and show the numbers (0-10, for ages).", taskType: "Numeracy & Speaking"},
               { page: 16, activityNumber: "My Phonics 1", description: "Listen and repeat (Six sisters - focusing on 'i' sound in 'six' and 'sisters').", taskType: "Phonics & Listening"},
@@ -685,6 +666,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT pronounce the letter “i” sound correctly.",
             bookActivities: [ 
                { page: 15, activityNumber: "17", description: "Listen and match in your copybook (names to pictures: Bakir, Tin Hinan, Meriem, Lotfi).", taskType: "Listening & Matching" },
                { page: 16, activityNumber: "My Phonics 2", description: "Listen and tick the box in your copybook when you hear the 'i' words.", taskType: "Phonics & Listening"},
@@ -693,6 +675,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write capital (I, J, L, T, U) letters correctly.",
              bookActivities: [ 
                { page: 15, activityNumber: "18 (Reading part)", description: "Read the dialogue: Hello, I'm Robotten...This is my friend, Peter...", taskType: "Reading"},
                { page: 17, activityNumber: "My handwriting 4", description: "Copy the capital letters in your copybook (I, J, L, T, U).", taskType: "Handwriting"},
@@ -701,6 +684,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about his friends.",
             bookActivities: [ 
                { page: 15, activityNumber: "18 (Role-play part)", description: "Act out: Hello, I'm Robotten... This is my friend, Peter...", taskType: "Role-play & Speaking"},
                { page: 14, activityNumber: "15", description: "Ask and answer about friends (e.g. How old are you? I'm 7. How old is she? She's 8.).", taskType: "Speaking & Role-play"},
@@ -733,7 +717,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify classroom objects and colours.",
             bookActivities: [
                 { page: 21, activityNumber: "7", description: "Listen, look and sing the song (related to school objects/colours).", taskType: "Singing & Listening"},
                 { page: 27, activityNumber: "My Phonics 1", description: "Listen and repeat (cup, rug, a cup under the rug - 'u' sound).", taskType: "Phonics & Listening"},
@@ -776,7 +760,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
            { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify school subjects and days of the week.",
             bookActivities: [
               { page: 26, activityNumber: "Days of the Week song (implied)", description: "Sing a song about the Days of the Week.", taskType: "Singing & Listening"},
               { page: 28, activityNumber: "Song 2 (Days of Week)", description: "Listen, look and sing the 'Days of the Week' song.", taskType: "Singing & Listening"},
@@ -845,7 +829,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify rooms of the house.",
             bookActivities: [
               { page: 34, activityNumber: "1", description: "Listen, look and sing the song (about the home).", taskType: "Singing & Listening"},
               { page: 39, activityNumber: "My Phonics 1", description: "Listen and repeat (pin, big, bin).", taskType: "Phonics & Listening"},
@@ -888,7 +872,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT locate rooms of the house and people inside them using prepositions.",
             bookActivities: [
               { page: 33, activityNumber: "7", description: "Listen and repeat (prepositions of place: in, on, under).", taskType: "Listening & Vocabulary"},
               { page: 39, activityNumber: "My Phonics 2", description: "Listen and repeat (pen, pin).", taskType: "Phonics & Listening"},
@@ -943,7 +927,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify some toys.",
             bookActivities: [
               { page: 42, activityNumber: "1", description: "Listen, look and repeat the names of the toys (doll, car, kite, etc.).", taskType: "Listening & Vocabulary"},
               { page: 43, activityNumber: "3", description: "Listen and sing the song.", taskType: "Singing & Listening"},
@@ -952,6 +936,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT read and pronounce toys' names correctly.",
             bookActivities: [
               { page: 49, activityNumber: "My Phonics 1", description: "Listen and repeat (cat, car, cap).", taskType: "Phonics & Listening"},
               { page: 43, activityNumber: "4", description: "Look, read and match the pictures with the words.", taskType: "Reading & Matching"},
@@ -960,6 +945,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write small (c, a, d, e, g) letters correctly.",
             bookActivities: [
               { page: 44, activityNumber: "7", description: "Complete the words with 'a', 'c', 'k', 't' (e.g. _ar, _ite).", taskType: "Writing Vocabulary"},
               { page: 50, activityNumber: "My handwriting 3", description: "Copy the small letters in your copybook (c, a, d, e, g).", taskType: "Handwriting"},
@@ -968,6 +954,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about toys.",
             bookActivities: [
               { page: 45, activityNumber: "8", description: "Ask and answer your friend (Have you got a car? Yes, I have).", taskType: "Speaking & Role-play"},
               { page: 51, activityNumber: "MY PROJECT", description: "My pictionary: Draw or stick the pictures of toys and label them.", taskType: "Project & Writing"},
@@ -986,7 +973,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify his favourite toy and its colour.",
             bookActivities: [
               { page: 49, activityNumber: "My Phonics 2", description: "Listen and repeat (black, bag).", taskType: "Phonics & Listening"},
               { page: 49, activityNumber: "My Phonics 3", description: "Listen, look and match the pictures with the words (cap/cat, bag/black).", taskType: "Phonics & Matching"},
@@ -995,6 +982,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT pronounce the /æ/ sound correctly.",
              bookActivities: [
               { page: 46, activityNumber: "11", description: "Read the sentences and colour the toys.", taskType: "Reading & Colouring"},
               { page: 47, activityNumber: "12", description: "Look at the pictures and complete the sentences with 'Its' or 'It's'.", taskType: "Reading & Grammar"},
@@ -1003,6 +991,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write capital (C, A, D, E, G) letters correctly.",
              bookActivities: [
               { page: 47, activityNumber: "13", description: "Look at the pictures and complete the sentences (about colours).", taskType: "Writing & Vocabulary"},
               { page: 50, activityNumber: "My handwriting 4", description: "Copy the capital letters in your copybook (C, A, D, E, G).", taskType: "Handwriting"},
@@ -1011,6 +1000,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about favourite toys.",
             bookActivities: [
               { page: 48, activityNumber: "14", description: "Ask and answer your friend (What's your favourite toy? My favourite toy is...).", taskType: "Speaking & Role-play"},
             ]
@@ -1055,7 +1045,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify pets.",
             bookActivities: [
               { page: 52, activityNumber: "1", description: "Listen, look and repeat the names of the pets.", taskType: "Listening & Vocabulary"},
               { page: 53, activityNumber: "3", description: "Listen and sing the song.", taskType: "Singing & Listening"},
@@ -1064,6 +1054,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT read and pronounce pets' names correctly.",
             bookActivities: [
               { page: 53, activityNumber: "4", description: "Look, read and match the pictures with the words.", taskType: "Reading & Matching"},
               { page: 59, activityNumber: "My Phonics 1", description: "Listen and repeat (dog, on, orange).", taskType: "Phonics & Listening"},
@@ -1072,6 +1063,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write small (o, q, f, s) letters correctly.",
             bookActivities: [
               { page: 54, activityNumber: "7", description: "Complete the sentences with 'I have' or 'I have not'.", taskType: "Writing & Grammar"},
               { page: 60, activityNumber: "My handwriting 3", description: "Copy the small letters in your copybook (o, q, f, s).", taskType: "Handwriting"},
@@ -1080,6 +1072,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about pet's names.",
              bookActivities: [
               { page: 55, activityNumber: "8", description: "Ask and answer your friend (Have you got a dog? Yes, I have).", taskType: "Speaking & Role-play"},
               { page: 61, activityNumber: "MY PROJECT", description: "My pictionary: Draw or stick the pictures of pets and label them.", taskType: "Project & Writing"},
@@ -1098,7 +1091,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name and identify pets' body parts.",
             bookActivities: [
               { page: 59, activityNumber: "My Phonics 2", description: "Listen and repeat (box, dog).", taskType: "Phonics & Listening"},
               { page: 59, activityNumber: "My Phonics 3", description: "Listen, look and match the pictures with the words (dog/doll, box/book).", taskType: "Phonics & Matching"},
@@ -1107,6 +1100,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT pronounce the /ɒ/ sound correctly.",
             bookActivities: [
               { page: 56, activityNumber: "11", description: "Read the sentences and colour the parts of the body.", taskType: "Reading & Colouring"},
               { page: 57, activityNumber: "12", description: "Look at the pictures and complete the sentences with 'Its' or 'It's'.", taskType: "Reading & Grammar"},
@@ -1115,6 +1109,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write capital (O, Q, F, S) letters correctly.",
             bookActivities: [
               { page: 57, activityNumber: "13", description: "Look at the pictures and complete the sentences.", taskType: "Writing & Vocabulary"},
               { page: 60, activityNumber: "My handwriting 4", description: "Copy the capital letters in your copybook (O, Q, F, S).", taskType: "Handwriting"},
@@ -1123,6 +1118,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about pets' body parts.",
             bookActivities: [
               { page: 58, activityNumber: "14", description: "Ask and answer your friend (What's your favourite pet? It is a cat...).", taskType: "Speaking & Role-play"},
             ]
@@ -1153,7 +1149,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT express offers and invitations.",
             bookActivities: [
               { page: 62, activityNumber: "1", description: "Listen, look and repeat the numbers (1-10 review).", taskType: "Listening & Vocabulary"},
               { page: 63, activityNumber: "3", description: "Listen and sing the song 'Happy Birthday'.", taskType: "Singing & Listening"},
@@ -1162,6 +1158,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT pronounce the /e/ sound correctly.",
             bookActivities: [
               { page: 63, activityNumber: "4", description: "Look, read and match the pictures with the words.", taskType: "Reading & Matching"},
               { page: 69, activityNumber: "My Phonics 1", description: "Listen and repeat (ten, red, hen).", taskType: "Phonics & Listening"},
@@ -1170,6 +1167,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write small (v, w, x, y, z) letters correctly.",
             bookActivities: [
               { page: 64, activityNumber: "7", description: "Look at the invitation card and answer the questions.", taskType: "Reading & Comprehension"},
               { page: 70, activityNumber: "My handwriting 3", description: "Copy the small letters in your copybook (v, w, x, y, z).", taskType: "Handwriting"},
@@ -1178,6 +1176,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT ask and answer questions about a party.",
             bookActivities: [
               { page: 65, activityNumber: "8", description: "Act out the dialogue (birthday invitation).", taskType: "Speaking & Role-play"},
               { page: 71, activityNumber: "MY PROJECT", description: "My fancy birthday invitation card.", taskType: "Project & Writing"},
@@ -1196,7 +1195,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Sing and Have Fun / I Listen and Repeat", 
             timing: "60mn", 
-            details: "Part 1 (10mn), Part 2 (35mn)",
+            details: "By the end of the session my LWBT name different objects and foods related to a party.",
             bookActivities: [
               { page: 69, activityNumber: "My Phonics 2", description: "Listen and repeat (fan, van).", taskType: "Phonics & Listening"},
               { page: 69, activityNumber: "My Phonics 3", description: "Listen, look and match the pictures with the words (van/fan, vase/face).", taskType: "Phonics & Matching"},
@@ -1205,6 +1204,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Discover", 
             timing: "60mn",
+            details: "By the end of the session my LWBT pronounce and differentiate between the sounds /f/ and /v/.",
             bookActivities: [
               { page: 66, activityNumber: "11", description: "Read the sentences and colour the pictures.", taskType: "Reading & Colouring"},
               { page: 67, activityNumber: "12", description: "Look at the pictures and complete the sentences with 'I can' or 'I can't'.", taskType: "Reading & Grammar"},
@@ -1213,6 +1213,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Read & Write", 
             timing: "60mn",
+            details: "By the end of the session my LWBT write capital (V, W, X, Y, Z) letters correctly.",
             bookActivities: [
               { page: 67, activityNumber: "13", description: "Look at the pictures and write the names of the food items.", taskType: "Writing & Vocabulary"},
               { page: 70, activityNumber: "My handwriting 4", description: "Copy the capital letters in your copybook (V, W, X, Y, Z).", taskType: "Handwriting"},
@@ -1221,6 +1222,7 @@ export const YEAR_3_CANVAS_STRUCTURE_DATA: CanvasSequence[] = [
           { 
             name: "I Play Roles", 
             timing: "60mn",
+            details: "By the end of the session my LWBT express wishes, feelings and emotions.",
             bookActivities: [
               { page: 68, activityNumber: "14", description: "Act out the dialogue (at the birthday party).", taskType: "Speaking & Role-play"},
             ]
